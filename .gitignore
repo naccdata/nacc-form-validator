@@ -1,0 +1,9 @@
+# Python
+*.py[cod]
+__pycache__/
+
+# System
+.DS_Store
+
+# Pip
+*.egg-info
