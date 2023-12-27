@@ -1,5 +1,5 @@
-""" Module for defining validation rules """
-import inspect
+""" Module for defining NACC specific data validation rules (extending cerberus library) """
+
 import logging
 
 from datetime import datetime as dt
@@ -10,6 +10,8 @@ from cerberus.validator import Validator
 
 from validator.datastore import Datastore
 from validator.json_logic import jsonLogic
+
+# pylint: disable=(too-few-public-methods)
 
 
 class SchemaDefs:
@@ -33,8 +35,6 @@ class SchemaDefs:
 
 class ValidationException(Exception):
     """ Raised when an system error occurs during validation """
-
-    pass
 
 
 class CustomErrorHandler(BasicErrorHandler):
@@ -71,8 +71,8 @@ class CustomErrorHandler(BasicErrorHandler):
         return super()._format_message(field, error)
 
 
-class RuleValidator(Validator):
-    """ RuleValidator class to extend cerberus.Validator """
+class NACCValidator(Validator):
+    """ NACCValidator class to extend cerberus.Validator """
 
     def __init__(self, schema: Mapping, *args, **kwargs):
         """
@@ -189,9 +189,9 @@ class RuleValidator(Validator):
                         record[key] = dt.strptime(value, '%Y-%m-%d').date()
                     elif self.__dtypes[key] == 'datetime':
                         record[key] = dt.strptime(value, '%Y-%m-%d %H:%M:%S')
-            except ValueError as e:
+            except ValueError as error:
                 logging.error('Failed to cast value %s to type %s - %s', value,
-                              self.__dtypes[key], e)
+                              self.__dtypes[key], error)
                 record[key] = value
 
         return record
@@ -218,16 +218,16 @@ class RuleValidator(Validator):
             try:
                 if value > curr_date:
                     self._error(field, 'cannot be greater than current date')
-            except TypeError as e:
-                self._error(field, str(e))
+            except TypeError as error:
+                self._error(field, str(error))
         elif max_value == SchemaDefs.CRR_YEAR:
             dtype = self.__dtypes[field]
             curr_date = dt.now()
             try:
                 if value.year > curr_date.year:
                     self._error(field, 'cannot be greater than current year')
-            except (TypeError, AttributeError) as e:
-                self._error(field, str(e))
+            except (TypeError, AttributeError) as error:
+                self._error(field, str(error))
         else:
             super()._validate_max(max_value, field, value)
 
@@ -253,16 +253,16 @@ class RuleValidator(Validator):
             try:
                 if value < curr_date:
                     self._error(field, 'cannot be less than current date')
-            except TypeError as e:
-                self._error(field, str(e))
+            except TypeError as error:
+                self._error(field, str(error))
         elif min_value == SchemaDefs.CRR_YEAR:
             dtype = self.__dtypes[field]
             curr_date = dt.now()
             try:
                 if value.year < curr_date.year:
                     self._error(field, 'cannot be less than current year')
-            except (TypeError, AttributeError) as e:
-                self._error(field, str(e))
+            except (TypeError, AttributeError) as error:
+                self._error(field, str(error))
         else:
             super()._validate_min(min_value, field, value)
 
@@ -330,7 +330,7 @@ class RuleValidator(Validator):
             # Check whether the dependency conditions satisfied
             for dep_field, conds in dependent_conds.items():
                 subschema = {dep_field: conds}
-                temp_validator = RuleValidator(
+                temp_validator = NACCValidator(
                     subschema,
                     allow_unknown=True,
                     error_handler=CustomErrorHandler(subschema))
@@ -349,7 +349,7 @@ class RuleValidator(Validator):
                 subschema = {field: else_conds}
 
             if subschema:
-                temp_validator = RuleValidator(
+                temp_validator = NACCValidator(
                     subschema,
                     allow_unknown=True,
                     error_handler=CustomErrorHandler(subschema))
@@ -421,12 +421,12 @@ class RuleValidator(Validator):
                 curr_schema = {field: curr_conds}
                 err_msg = constraint.get(SchemaDefs.ERRMSG, None)
 
-                prev_validator = RuleValidator(
+                prev_validator = NACCValidator(
                     prev_schema,
                     allow_unknown=True,
                     error_handler=CustomErrorHandler(prev_schema))
                 if prev_validator.validate(prev_ins):
-                    temp_validator = RuleValidator(
+                    temp_validator = NACCValidator(
                         curr_schema,
                         allow_unknown=True,
                         error_handler=CustomErrorHandler(curr_schema))
@@ -525,7 +525,7 @@ class RuleValidator(Validator):
                 field, 'Need >=12 questions with valid scores to compute the total GDS score')
             return
 
-        if num_valid > 0 and num_valid < 15:
+        if 0 < num_valid < 15:
             gds = round(gds + (gds/num_valid)*(15-num_valid))
 
         if gds != value:
