@@ -2,6 +2,8 @@
 
 from abc import ABC, abstractmethod
 
+# pylint: disable=(too-few-public-methods)
+
 
 class Datastore(ABC):
     """ Abstract class to represent the datastore (or warehouse) """
@@ -20,6 +22,3 @@ class Datastore(ABC):
         Returns:
             dict[str, str]: Previous instance or False if no instance found
         """
-
-        pass
-    
