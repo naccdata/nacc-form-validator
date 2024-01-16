@@ -34,7 +34,8 @@ class QualityCheck:
         self.__schema: dict[str, Mapping[str, object]] = schema
 
         # Validator object for rule evaluation
-        self.__validator: NACCValidator = self.__init_validator(datastore)
+        self.__validator: NACCValidator = None
+        self.__init_validator(datastore)
 
     @property
     def schema(self) -> dict[str, Mapping[str, object]]:
@@ -85,6 +86,7 @@ class QualityCheck:
         # All the fields in the input record represented as string values,
         # cast the fields to appropriate data types according to the schema before validation
         cst_record = self.__validator.cast_record(record.copy())
+
         # Validate the record against the defined schema
         try:
             passed = self.__validator.validate(cst_record, normalize=False)
