@@ -1,10 +1,14 @@
 """ Module for performing data quality checks """
-import cerberus.schema
 
+import logging
+import sys
 from typing import Mapping, Tuple
 
+from cerberus.schema import SchemaError
 from validator.datastore import Datastore
 from validator.nacc_validator import CustomErrorHandler, NACCValidator, ValidationException
+
+log = logging.getLogger(__name__)
 
 
 class QualityCheckException(Exception):
@@ -12,7 +16,7 @@ class QualityCheckException(Exception):
 
 
 class QualityCheck:
-    """ Class to load the rule definitions and run the quality checks """
+    """ Class to initiate validator object with the provided schema and run the data quality checks """
 
     def __init__(self,
                  pk_field: str,
@@ -68,7 +72,7 @@ class QualityCheck:
                                                  self.__schema))
             self.__validator.set_primary_key_field(self.__pk_field)
             self.__validator.set_datastore(datastore)
-        except cerberus.schema.SchemaError as error:
+        except SchemaError as error:
             raise QualityCheckException(f'Schema Error - {error}') from error
 
     def validate_record(
@@ -88,10 +92,19 @@ class QualityCheck:
         cst_record = self.__validator.cast_record(record.copy())
 
         # Validate the record against the defined schema
+        sys_errors = False
+        passed = False
         try:
             passed = self.__validator.validate(cst_record, normalize=False)
         except ValidationException:
-            passed = False
+            sys_errors = True
+
+        if sys_errors:
+            log.error(
+                'System error(s) occurred during validation, ' +
+                'please fix the issues below and retry or contact system administrator.')
+            log.error(self.__validator.sys_erros)
+            sys.exit(1)
 
         errors = self.__validator.errors
 

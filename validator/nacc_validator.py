@@ -1,15 +1,15 @@
 """ Module for defining NACC specific data validation rules (extending cerberus library) """
 
-import logging
-
 from datetime import datetime as dt
+import logging
 from typing import Mapping
 
 from cerberus.errors import BasicErrorHandler, ValidationError, ErrorTree
 from cerberus.validator import Validator
-
 from validator.datastore import Datastore
 from validator.json_logic import jsonLogic
+
+log = logging.getLogger(__name__)
 
 # pylint: disable=(too-few-public-methods)
 
@@ -76,7 +76,6 @@ class NACCValidator(Validator):
 
     def __init__(self, schema: Mapping, *args, **kwargs):
         """
-
         Args:
             schema (Mapping): Validation schema as dict[field, rule objects]
         """
@@ -97,10 +96,22 @@ class NACCValidator(Validator):
         # Cache of previous records that has been retrieved
         self.__prev_records: dict[str, Mapping] = {}
 
+        # List of system errors occured by field
+        self.__sys_erros: dict[str, list[str]] = {}
+
     @property
-    def dtypes(self):
-        """ The dtype property """
+    def dtypes(self) -> dict[str, str]:
+        """ Returns the field->datatype mapping for the fields defined in the validation schema. """
         return self.__dtypes
+
+    @property
+    def sys_erros(self) -> dict[str, list[str]]:
+        """ Returns the list of system errors occurred during validation (by field).
+            This is different from the validation erros and can be empty.
+            Examples: Datastore not set for temporal checks
+                      Error in rule definition file
+        """
+        return self.__sys_erros
 
     def __populate_data_types(self) -> dict[str, str] | None:
         """ Convert cerberus data types to python data types.
@@ -131,6 +142,18 @@ class NACCValidator(Validator):
                     data_types[key] = 'datetime'
 
         return data_types
+
+    def __add_system_error(self, field: str, err_msg: str):
+        """ Add system error message
+
+        Args:
+            field (str): Variable name
+            err_msg (str): Error message
+        """
+        if field in self.__sys_erros:
+            self.__sys_erros[field].append(err_msg)
+        else:
+            self.__sys_erros[field] = [err_msg]
 
     def set_datastore(self, datastore: Datastore):
         """ Set the Datastore instance
@@ -176,6 +199,8 @@ class NACCValidator(Validator):
             if value == '':
                 record[key] = None
                 continue
+            if value is None:
+                continue
 
             try:
                 if key in self.__dtypes:
@@ -189,9 +214,9 @@ class NACCValidator(Validator):
                         record[key] = dt.strptime(value, '%Y-%m-%d').date()
                     elif self.__dtypes[key] == 'datetime':
                         record[key] = dt.strptime(value, '%Y-%m-%d %H:%M:%S')
-            except ValueError as error:
-                logging.error('Failed to cast value %s to type %s - %s', value,
-                              self.__dtypes[key], error)
+            except (ValueError, TypeError) as error:
+                log.error('Failed to cast variable %s, value %s to type %s - %s', key, value,
+                          self.__dtypes[key], error)
                 record[key] = value
 
         return record
@@ -388,14 +413,21 @@ class NACCValidator(Validator):
                         }
             }
         """
+
         if not self.__datastore:
-            raise ValidationException(
-                'Datastore not set, use set_datastore() method')
+            err_msg = 'Datastore not set for validating temporal rules, use set_datastore() method.'
+            self.__add_system_error(field, err_msg)
+            raise ValidationException(err_msg)
 
         if not self.__pk_field:
-            raise ValidationException(
-                'Primary key field not set, use set_primary_key_field() method'
-            )
+            err_msg = 'Primary key field not set for validating temporal rules, use set_primary_key_field() method.'
+            self.__add_system_error(field, err_msg)
+            raise ValidationException(err_msg)
+
+        if self.__pk_field not in self.document or not self.document[self.__pk_field]:
+            err_msg = f'Variable {self.__pk_field} not set in current visit data, cannot retrieve the previous visits.'
+            self._error(field, err_msg)
+            return
 
         record_id = self.document[self.__pk_field]
 
@@ -405,41 +437,46 @@ class NACCValidator(Validator):
         else:
             orderby = temporalrules[SchemaDefs.ORDERBY]
             prev_ins = self.__datastore.get_previous_instance(
-                orderby, self.document)
+                orderby, self.__pk_field, self.document)
 
             if prev_ins:
                 prev_ins = self.cast_record(prev_ins)
 
             self.__prev_records[record_id] = prev_ins
 
-        if prev_ins:
-            constraints = temporalrules[SchemaDefs.CONSTRAINTS]
-            for constraint in constraints:
-                prev_conds = constraint[SchemaDefs.PREVIOUS]
-                prev_schema = {field: prev_conds}
-                curr_conds = constraint[SchemaDefs.CURRENT]
-                curr_schema = {field: curr_conds}
-                err_msg = constraint.get(SchemaDefs.ERRMSG, None)
+        # TODO - check whether we should skip validation and pass the record if there's no previous visit
+        if prev_ins is None:
+            self._error(
+                field, 'Failed to retrieve the previous visit, cannot proceed with validation.')
+            return
 
-                prev_validator = NACCValidator(
-                    prev_schema,
+        constraints = temporalrules[SchemaDefs.CONSTRAINTS]
+        for constraint in constraints:
+            prev_conds = constraint[SchemaDefs.PREVIOUS]
+            prev_schema = {field: prev_conds}
+            curr_conds = constraint[SchemaDefs.CURRENT]
+            curr_schema = {field: curr_conds}
+            err_msg = constraint.get(SchemaDefs.ERRMSG, None)
+
+            prev_validator = NACCValidator(
+                prev_schema,
+                allow_unknown=True,
+                error_handler=CustomErrorHandler(prev_schema))
+            if prev_validator.validate(prev_ins):
+                temp_validator = NACCValidator(
+                    curr_schema,
                     allow_unknown=True,
-                    error_handler=CustomErrorHandler(prev_schema))
-                if prev_validator.validate(prev_ins):
-                    temp_validator = NACCValidator(
-                        curr_schema,
-                        allow_unknown=True,
-                        error_handler=CustomErrorHandler(curr_schema))
-                    if not temp_validator.validate({field: value}):
-                        if err_msg:
-                            self._error(field, err_msg)
-                        else:
-                            errors = temp_validator.errors.items()
-                            for error in errors:
-                                self._error(
-                                    field,
-                                    f'{str(error)} in current visit for {prev_conds} in previous visit'
-                                )
+                    error_handler=CustomErrorHandler(curr_schema))
+                if not temp_validator.validate({field: value}):
+                    if err_msg:
+                        self._error(field, err_msg)
+                    else:
+                        errors = temp_validator.errors.items()
+                        for error in errors:
+                            self._error(
+                                field,
+                                f'{str(error)} in current visit for {prev_conds} in previous visit'
+                            )
 
     def _validate_logic(self, logic: dict[Mapping], field: str, value: object):
         """ Validate a mathematical formula/expression.
@@ -485,7 +522,7 @@ class NACCValidator(Validator):
             func(value)
         else:
             err_msg = f'{function} not defined in the validator module'
-            self._error(field, err_msg)
+            self.__add_system_error(field, err_msg)
             raise ValidationException(err_msg)
 
     def _check_with_gds(self, field: str, value: object):
