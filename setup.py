@@ -5,13 +5,12 @@ setup(
     version='0.1',
 
     url='https://github.com/naccdata/nacc-form-validator',
-    author='Chandima HewaNadungodage',
-    author_email='chandhn@uw.edu',
+    author='NACC',
+    author_email='nacchelp@uw.edu',
 
     packages=find_packages(),
 
     install_requires=[
-        'cerberus',
-        'pyyaml',
+        'cerberus'
     ],
 )
