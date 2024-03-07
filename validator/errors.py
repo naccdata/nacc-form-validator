@@ -11,7 +11,8 @@ class ErrorDefs:
     """ Class to define custom errors. """
     # IMPORTANT - When adding a new error DON'T change the existing codes
     # Error codes are used to map b/w cerberus erros and NACC error codes in QC gear
-    # Add the new code to the end of the list
+    # Cerberus uses bit 5 and bit 7 to mark specific error types
+    # Check https://docs.python-cerberus.org/customize.html for more info
     CURR_DATE_MAX = ErrorDefinition(0x1000, 'max')
     CURR_YEAR_MAX = ErrorDefinition(0x1001, 'max')
     INVALID_DATE_MAX = ErrorDefinition(0x1002, 'max')
@@ -22,15 +23,15 @@ class ErrorDefs:
     FILLED_FALSE = ErrorDefinition(0x1007, 'filled')
     COMPATIBILITY_TRUE = ErrorDefinition(0x1008, 'compatibility')
     COMPATIBILITY_FALSE = ErrorDefinition(0x1009, 'compatibility')
-    TEMPORAL = ErrorDefinition(0x1010, 'temporalrules')
-    NO_PRIMARY_KEY = ErrorDefinition(0x1011, 'temporalrules')
-    NO_PREV_VISIT = ErrorDefinition(0x1012, 'temporalrules')
-    FORMULA = ErrorDefinition(0x1013, 'logic')
-    CHECK_GDS_1 = ErrorDefinition(0x1014, 'check_with')
-    CHECK_GDS_2 = ErrorDefinition(0x1015, 'check_with')
-    CHECK_GDS_3 = ErrorDefinition(0x1016, 'check_with')
-    CHECK_GDS_4 = ErrorDefinition(0x1017, 'check_with')
-    CHECK_GDS_5 = ErrorDefinition(0x1018, 'check_with')
+    TEMPORAL = ErrorDefinition(0x2000, 'temporalrules')
+    NO_PRIMARY_KEY = ErrorDefinition(0x2001, 'temporalrules')
+    NO_PREV_VISIT = ErrorDefinition(0x2002, 'temporalrules')
+    FORMULA = ErrorDefinition(0x2003, 'logic')
+    CHECK_GDS_1 = ErrorDefinition(0x2004, 'check_with')
+    CHECK_GDS_2 = ErrorDefinition(0x2005, 'check_with')
+    CHECK_GDS_3 = ErrorDefinition(0x2006, 'check_with')
+    CHECK_GDS_4 = ErrorDefinition(0x2007, 'check_with')
+    CHECK_GDS_5 = ErrorDefinition(0x2008, 'check_with')
 
 
 class CustomErrorHandler(BasicErrorHandler):
@@ -52,6 +53,8 @@ class CustomErrorHandler(BasicErrorHandler):
         """Add custom error codes specific to NACC validation rules
         """
         # IMPORTANT - When adding a new error DON'T change the existing codes
+        # Cerberus uses bit 5 and bit 7 to mark specific error types
+        # Check https://docs.python-cerberus.org/customize.html for more info
         # Error messages are synced with ErrorDefs using the error code
         # Error codes are also used to map b/w cerberus erros and NACC error codes in QC gear
         custom_errors = {
@@ -65,20 +68,20 @@ class CustomErrorHandler(BasicErrorHandler):
             0x1007: "must be empty",
             0x1008: "{1} for {2} - compatibility rule no: {0}",
             0x1009: "{1} for {2} - compatibility rule no: {0}",
-            0x1010:
+            0x2000:
             "{1} in current visit for {2} in previous visit - temporal rule no: {0}",
-            0x1011: "primary key variable {0} not set in current visit data",
-            0x1012:
+            0x2001: "primary key variable {0} not set in current visit data",
+            0x2002:
             "failed to retrieve the previous visit, cannot proceed with validation",
-            0x1013: "error in formula evaluation - {0}",
-            0x1014:
+            0x2003: "error in formula evaluation - {0}",
+            0x2004:
             "GDS not attempted (nogds=1), total GDS score should be 88",
-            0x1015:
+            0x2005:
             "there are >=12 questions with valid scores, GDS should be computed",
-            0x1016:
+            0x2006:
             "less than 12 questions has valid scores, GDS cannot be computed",
-            0x1017: "incorrect total GDS score {0}, expected value {1}",
-            0x1018: "incorrect partial GDS score {0}, expected value {1}",
+            0x2007: "incorrect total GDS score {0}, expected value {1}",
+            0x2008: "incorrect partial GDS score {0}, expected value {1}",
         }
 
         self.messages.update(custom_errors)
