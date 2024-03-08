@@ -353,8 +353,8 @@ class NACCValidator(Validator):
                         self._error(field, error_def, rule_no, str(error),
                                     dependent_conds)
 
-    def _validate_temporalrules(self, temporalrules: Dict[Mapping], field: str,
-                                value: object):
+    def _validate_temporalrules(self, temporalrules: Dict[str, Mapping],
+                                field: str, value: object):
         """ Validate the List of longitudial checks specified for a field.
 
         Args:
@@ -444,13 +444,14 @@ class NACCValidator(Validator):
                         self._error(field, ErrorDefs.TEMPORAL, rule_no,
                                     str(error), prev_conds)
 
-    def _validate_logic(self, logic: Dict[Mapping], field: str, value: object):
+    def _validate_logic(self, logic: Dict[str, Mapping], field: str,
+                        value: object):
         """ Validate a mathematical formula/expression.
 
         Args:
-            logic (Dict[Mapping]): Validation logic specified in the rule definition
-            field (str): Variable name
-            value (object): Variable value
+            logic: Validation logic specified in the rule definition
+            field: Variable name
+            value: Variable value
 
         Note: Don't remove below docstring,
         Cerberus uses it to validate the schema definition.
