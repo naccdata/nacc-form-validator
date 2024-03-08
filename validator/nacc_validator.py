@@ -289,12 +289,12 @@ class NACCValidator(Validator):
         Cerberus uses it to validate the schema definition.
 
         The rule's arguments are validated against this schema:
-            {'type': 'List',
-                'schema': {'type': 'Dict',
+            {'type': 'list',
+                'schema': {'type': 'dict',
                         'schema':{'op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR']},
-                                    'if': {'type': 'Dict', 'required': True, 'empty': False},
-                                    'then': {'type': 'Dict', 'required': True, 'empty': False},
-                                    'else': {'type': 'Dict', 'required': False, 'empty': False}
+                                    'if': {'type': 'dict', 'required': True, 'empty': False},
+                                    'then': {'type': 'dict', 'required': True, 'empty': False},
+                                    'else': {'type': 'dict', 'required': False, 'empty': False}
                                     }
                         }
             }
@@ -369,12 +369,12 @@ class NACCValidator(Validator):
         Cerberus uses it to validate the schema definition.
 
         The rule's arguments are validated against this schema:
-            {'type': 'Dict',
+            {'type': 'dict',
              'schema': {'orderby': {'type': 'string', 'required': True, 'empty': False},
-                        'constraints': {'type': 'List',
-                                        'schema': {'type': 'Dict',
-                                                    'schema': {'previous': {'type': 'Dict', 'required': True, 'empty': False},
-                                                                'current': {'type': 'Dict', 'required': True, 'empty': False}
+                        'constraints': {'type': 'list',
+                                        'schema': {'type': 'dict',
+                                                    'schema': {'previous': {'type': 'dict', 'required': True, 'empty': False},
+                                                                'current': {'type': 'dict', 'required': True, 'empty': False}
                                                             }
                                                 }
                                         }
@@ -457,8 +457,8 @@ class NACCValidator(Validator):
         Cerberus uses it to validate the schema definition.
 
         The rule's arguments are validated against this schema:
-            {'type': 'Dict',
-             'schema': {'formula': {'type': 'Dict', 'required': True, 'empty': False},
+            {'type': 'dict',
+             'schema': {'formula': {'type': 'dict', 'required': True, 'empty': False},
                         'errmsg': {'type': 'string', 'required': False, 'empty': False}
                        }
             }
