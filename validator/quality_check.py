@@ -1,12 +1,12 @@
 """ Module for performing data quality checks """
 
 import logging
-import sys
-from typing import Dict, List, Mapping, Tuple
+from typing import Any, Dict, List, Mapping, Tuple
 
 from cerberus.schema import SchemaError
 from validator.datastore import Datastore
-from validator.nacc_validator import CustomErrorHandler, NACCValidator, ValidationException
+from validator.nacc_validator import (CustomErrorHandler, NACCValidator,
+                                      ValidationException)
 
 log = logging.getLogger(__name__)
 
@@ -16,7 +16,8 @@ class QualityCheckException(Exception):
 
 
 class QualityCheck:
-    """ Class to initiate validator object with the provided schema and run the data quality checks """
+    """ Class to initiate validator object with the provided schema
+    and run the data quality checks """
 
     def __init__(self,
                  pk_field: str,
@@ -26,16 +27,17 @@ class QualityCheck:
         """
 
         Args:
-            pk_field (str): Primary key field of the project
-            schema (Mapping): Validation rules schema as Dict[field, rule objects].
-            strict (bool, optional): Validation mode, defaults to True.
-                                     If False, unknown forms/fields are skipped from validation.
-            datastore (Datastore, optional): Datastore instance to retrieve longitudinal data.
+            pk_field: Primary key field of the project
+            schema: Validation rules schema as Dict[field, rule objects].
+            strict (optional): Validation mode, defaults to True.
+                        If False, unknown forms/fields are skipped from validation.
+            datastore (optional): Datastore instance to retrieve longitudinal data.
         """
 
         self.__pk_field: str = pk_field
         self.__strict = strict
         self.__schema: Dict[str, Mapping[str, object]] = schema
+
         # Validator object for rule evaluation
         self.__validator: NACCValidator = None
         self.__init_validator(datastore)
@@ -45,7 +47,8 @@ class QualityCheck:
         """ The schema property
 
         Returns:
-            Dict[str, Mapping[str, object]]: Schema of validation rules defined in the project
+            Dict[str, Mapping[str, object]]:
+            Schema of validation rules defined in the project
         """
         return self.__schema
 
@@ -69,13 +72,14 @@ class QualityCheck:
                                              allow_unknown=not self.__strict,
                                              error_handler=CustomErrorHandler(
                                                  self.__schema))
-            self.__validator.set_primary_key_field(self.__pk_field)
-            self.__validator.set_datastore(datastore)
+            self.__validator.primary_key = self.__pk_field
+            self.__validator.datastore = datastore
         except SchemaError as error:
             raise QualityCheckException(f'Schema Error - {error}') from error
 
     def validate_record(
-            self, record: Dict[str, str]) -> Tuple[bool, Dict[str, List[str]]]:
+        self, record: Dict[str, str]
+    ) -> Tuple[bool, Dict[str, List[str]], Dict[str, Any]]:
         """ Evaluate the record against the defined rules using cerberus.
 
         Args:
@@ -83,11 +87,12 @@ class QualityCheck:
 
         Returns:
             bool: True if the record satisfied all rules
-            Dict[str, List[str]: List of validation errors by variable (if any)
+            Dict[str, List[str]: List of formatted error messages by variable
+            Dict[str, Any]: Dict of ValidationError objects by variable
         """
 
         # All the fields in the input record represented as string values,
-        # cast the fields to appropriate data types according to the schema before validation
+        # cast the fields to appropriate data types according to the schema
         cst_record = self.__validator.cast_record(record.copy())
 
         # Validate the record against the defined schema
@@ -99,13 +104,14 @@ class QualityCheck:
             sys_errors = True
 
         if sys_errors:
-            log.error(
-                'System error(s) occurred during validation, '
-                'please fix the issues below and retry or contact system administrator.'
-            )
+            log.error('System error(s) occurred during validation, '
+                      'please fix the issues below and retry '
+                      'or contact the system administrator.')
             log.error(self.__validator.sys_erros)
-            sys.exit(1)
+            errors = self.__validator.sys_erros
+            error_tree = None
+        else:
+            errors = self.__validator.errors
+            error_tree = self.__validator.document_error_tree
 
-        errors = self.__validator.errors
-
-        return passed, errors
+        return passed, errors, error_tree

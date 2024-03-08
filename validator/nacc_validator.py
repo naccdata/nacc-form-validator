@@ -4,7 +4,7 @@
 import logging
 
 from datetime import datetime as dt
-from typing import Mapping
+from typing import Dict, List, Mapping, Optional
 
 from cerberus.validator import Validator
 
@@ -25,48 +25,47 @@ class NACCValidator(Validator):
     def __init__(self, schema: Mapping, *args, **kwargs):
         """
         Args:
-            schema (Mapping): Validation schema as dict[field, rule objects]
+            schema: Validation schema as Dict[variable, rule objects]
         """
 
         super().__init__(schema, *args, **kwargs)
 
         # Data type map for each field
-        self.__dtypes: dict[str, str] = self.__populate_data_types()
+        self.__dtypes: Dict[str, str] = self.__populate_data_types()
 
-        # Datastore instance, will be set later for longitudinal projects
-        # Not passing this as an attribute to init method as it causes errors inside cerberus code
+        # Datastore instance
         self.__datastore: Datastore = None
 
-        # Primary key field of the project, will be set later for longitudinal projects
-        # Not passing this as an attribute to init method as it causes errors inside cerberus code
+        # Primary key field of the project
         self.__pk_field: str = None
 
         # Cache of previous records that has been retrieved
-        self.__prev_records: dict[str, Mapping] = {}
+        self.__prev_records: Dict[str, Mapping] = {}
 
         # List of system errors occured by field
-        self.__sys_erros: dict[str, list[str]] = {}
+        self.__sys_erros: Dict[str, List[str]] = {}
 
     @property
-    def dtypes(self) -> dict[str, str]:
-        """ Returns the field->datatype mapping for the fields defined in the validation schema. """
+    def dtypes(self) -> Dict[str, str]:
+        """ Returns the field->datatype mapping
+        for the fields defined in the validation schema. """
         return self.__dtypes
 
     @property
-    def sys_erros(self) -> dict[str, list[str]]:
-        """ Returns the list of system errors occurred during validation (by field).
+    def sys_erros(self) -> Dict[str, List[str]]:
+        """ Returns the list of system errors occurred during validation.
             This is different from the validation erros and can be empty.
             Examples: Datastore not set for temporal checks
                       Error in rule definition file
         """
         return self.__sys_erros
 
-    def __populate_data_types(self) -> dict[str, str] | None:
+    def __populate_data_types(self) -> Dict[str, str] | None:
         """ Convert cerberus data types to python data types.
             Populates a field->data type mapping for each field in the schema
 
         Returns:
-            dict[str, str] : dict of [field, data_type]
+            Dict[str, str] : Dict of [field, data_type]
             None: If no validation schema available
         """
 
@@ -103,37 +102,49 @@ class NACCValidator(Validator):
         else:
             self.__sys_erros[field] = [err_msg]
 
-    def set_datastore(self, datastore: Datastore):
+    @property
+    def datastore(self) -> Optional[Datastore]:
+        """ Returns the datastore object or None """
+        return self.__datastore
+
+    @datastore.setter
+    def datastore(self, datastore: Datastore):
         """ Set the Datastore instance
 
         Args:
-            datastore (Datastore): Datastore instance to retrieve longitudinal data
+            datastore: Datastore instance to retrieve longitudinal data
         """
 
-        self.__datastore: Datastore = datastore
+        self.__datastore = datastore
 
-    def set_primary_key_field(self, pk_field: str):
+    @property
+    def primary_key(self) -> Optional[str]:
+        """ Returns the primary key field name or None """
+        return self.__pk_field
+
+    @primary_key.setter
+    def primary_key(self, pk_field: str):
         """ Set the pk_field attribute
 
         Args:
             pk_field (str): Primary key field of the project
         """
 
-        self.__pk_field: str = pk_field
+        self.__pk_field = pk_field
 
     def reset_record_cache(self):
         """ Clear the previous records cache """
 
         self.__prev_records.clear()
 
-    def cast_record(self, record: dict[str, str]) -> dict[str, object]:
+    def cast_record(self, record: Dict[str, str]) -> Dict[str, object]:
         """ Cast the fields in the record to appropriate data types.
 
         Args:
-            record (dict[str, str]): Input record dict[field, value]
+            record (Dict[str, str]): Input record Dict[field, value]
 
         Returns:
-            dict[str, object]: Casted record dict[field, value]
+            Dict[str, object]: Casted record Dict[field, value]
         """
 
         if not self.__dtypes:
@@ -178,9 +189,11 @@ class NACCValidator(Validator):
             field (str): Variable name
             value (object): Variable value
 
-            Note: Don't remove below docstring, Cerberus uses it to validate the schema definition.
-            The rule's arguments are validated against this schema:
-                {'nullable': False}
+        Note: Don't remove below docstring,
+        Cerberus uses it to validate the schema definition.
+
+        The rule's arguments are validated against this schema:
+            {'nullable': False}
         """
 
         if max_value == SchemaDefs.CRR_DATE:
@@ -191,20 +204,16 @@ class NACCValidator(Validator):
 
             try:
                 if value > curr_date:
-                    # self._error(field, 'cannot be greater than current date')
                     self._error(field, ErrorDefs.CURR_DATE_MAX, str(curr_date))
             except TypeError as error:
-                # self._error(field, str(error))
                 self._error(field, ErrorDefs.INVALID_DATE_MAX, str(error))
         elif max_value == SchemaDefs.CRR_YEAR:
             dtype = self.__dtypes[field]
             curr_date = dt.now()
             try:
                 if value.year > curr_date.year:
-                    # self._error(field, 'cannot be greater than current year')
                     self._error(field, ErrorDefs.CURR_YEAR_MAX, curr_date.year)
             except (TypeError, AttributeError) as error:
-                # self._error(field, str(error))
                 self._error(field, ErrorDefs.INVALID_DATE_MAX, str(error))
         else:
             super()._validate_max(max_value, field, value)
@@ -217,9 +226,11 @@ class NACCValidator(Validator):
             field (str): Variable name
             value (object): Variable value
 
-            Note: Don't remove below docstring, Cerberus uses it to validate the schema definition.
-            The rule's arguments are validated against this schema:
-                {'nullable': False}
+        Note: Don't remove below docstring,
+        Cerberus uses it to validate the schema definition.
+
+        The rule's arguments are validated against this schema:
+            {'nullable': False}
         """
 
         if min_value == SchemaDefs.CRR_DATE:
@@ -230,20 +241,16 @@ class NACCValidator(Validator):
 
             try:
                 if value < curr_date:
-                    # self._error(field, 'cannot be less than current date')
                     self._error(field, ErrorDefs.CURR_DATE_MIN, str(curr_date))
             except TypeError as error:
-                # self._error(field, str(error))
                 self._error(field, ErrorDefs.INVALID_DATE_MIN, str(error))
         elif min_value == SchemaDefs.CRR_YEAR:
             dtype = self.__dtypes[field]
             curr_date = dt.now()
             try:
                 if value.year < curr_date.year:
-                    # self._error(field, 'cannot be less than current year')
                     self._error(field, ErrorDefs.CURR_YEAR_MIN, curr_date.year)
             except (TypeError, AttributeError) as error:
-                # self._error(field, str(error))
                 self._error(field, ErrorDefs.INVALID_DATE_MIN, str(error))
         else:
             super()._validate_min(min_value, field, value)
@@ -257,42 +264,43 @@ class NACCValidator(Validator):
             field (str): Variable name
             value (object): Variable value
 
-            Note: Don't remove below docstring, Cerberus uses it to validate the schema definition.
-            The rule's arguments are validated against this schema:
-                {'type': 'boolean'}
+        Note: Don't remove below docstring,
+        Cerberus uses it to validate the schema definition.
+
+        The rule's arguments are validated against this schema:
+            {'type': 'boolean'}
         """
 
         if not filled and value is not None:
-            # self._error(field, 'must be empty')
             self._error(field, ErrorDefs.FILLED_FALSE)
         elif filled and value is None:
-            # self._error(field, 'cannot be empty')
             self._error(field, ErrorDefs.FILLED_TRUE)
 
-    def _validate_compatibility(self, constraints: list[Mapping], field: str,
+    def _validate_compatibility(self, constraints: List[Mapping], field: str,
                                 value: object):
-        """ Validate the list of compatibility checks specified for a field.
+        """ Validate the List of compatibility checks specified for a field.
 
         Args:
-            constraints (list[Mapping]): List of constraints specified for the variable
+            constraints (List[Mapping]): List of constraints specified for the variable
             field (str): Variable name
             value (object): Variable value
 
-        Note: Don't remove below docstring, Cerberus uses it to validate the schema definition.
-            The rule's arguments are validated against this schema:
-                {'type': 'list',
-                 'schema': {'type': 'dict',
-                            'schema':{'op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR']},
-                                      'if': {'type': 'dict', 'required': True, 'empty': False},
-                                      'then': {'type': 'dict', 'required': True, 'empty': False},
-                                      'else': {'type': 'dict', 'required': False, 'empty': False},
-                                      'errmsg': {'type': 'string', 'required': False, 'empty': False}
-                                      }
-                            }
-                }
+        Note: Don't remove below docstring,
+        Cerberus uses it to validate the schema definition.
+
+        The rule's arguments are validated against this schema:
+            {'type': 'List',
+                'schema': {'type': 'Dict',
+                        'schema':{'op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR']},
+                                    'if': {'type': 'Dict', 'required': True, 'empty': False},
+                                    'then': {'type': 'Dict', 'required': True, 'empty': False},
+                                    'else': {'type': 'Dict', 'required': False, 'empty': False}
+                                    }
+                        }
+            }
         """
 
-        # Evaluate each constraint in the list individually,
+        # Evaluate each constraint in the List individually,
         # validation fails if any of the constraints fails.
         rule_no = 0
         for constraint in constraints:
@@ -308,9 +316,6 @@ class NACCValidator(Validator):
 
             # Extract conditions for else clause, this is optional
             else_conds = constraint.get(SchemaDefs.ELSE, None)
-
-            # Extract error message if specified, this is optional
-            err_msg = constraint.get(SchemaDefs.ERRMSG, None)
 
             valid = False
             # Check whether the dependency conditions satisfied
@@ -332,7 +337,8 @@ class NACCValidator(Validator):
             if valid:
                 subschema = {field: then_conds}
                 error_def = ErrorDefs.COMPATIBILITY_TRUE
-            elif else_conds:  # If dependencies not satisfied validate Else clause, if there's any
+            # If dependencies not satisfied validate Else clause
+            elif else_conds:
                 subschema = {field: else_conds}
                 error_def = ErrorDefs.COMPATIBILITY_FALSE
 
@@ -342,35 +348,33 @@ class NACCValidator(Validator):
                     allow_unknown=True,
                     error_handler=CustomErrorHandler(subschema))
                 if not temp_validator.validate(self.document):
-                    if err_msg:
-                        self._error(field, err_msg)
-                    else:
-                        errors = temp_validator.errors.items()
-                        for error in errors:
-                            #self._error(field,f'{str(error)} for {dependent_conds}')
-                            self._error(field, error_def, rule_no, str(error),
-                                        dependent_conds)
+                    errors = temp_validator.errors.items()
+                    for error in errors:
+                        self._error(field, error_def, rule_no, str(error),
+                                    dependent_conds)
 
-    def _validate_temporalrules(self, temporalrules: dict[Mapping], field: str,
+    def _validate_temporalrules(self, temporalrules: Dict[Mapping], field: str,
                                 value: object):
-        """ Validate the list of longitudial checks specified for a field.
+        """ Validate the List of longitudial checks specified for a field.
 
         Args:
-            temporalrules (dict[Mapping]): Longitudial checks definitions for the variable
-            field (str): Variable name
-            value (object): Variable value
+            temporalrules: Longitudial checks definitions for the variable
+            field: Variable name
+            value: Variable value
 
         Raises:
             ValidationException: If DataHandler or primary key not set
 
-        Note: Don't remove below docstring, Cerberus uses it to validate the schema definition.
+        Note: Don't remove below docstring,
+        Cerberus uses it to validate the schema definition.
+
         The rule's arguments are validated against this schema:
-            {'type': 'dict',
+            {'type': 'Dict',
              'schema': {'orderby': {'type': 'string', 'required': True, 'empty': False},
-                        'constraints': {'type': 'list',
-                                        'schema': {'type': 'dict',
-                                                    'schema': {'previous': {'type': 'dict', 'required': True, 'empty': False},
-                                                                'current': {'type': 'dict', 'required': True, 'empty': False}
+                        'constraints': {'type': 'List',
+                                        'schema': {'type': 'Dict',
+                                                    'schema': {'previous': {'type': 'Dict', 'required': True, 'empty': False},
+                                                                'current': {'type': 'Dict', 'required': True, 'empty': False}
                                                             }
                                                 }
                                         }
@@ -379,23 +383,24 @@ class NACCValidator(Validator):
         """
 
         if not self.__datastore:
-            err_msg = 'Datastore not set for validating temporal rules, use set_datastore() method.'
+            err_msg = ('Datastore not set for validating temporal rules, '
+                       'use set_datastore() method.')
             self.__add_system_error(field, err_msg)
             raise ValidationException(err_msg)
 
-        if not self.__pk_field:
-            err_msg = 'Primary key field not set for validating temporal rules, use set_primary_key_field() method.'
+        if not self.primary_key:
+            err_msg = (
+                'Primary key field not set for validating temporal rules, '
+                'use set_primary_key_field() method.')
             self.__add_system_error(field, err_msg)
             raise ValidationException(err_msg)
 
-        if self.__pk_field not in self.document or not self.document[
-                self.__pk_field]:
-            #err_msg = f'Variable {self.__pk_field} not set in current visit data, cannot retrieve the previous visits.'
-            # self._error(field, err_msg)
-            self._error(field, ErrorDefs.NO_PRIMARY_KEY, self.__pk_field)
+        if self.primary_key not in self.document or not self.document[
+                self.primary_key]:
+            self._error(field, ErrorDefs.NO_PRIMARY_KEY, self.primary_key)
             return
 
-        record_id = self.document[self.__pk_field]
+        record_id = self.document[self.primary_key]
 
         # If the previous record was already retrieved, use it
         if record_id in self.__prev_records:
@@ -403,19 +408,15 @@ class NACCValidator(Validator):
         else:
             orderby = temporalrules[SchemaDefs.ORDERBY]
             prev_ins = self.__datastore.get_previous_instance(
-                orderby, self.__pk_field, self.document)
+                orderby, self.primary_key, self.document)
 
             if prev_ins:
                 prev_ins = self.cast_record(prev_ins)
 
             self.__prev_records[record_id] = prev_ins
 
-        # TODO - check whether we should skip validation and pass the record if there's no previous visit
+        # TODO - should we skip validation and pass the record if there's no previous visit?
         if prev_ins is None:
-            """ self._error(
-                field,
-                'Failed to retrieve the previous visit, cannot proceed with validation.'
-            ) """
             self._error(field, ErrorDefs.NO_PREV_VISIT)
             return
 
@@ -427,7 +428,6 @@ class NACCValidator(Validator):
             prev_schema = {field: prev_conds}
             curr_conds = constraint[SchemaDefs.CURRENT]
             curr_schema = {field: curr_conds}
-            # err_msg = constraint.get(SchemaDefs.ERRMSG, None)
 
             prev_validator = NACCValidator(
                 prev_schema,
@@ -441,25 +441,23 @@ class NACCValidator(Validator):
                 if not temp_validator.validate({field: value}):
                     errors = temp_validator.errors.items()
                     for error in errors:
-                        """ self._error(
-                            field,
-                            f'{str(error)} in current visit for {prev_conds} in previous visit'
-                        ) """
                         self._error(field, ErrorDefs.TEMPORAL, rule_no,
                                     str(error), prev_conds)
 
-    def _validate_logic(self, logic: dict[Mapping], field: str, value: object):
+    def _validate_logic(self, logic: Dict[Mapping], field: str, value: object):
         """ Validate a mathematical formula/expression.
 
         Args:
-            logic (dict[Mapping]): Validation logic specified in the rule definition
+            logic (Dict[Mapping]): Validation logic specified in the rule definition
             field (str): Variable name
             value (object): Variable value
 
-        Note: Don't remove below docstring, Cerberus uses it to validate the schema definition.
+        Note: Don't remove below docstring,
+        Cerberus uses it to validate the schema definition.
+
         The rule's arguments are validated against this schema:
-            {'type': 'dict',
-             'schema': {'formula': {'type': 'dict', 'required': True, 'empty': False},
+            {'type': 'Dict',
+             'schema': {'formula': {'type': 'Dict', 'required': True, 'empty': False},
                         'errmsg': {'type': 'string', 'required': False, 'empty': False}
                        }
             }
@@ -469,10 +467,12 @@ class NACCValidator(Validator):
         formula = logic[SchemaDefs.FORMULA]
         err_msg = logic.get(SchemaDefs.ERRMSG, None)
         if not err_msg:
-            err_msg = f'Formula {formula} not satisfied'
-        if not jsonLogic(formula, self.document):
-            # self._error(field, err_msg)
-            self._error(field, ErrorDefs.FORMULA, err_msg)
+            err_msg = 'formula not satisfied'
+        try:
+            if not jsonLogic(formula, self.document):
+                self._error(field, ErrorDefs.FORMULA, err_msg)
+        except ValueError as error:
+            self._error(field, ErrorDefs.FORMULA, str(error))
 
     def _validate_function(self, function: str, field: str, value: object):
         """ Validate using a custom defined function
@@ -482,9 +482,11 @@ class NACCValidator(Validator):
             field (str): Variable name
             value (object): Variable value
 
-            Note: Don't remove below docstring, Cerberus uses it to validate the schema definition.
-            The rule's arguments are validated against this schema:
-                {'type': 'string', 'empty': False}
+        Note: Don't remove below docstring,
+        Cerberus uses it to validate the schema definition.
+
+        The rule's arguments are validated against this schema:
+            {'type': 'string', 'empty': False}
         """
 
         func = getattr(self, function, None)
@@ -508,9 +510,6 @@ class NACCValidator(Validator):
             nogds = self.document['nogds']
 
         if nogds == 1 and value != 88:
-            """ self._error(
-                field,
-                'If GDS not attempted (nogds=1), total GDS score should be 88') """
             self._error(field, ErrorDefs.CHECK_GDS_1)
             return
 
@@ -528,18 +527,10 @@ class NACCValidator(Validator):
                 gds += self.document[key]
 
         if nogds == 1 and num_valid >= 12:
-            # self._error(
-            #     field,
-            #     'If GDS not attempted (nogds=1), there cannot be >=12 questions with valid scores'
-            # )
             self._error(field, ErrorDefs.CHECK_GDS_2)
             return
 
         if nogds == 0 and num_valid < 12:
-            """ self._error(
-                field,
-                'Need >=12 questions with valid scores to compute the total GDS score'
-            ) """
             self._error(field, ErrorDefs.CHECK_GDS_3)
             return
 
@@ -549,8 +540,4 @@ class NACCValidator(Validator):
             error_def = ErrorDefs.CHECK_GDS_5
 
         if gds != value:
-            """ self._error(
-                field,
-                f'Incorrect total GDS score, current value {value}, expected value {gds}'
-            ) """
             self._error(field, error_def, value, gds)
