@@ -276,6 +276,7 @@ class NACCValidator(Validator):
         elif filled and value is None:
             self._error(field, ErrorDefs.FILLED_TRUE)
 
+    # pylint: disable=(too-many-locals, unused-argument)
     def _validate_compatibility(self, constraints: List[Mapping], field: str,
                                 value: object):
         """ Validate the List of compatibility checks specified for a field.
@@ -353,6 +354,7 @@ class NACCValidator(Validator):
                         self._error(field, error_def, rule_no, str(error),
                                     dependent_conds)
 
+    # pylint: disable=(too-many-locals)
     def _validate_temporalrules(self, temporalrules: Dict[str, Mapping],
                                 field: str, value: object):
         """ Validate the List of longitudial checks specified for a field.
@@ -468,7 +470,7 @@ class NACCValidator(Validator):
         formula = logic[SchemaDefs.FORMULA]
         err_msg = logic.get(SchemaDefs.ERRMSG, None)
         if not err_msg:
-            err_msg = 'formula not satisfied'
+            err_msg = f'value {value} does not satisfy the specified formula'
         try:
             if not jsonLogic(formula, self.document):
                 self._error(field, ErrorDefs.FORMULA, err_msg)

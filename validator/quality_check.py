@@ -1,8 +1,9 @@
 """ Module for performing data quality checks """
 
 import logging
-from typing import Any, Dict, List, Mapping, Tuple
+from typing import Dict, List, Mapping, Tuple
 
+from cerberus.errors import DocumentErrorTree
 from cerberus.schema import SchemaError
 from validator.datastore import Datastore
 from validator.nacc_validator import (CustomErrorHandler, NACCValidator,
@@ -79,7 +80,7 @@ class QualityCheck:
 
     def validate_record(
         self, record: Dict[str, str]
-    ) -> Tuple[bool, Dict[str, List[str]], Dict[str, Any]]:
+    ) -> Tuple[bool, Dict[str, List[str]], DocumentErrorTree]:
         """ Evaluate the record against the defined rules using cerberus.
 
         Args:
@@ -88,7 +89,8 @@ class QualityCheck:
         Returns:
             bool: True if the record satisfied all rules
             Dict[str, List[str]: List of formatted error messages by variable
-            Dict[str, Any]: Dict of ValidationError objects by variable
+            DocumentErrorTree: A dict like object of ValidationError instances
+            (check https://docs.python-cerberus.org/errors.html)
         """
 
         # All the fields in the input record represented as string values,
