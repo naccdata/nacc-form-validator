@@ -315,7 +315,7 @@ class NACCValidator(Validator):
             operator = constraint.get(SchemaDefs.OP, 'AND')
 
             # Extract conditions for if clause
-            dependent_conds = constraint[SchemaDefs.IF]
+            if_conds = constraint[SchemaDefs.IF]
 
             # Extract conditions for then clause
             then_conds = constraint[SchemaDefs.THEN]
@@ -323,9 +323,9 @@ class NACCValidator(Validator):
             # Extract conditions for else clause, this is optional
             else_conds = constraint.get(SchemaDefs.ELSE, None)
 
-            valid = False
+            valid = False if (operator == 'OR') else True
             # Check whether the dependency conditions satisfied
-            for dep_field, conds in dependent_conds.items():
+            for dep_field, conds in if_conds.items():
                 subschema = {dep_field: conds}
                 temp_validator = NACCValidator(
                     subschema,
@@ -357,7 +357,7 @@ class NACCValidator(Validator):
                     errors = temp_validator.errors.items()
                     for error in errors:
                         self._error(field, error_def, rule_no, str(error),
-                                    dependent_conds)
+                                    if_conds)
 
     # pylint: disable=(too-many-locals)
     def _validate_temporalrules(self, temporalrules: Dict[str, Mapping],
