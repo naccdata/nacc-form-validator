@@ -51,15 +51,6 @@ class NACCValidator(Validator):
         for the fields defined in the validation schema. """
         return self.__dtypes
 
-    @property
-    def sys_erros(self) -> Dict[str, List[str]]:
-        """ Returns the list of system errors occurred during validation.
-            This is different from the validation erros and can be empty.
-            Examples: Datastore not set for temporal checks
-                      Error in rule definition file
-        """
-        return self.__sys_erros
-
     def __populate_data_types(self) -> Dict[str, str] | None:
         """ Convert cerberus data types to python data types.
             Populates a field->data type mapping for each field in the schema
@@ -90,18 +81,6 @@ class NACCValidator(Validator):
 
         return data_types
 
-    def __add_system_error(self, field: str, err_msg: str):
-        """ Add system error message
-
-        Args:
-            field (str): Variable name
-            err_msg (str): Error message
-        """
-        if field in self.__sys_erros:
-            self.__sys_erros[field].append(err_msg)
-        else:
-            self.__sys_erros[field] = [err_msg]
-
     @property
     def datastore(self) -> Optional[Datastore]:
         """ Returns the datastore object or None """
@@ -131,6 +110,32 @@ class NACCValidator(Validator):
         """
 
         self.__pk_field = pk_field
+
+    @property
+    def sys_erros(self) -> Dict[str, List[str]]:
+        """ Returns the list of system errors occurred during validation.
+            This is different from the validation erros and can be empty.
+            Examples: Datastore not set for temporal checks
+                      Error in rule definition file
+        """
+        return self.__sys_erros
+
+    def __add_system_error(self, field: str, err_msg: str):
+        """ Add system error message
+
+        Args:
+            field (str): Variable name
+            err_msg (str): Error message
+        """
+        if field in self.__sys_erros:
+            self.__sys_erros[field].append(err_msg)
+        else:
+            self.__sys_erros[field] = [err_msg]
+
+    def reset_sys_erros(self):
+        """ Clear the system erros """
+
+        self.__sys_erros.clear()
 
     def reset_record_cache(self):
         """ Clear the previous records cache """

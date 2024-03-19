@@ -1,6 +1,5 @@
 """ Module for performing data quality checks """
 
-import logging
 from typing import Dict, List, Mapping, Tuple
 
 from cerberus.errors import DocumentErrorTree
@@ -8,8 +7,6 @@ from cerberus.schema import SchemaError
 from validator.datastore import Datastore
 from validator.nacc_validator import (CustomErrorHandler, NACCValidator,
                                       ValidationException)
-
-log = logging.getLogger(__name__)
 
 
 class QualityCheckException(Exception):
@@ -36,12 +33,21 @@ class QualityCheck:
         """
 
         self.__pk_field: str = pk_field
-        self.__strict = strict
+        self.__strict: bool = strict
         self.__schema: Dict[str, Mapping[str, object]] = schema
 
         # Validator object for rule evaluation
         self.__validator: NACCValidator = None
         self.__init_validator(datastore)
+
+    @property
+    def pk_field(self) -> str:
+        """ primary key field 
+
+        Returns:
+            str: primary key field of validated data
+        """
+        return self.__pk_field
 
     @property
     def schema(self) -> Dict[str, Mapping[str, object]]:
@@ -69,18 +75,18 @@ class QualityCheck:
             QualityCheckException: If there is an schema error
         """
         try:
-            self.__validator = NACCValidator(self.__schema,
+            self.__validator = NACCValidator(self.schema,
                                              allow_unknown=not self.__strict,
                                              error_handler=CustomErrorHandler(
-                                                 self.__schema))
-            self.__validator.primary_key = self.__pk_field
-            self.__validator.datastore = datastore
+                                                 self.schema))
+            self.validator.primary_key = self.pk_field
+            self.validator.datastore = datastore
         except SchemaError as error:
             raise QualityCheckException(f'Schema Error - {error}') from error
 
     def validate_record(
         self, record: Dict[str, str]
-    ) -> Tuple[bool, Dict[str, List[str]], DocumentErrorTree]:
+    ) -> Tuple[bool, bool, Dict[str, List[str]], DocumentErrorTree]:
         """ Evaluate the record against the defined rules using cerberus.
 
         Args:
@@ -88,6 +94,7 @@ class QualityCheck:
 
         Returns:
             bool: True if the record satisfied all rules
+            bool: True if system error occurred
             Dict[str, List[str]: List of formatted error messages by variable
             DocumentErrorTree: A dict like object of ValidationError instances
             (check https://docs.python-cerberus.org/errors.html)
@@ -95,25 +102,23 @@ class QualityCheck:
 
         # All the fields in the input record represented as string values,
         # cast the fields to appropriate data types according to the schema
-        cst_record = self.__validator.cast_record(record.copy())
+        cst_record = self.validator.cast_record(record.copy())
 
         # Validate the record against the defined schema
-        sys_errors = False
+        sys_failure = False
         passed = False
         try:
-            passed = self.__validator.validate(cst_record, normalize=False)
+            self.validator.reset_sys_erros()
+            self.validator.reset_record_cache()
+            passed = self.validator.validate(cst_record, normalize=False)
         except ValidationException:
-            sys_errors = True
+            sys_failure = True
 
-        if sys_errors:
-            log.error('System error(s) occurred during validation, '
-                      'please fix the issues below and retry '
-                      'or contact the system administrator.')
-            log.error(self.__validator.sys_erros)
-            errors = self.__validator.sys_erros
+        if sys_failure:
+            errors = self.validator.sys_erros
             error_tree = None
         else:
-            errors = self.__validator.errors
-            error_tree = self.__validator.document_error_tree
+            errors = self.validator.errors
+            error_tree = self.validator.document_error_tree
 
-        return passed, errors, error_tree
+        return passed, sys_failure, errors, error_tree
