@@ -81,7 +81,7 @@ class QualityCheck:
                                                  self.schema))
             self.validator.primary_key = self.pk_field
             self.validator.datastore = datastore
-        except SchemaError as error:
+        except (SchemaError, RuntimeError) as error:
             raise QualityCheckException(f'Schema Error - {error}') from error
 
     def validate_record(
