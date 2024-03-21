@@ -142,6 +142,15 @@ class NACCValidator(Validator):
 
         self.__prev_records.clear()
 
+    def get_error_messages(self) -> Dict[int, str]:
+        """ Returns the list of error messages by error code.
+        Check ~cerberus.errors.BasicErrorHandler for more info
+
+        Returns:
+            Dict[int, str]: list of error messages
+        """
+        return self.error_handler.messages
+
     def cast_record(self, record: Dict[str, str]) -> Dict[str, object]:
         """ Cast the fields in the record to appropriate data types.
 
