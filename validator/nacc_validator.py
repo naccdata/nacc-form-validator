@@ -304,14 +304,18 @@ class NACCValidator(Validator):
         Cerberus uses it to validate the schema definition.
 
         The rule's arguments are validated against this schema:
-            {'type': 'list',
-                'schema': {'type': 'dict',
-                        'schema':{'op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR']},
-                                    'if': {'type': 'dict', 'required': True, 'empty': False},
-                                    'then': {'type': 'dict', 'required': True, 'empty': False},
-                                    'else': {'type': 'dict', 'required': False, 'empty': False}
-                                    }
-                        }
+            {
+                'type': 'list',
+                'schema': {
+                    'type': 'dict',
+                    'schema':{
+                        'index': {'type': 'int', 'required': False},
+                        'op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR']},
+                        'if': {'type': 'dict', 'required': True, 'empty': False},
+                        'then': {'type': 'dict', 'required': True, 'empty': False},
+                        'else': {'type': 'dict', 'required': False, 'empty': False}
+                    }
+                }
             }
         """
 
@@ -319,9 +323,11 @@ class NACCValidator(Validator):
         # validation fails if any of the constraints fails.
         rule_no = 0
         for constraint in constraints:
-            rule_no += 1
             # Extract operator if specified, default is AND
             operator = constraint.get(SchemaDefs.OP, 'AND')
+
+            # Extract constraint index if specified, or increment by 1
+            rule_no = constraint.get(SchemaDefs.INDEX, rule_no + 1)
 
             # Extract conditions for if clause
             if_conds = constraint[SchemaDefs.IF]
@@ -385,16 +391,22 @@ class NACCValidator(Validator):
         Cerberus uses it to validate the schema definition.
 
         The rule's arguments are validated against this schema:
-            {'type': 'dict',
-             'schema': {'orderby': {'type': 'string', 'required': True, 'empty': False},
-                        'constraints': {'type': 'list',
-                                        'schema': {'type': 'dict',
-                                                    'schema': {'previous': {'type': 'dict', 'required': True, 'empty': False},
-                                                                'current': {'type': 'dict', 'required': True, 'empty': False}
-                                                            }
-                                                }
-                                        }
+            {
+                'type': 'dict',
+                'schema': {
+                    'orderby': {'type': 'string', 'required': True, 'empty': False},
+                    'constraints': {
+                        'type': 'list',
+                        'schema': {
+                            'type': 'dict',
+                            'schema': {
+                                'index': {'type': 'int', 'required': False},
+                                'previous': {'type': 'dict', 'required': True, 'empty': False},
+                                'current': {'type': 'dict', 'required': True, 'empty': False}
+                            }
                         }
+                    }
+                }
             }
         """
 
@@ -439,7 +451,7 @@ class NACCValidator(Validator):
         constraints = temporalrules[SchemaDefs.CONSTRAINTS]
         rule_no = 0
         for constraint in constraints:
-            rule_no += 1
+            rule_no = constraint.get(SchemaDefs.INDEX, rule_no + 1)
             prev_conds = constraint[SchemaDefs.PREVIOUS]
             prev_schema = {field: prev_conds}
             curr_conds = constraint[SchemaDefs.CURRENT]
