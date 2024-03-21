@@ -309,7 +309,7 @@ class NACCValidator(Validator):
                 'schema': {
                     'type': 'dict',
                     'schema':{
-                        'index': {'type': 'int', 'required': False},
+                        'index': {'type': 'integer', 'required': False},
                         'op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR']},
                         'if': {'type': 'dict', 'required': True, 'empty': False},
                         'then': {'type': 'dict', 'required': True, 'empty': False},
@@ -400,7 +400,7 @@ class NACCValidator(Validator):
                         'schema': {
                             'type': 'dict',
                             'schema': {
-                                'index': {'type': 'int', 'required': False},
+                                'index': {'type': 'integer', 'required': False},
                                 'previous': {'type': 'dict', 'required': True, 'empty': False},
                                 'current': {'type': 'dict', 'required': True, 'empty': False}
                             }
