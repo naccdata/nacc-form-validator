@@ -10,7 +10,7 @@ from cerberus.errors import (BasicErrorHandler, ErrorDefinition, ErrorTree,
 class ErrorDefs:
     """ Class to define custom errors. """
     # IMPORTANT - When adding a new error DON'T change the existing codes
-    # Error codes are used to map b/w cerberus erros and NACC error codes in QC gear
+    # Error codes are used to map b/w cerberus errors and NACC error codes in QC gear
     # Cerberus uses bit 5 and bit 7 to mark specific error types
     # Check https://docs.python-cerberus.org/customize.html for more info
     CURR_DATE_MAX = ErrorDefinition(0x1000, 'max')
@@ -56,7 +56,7 @@ class CustomErrorHandler(BasicErrorHandler):
         # Cerberus uses bit 5 and bit 7 to mark specific error types
         # Check https://docs.python-cerberus.org/customize.html for more info
         # Error messages are synced with ErrorDefs using the error code
-        # Error codes are also used to map b/w cerberus erros and NACC error codes in QC gear
+        # Error codes are also used to map b/w cerberus errors and NACC error codes in QC gear
         custom_errors = {
             0x1000: "cannot be greater than current date {0}",
             0x1001: "cannot be greater than current year {0}",

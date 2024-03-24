@@ -43,7 +43,7 @@ class NACCValidator(Validator):
         self.__prev_records: Dict[str, Mapping] = {}
 
         # List of system errors occured by field
-        self.__sys_erros: Dict[str, List[str]] = {}
+        self.__sys_errors: Dict[str, List[str]] = {}
 
     @property
     def dtypes(self) -> Dict[str, str]:
@@ -112,13 +112,13 @@ class NACCValidator(Validator):
         self.__pk_field = pk_field
 
     @property
-    def sys_erros(self) -> Dict[str, List[str]]:
+    def sys_errors(self) -> Dict[str, List[str]]:
         """ Returns the list of system errors occurred during validation.
-            This is different from the validation erros and can be empty.
+            This is different from the validation errors and can be empty.
             Examples: Datastore not set for temporal checks
                       Error in rule definition file
         """
-        return self.__sys_erros
+        return self.__sys_errors
 
     def __add_system_error(self, field: str, err_msg: str):
         """ Add system error message
@@ -127,15 +127,15 @@ class NACCValidator(Validator):
             field (str): Variable name
             err_msg (str): Error message
         """
-        if field in self.__sys_erros:
-            self.__sys_erros[field].append(err_msg)
+        if field in self.__sys_errors:
+            self.__sys_errors[field].append(err_msg)
         else:
-            self.__sys_erros[field] = [err_msg]
+            self.__sys_errors[field] = [err_msg]
 
-    def reset_sys_erros(self):
-        """ Clear the system erros """
+    def reset_sys_errors(self):
+        """ Clear the system errors """
 
-        self.__sys_erros.clear()
+        self.__sys_errors.clear()
 
     def reset_record_cache(self):
         """ Clear the previous records cache """
@@ -385,7 +385,7 @@ class NACCValidator(Validator):
             value: Variable value
 
         Raises:
-            ValidationException: If DataHandler or primary key not set
+            ValidationException: If Datastore or primary key not set
 
         Note: Don't remove below docstring,
         Cerberus uses it to validate the schema definition.

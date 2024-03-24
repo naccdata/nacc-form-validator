@@ -108,14 +108,14 @@ class QualityCheck:
         sys_failure = False
         passed = False
         try:
-            self.validator.reset_sys_erros()
+            self.validator.reset_sys_errors()
             self.validator.reset_record_cache()
             passed = self.validator.validate(cst_record, normalize=False)
         except ValidationException:
             sys_failure = True
 
         if sys_failure:
-            errors = self.validator.sys_erros
+            errors = self.validator.sys_errors
             error_tree = None
         else:
             errors = self.validator.errors
