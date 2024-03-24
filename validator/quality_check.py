@@ -1,14 +1,12 @@
 """ Module for performing data quality checks """
 
-import logging
-import sys
-from typing import Mapping, Tuple
+from typing import Dict, List, Mapping, Tuple
 
+from cerberus.errors import DocumentErrorTree
 from cerberus.schema import SchemaError
 from validator.datastore import Datastore
-from validator.nacc_validator import CustomErrorHandler, NACCValidator, ValidationException
-
-log = logging.getLogger(__name__)
+from validator.nacc_validator import (CustomErrorHandler, NACCValidator,
+                                      ValidationException)
 
 
 class QualityCheckException(Exception):
@@ -16,7 +14,8 @@ class QualityCheckException(Exception):
 
 
 class QualityCheck:
-    """ Class to initiate validator object with the provided schema and run the data quality checks """
+    """ Class to initiate validator object with the provided schema
+    and run the data quality checks """
 
     def __init__(self,
                  pk_field: str,
@@ -26,27 +25,37 @@ class QualityCheck:
         """
 
         Args:
-            pk_field (str): Primary key field of the project
-            schema (Mapping): Validation rules schema as dict[field, rule objects].
-            strict (bool, optional): Validation mode. Defaults to True.
-                                     If False, unknown forms/fields are skipped from validation
-            datastore (Datastore, optional): Datastore instance to retrieve longitudinal data
+            pk_field: Primary key field of the project
+            schema: Validation rules schema as Dict[field, rule objects].
+            strict (optional): Validation mode, defaults to True.
+                        If False, unknown forms/fields are skipped from validation.
+            datastore (optional): Datastore instance to retrieve longitudinal data.
         """
 
         self.__pk_field: str = pk_field
-        self.__strict = strict
-        self.__schema: dict[str, Mapping[str, object]] = schema
+        self.__strict: bool = strict
+        self.__schema: Dict[str, Mapping[str, object]] = schema
 
         # Validator object for rule evaluation
         self.__validator: NACCValidator = None
         self.__init_validator(datastore)
 
     @property
-    def schema(self) -> dict[str, Mapping[str, object]]:
+    def pk_field(self) -> str:
+        """ primary key field 
+
+        Returns:
+            str: primary key field of validated data
+        """
+        return self.__pk_field
+
+    @property
+    def schema(self) -> Dict[str, Mapping[str, object]]:
         """ The schema property
 
         Returns:
-            dict[str, Mapping[str, object]]: Schema of validation rules defined in the project
+            Dict[str, Mapping[str, object]]:
+            Schema of validation rules defined in the project
         """
         return self.__schema
 
@@ -66,46 +75,50 @@ class QualityCheck:
             QualityCheckException: If there is an schema error
         """
         try:
-            self.__validator = NACCValidator(self.__schema,
+            self.__validator = NACCValidator(self.schema,
                                              allow_unknown=not self.__strict,
                                              error_handler=CustomErrorHandler(
-                                                 self.__schema))
-            self.__validator.set_primary_key_field(self.__pk_field)
-            self.__validator.set_datastore(datastore)
-        except SchemaError as error:
+                                                 self.schema))
+            self.validator.primary_key = self.pk_field
+            self.validator.datastore = datastore
+        except (SchemaError, RuntimeError) as error:
             raise QualityCheckException(f'Schema Error - {error}') from error
 
     def validate_record(
-            self, record: dict[str, str]) -> Tuple[bool, dict[str, list[str]]]:
+        self, record: Dict[str, str]
+    ) -> Tuple[bool, bool, Dict[str, List[str]], DocumentErrorTree]:
         """ Evaluate the record against the defined rules using cerberus.
 
         Args:
-            record (dict[str, str]): Record to be validated, dict[field, value]
+            record (Dict[str, str]): Record to be validated, Dict[field, value]
 
         Returns:
             bool: True if the record satisfied all rules
-            dict[str, list[str]: List of validation errors by variable (if any)
+            bool: True if system error occurred
+            Dict[str, List[str]: List of formatted error messages by variable
+            DocumentErrorTree: A dict like object of ValidationError instances
+            (check https://docs.python-cerberus.org/errors.html)
         """
 
         # All the fields in the input record represented as string values,
-        # cast the fields to appropriate data types according to the schema before validation
-        cst_record = self.__validator.cast_record(record.copy())
+        # cast the fields to appropriate data types according to the schema
+        cst_record = self.validator.cast_record(record.copy())
 
         # Validate the record against the defined schema
-        sys_errors = False
+        sys_failure = False
         passed = False
         try:
-            passed = self.__validator.validate(cst_record, normalize=False)
+            self.validator.reset_sys_errors()
+            self.validator.reset_record_cache()
+            passed = self.validator.validate(cst_record, normalize=False)
         except ValidationException:
-            sys_errors = True
+            sys_failure = True
 
-        if sys_errors:
-            log.error(
-                'System error(s) occurred during validation, ' +
-                'please fix the issues below and retry or contact system administrator.')
-            log.error(self.__validator.sys_erros)
-            sys.exit(1)
+        if sys_failure:
+            errors = self.validator.sys_errors
+            error_tree = None
+        else:
+            errors = self.validator.errors
+            error_tree = self.validator.document_error_tree
 
-        errors = self.__validator.errors
-
-        return passed, errors
+        return passed, sys_failure, errors, error_tree
