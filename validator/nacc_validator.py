@@ -6,6 +6,7 @@ import logging
 from datetime import datetime as dt
 from typing import Dict, List, Mapping, Optional
 
+from dateutil import parser
 from cerberus.validator import Validator
 
 from validator.datastore import Datastore
@@ -78,6 +79,14 @@ class NACCValidator(Validator):
                     data_types[key] = 'date'
                 elif configs[SchemaDefs.TYPE] == 'datetime':
                     data_types[key] = 'datetime'
+                else:
+                    log.warning('Unsupported datatype %s for field %s',
+                                configs[SchemaDefs.TYPE], key)
+                    data_types[key] = 'str'
+            else:
+                log.warning('datatype not set for field %s, assuming string',
+                            key)
+                data_types[key] = 'str'
 
         return data_types
 
@@ -184,10 +193,10 @@ class NACCValidator(Validator):
                     elif self.__dtypes[key] == 'bool':
                         record[key] = bool(value)
                     elif self.__dtypes[key] == 'date':
-                        record[key] = dt.strptime(value, '%Y-%m-%d').date()
+                        record[key] = parser.parse(value).date()
                     elif self.__dtypes[key] == 'datetime':
-                        record[key] = dt.strptime(value, '%Y-%m-%d %H:%M:%S')
-            except (ValueError, TypeError) as error:
+                        record[key] = parser.parse(value)
+            except (ValueError, TypeError, parser.ParserError) as error:
                 log.error(
                     'Failed to cast variable %s, value %s to type %s - %s',
                     key, value, self.__dtypes[key], error)
@@ -210,22 +219,31 @@ class NACCValidator(Validator):
             {'nullable': False}
         """
 
-        if max_value == SchemaDefs.CRR_DATE:
-            dtype = self.__dtypes[field]
-            curr_date = dt.now()
-            if dtype == 'date':
-                curr_date = curr_date.date()
-
+        dtype = self.__dtypes[field]
+        if max_value in (SchemaDefs.CRR_DATE, SchemaDefs.CRR_YEAR):
             try:
-                if value > curr_date:
-                    self._error(field, ErrorDefs.CURR_DATE_MAX, str(curr_date))
-            except TypeError as error:
+                if dtype == 'str':
+                    input_date = parser.parse(value).date()
+                elif dtype == 'date':
+                    input_date = value
+                elif dtype == 'datetime':
+                    input_date = value.date()
+                elif dtype == 'int' and max_value == SchemaDefs.CRR_YEAR:
+                    input_date = dt(value, 1, 1).date()
+                else:
+                    message = f'{max_value} not supported for {dtype} type'
+                    self._error(field, ErrorDefs.INVALID_DATE_MAX, message)
+                    return
+            except (ValueError, TypeError, parser.ParserError) as error:
                 self._error(field, ErrorDefs.INVALID_DATE_MAX, str(error))
-        elif max_value == SchemaDefs.CRR_YEAR:
-            dtype = self.__dtypes[field]
-            curr_date = dt.now()
+                return
+
+            curr_date = dt.now().date()
             try:
-                if value.year > curr_date.year:
+                if max_value == SchemaDefs.CRR_DATE and input_date > curr_date:
+                    self._error(field, ErrorDefs.CURR_DATE_MAX, str(curr_date))
+                elif (max_value == SchemaDefs.CRR_YEAR
+                      and input_date.year > curr_date.year):
                     self._error(field, ErrorDefs.CURR_YEAR_MAX, curr_date.year)
             except (TypeError, AttributeError) as error:
                 self._error(field, ErrorDefs.INVALID_DATE_MAX, str(error))
@@ -247,22 +265,31 @@ class NACCValidator(Validator):
             {'nullable': False}
         """
 
-        if min_value == SchemaDefs.CRR_DATE:
-            dtype = self.__dtypes[field]
-            curr_date = dt.now()
-            if dtype == 'date':
-                curr_date = curr_date.date()
-
+        dtype = self.__dtypes[field]
+        if min_value in (SchemaDefs.CRR_DATE, SchemaDefs.CRR_YEAR):
             try:
-                if value < curr_date:
-                    self._error(field, ErrorDefs.CURR_DATE_MIN, str(curr_date))
-            except TypeError as error:
+                if dtype == 'str':
+                    input_date = parser.parse(value).date()
+                elif dtype == 'date':
+                    input_date = value
+                elif dtype == 'datetime':
+                    input_date = value.date()
+                elif dtype == 'int' and min_value == SchemaDefs.CRR_YEAR:
+                    input_date = dt(value, 1, 1).date()
+                else:
+                    message = f'{min_value} not supported for {dtype} type'
+                    self._error(field, ErrorDefs.INVALID_DATE_MIN, message)
+                    return
+            except (ValueError, TypeError, parser.ParserError) as error:
                 self._error(field, ErrorDefs.INVALID_DATE_MIN, str(error))
-        elif min_value == SchemaDefs.CRR_YEAR:
-            dtype = self.__dtypes[field]
-            curr_date = dt.now()
+                return
+
+            curr_date = dt.now().date()
             try:
-                if value.year < curr_date.year:
+                if min_value == SchemaDefs.CRR_DATE and input_date < curr_date:
+                    self._error(field, ErrorDefs.CURR_DATE_MIN, str(curr_date))
+                elif (min_value == SchemaDefs.CRR_YEAR
+                      and input_date.year < curr_date.year):
                     self._error(field, ErrorDefs.CURR_YEAR_MIN, curr_date.year)
             except (TypeError, AttributeError) as error:
                 self._error(field, ErrorDefs.INVALID_DATE_MIN, str(error))
@@ -338,7 +365,7 @@ class NACCValidator(Validator):
             # Extract conditions for else clause, this is optional
             else_conds = constraint.get(SchemaDefs.ELSE, None)
 
-            valid = False if (operator == 'OR') else True
+            valid = (operator != 'OR')
             # Check whether the dependency conditions satisfied
             for dep_field, conds in if_conds.items():
                 subschema = {dep_field: conds}
@@ -347,9 +374,11 @@ class NACCValidator(Validator):
                     allow_unknown=True,
                     error_handler=CustomErrorHandler(subschema))
                 if operator == 'OR':
-                    valid = valid or temp_validator.validate(self.document)
+                    valid = valid or temp_validator.validate(self.document,
+                                                             normalize=False)
                 # Evaluate as logical AND operation
-                elif not temp_validator.validate(self.document):
+                elif not temp_validator.validate(self.document,
+                                                 normalize=False):
                     valid = False
                     break
 
@@ -368,7 +397,7 @@ class NACCValidator(Validator):
                     subschema,
                     allow_unknown=True,
                     error_handler=CustomErrorHandler(subschema))
-                if not temp_validator.validate(self.document):
+                if not temp_validator.validate(self.document, normalize=False):
                     errors = temp_validator.errors.items()
                     for error in errors:
                         self._error(field, error_def, rule_no, str(error),
@@ -461,12 +490,13 @@ class NACCValidator(Validator):
                 prev_schema,
                 allow_unknown=True,
                 error_handler=CustomErrorHandler(prev_schema))
-            if prev_validator.validate(prev_ins):
+            if prev_validator.validate(prev_ins, normalize=False):
                 temp_validator = NACCValidator(
                     curr_schema,
                     allow_unknown=True,
                     error_handler=CustomErrorHandler(curr_schema))
-                if not temp_validator.validate({field: value}):
+                if not temp_validator.validate({field: value},
+                                               normalize=False):
                     errors = temp_validator.errors.items()
                     for error in errors:
                         self._error(field, ErrorDefs.TEMPORAL, rule_no,
