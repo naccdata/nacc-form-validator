@@ -9,6 +9,7 @@ from typing import Dict, List, Mapping, Optional
 from dateutil import parser
 from cerberus.validator import Validator
 
+from validator import utils
 from validator.datastore import Datastore
 from validator.errors import CustomErrorHandler, ErrorDefs, SchemaDefs
 from validator.json_logic import jsonLogic
@@ -82,11 +83,6 @@ class NACCValidator(Validator):
                 else:
                     log.warning('Unsupported datatype %s for field %s',
                                 configs[SchemaDefs.TYPE], key)
-                    data_types[key] = 'str'
-            else:
-                log.warning('datatype not set for field %s, assuming string',
-                            key)
-                data_types[key] = 'str'
 
         return data_types
 
@@ -170,7 +166,7 @@ class NACCValidator(Validator):
             Dict[str, object]: Casted record Dict[field, value]
         """
 
-        if not self.__dtypes:
+        if not self.dtypes:
             return record
 
         for key, value in record.items():
@@ -184,25 +180,47 @@ class NACCValidator(Validator):
             if value is None:
                 continue
 
-            try:
-                if key in self.__dtypes:
-                    if self.__dtypes[key] == 'int':
+            if key in self.dtypes:
+                try:
+                    if self.dtypes[key] == 'int':
                         record[key] = int(value)
-                    elif self.__dtypes[key] == 'float':
+                    elif self.dtypes[key] == 'float':
                         record[key] = float(value)
-                    elif self.__dtypes[key] == 'bool':
+                    elif self.dtypes[key] == 'bool':
                         record[key] = bool(value)
-                    elif self.__dtypes[key] == 'date':
-                        record[key] = parser.parse(value).date()
-                    elif self.__dtypes[key] == 'datetime':
-                        record[key] = parser.parse(value)
-            except (ValueError, TypeError, parser.ParserError) as error:
-                log.error(
-                    'Failed to cast variable %s, value %s to type %s - %s',
-                    key, value, self.__dtypes[key], error)
-                record[key] = value
+                    elif self.dtypes[key] == 'date':
+                        record[key] = utils.convert_to_date(value)
+                    elif self.dtypes[key] == 'datetime':
+                        record[key] = utils.convert_to_datetime(value)
+                except (ValueError, TypeError, parser.ParserError) as error:
+                    log.error(
+                        'Failed to cast variable %s, value %s to type %s - %s',
+                        key, value, self.dtypes[key], error)
+                    record[key] = value
 
         return record
+
+    # pylint: disable=(unused-argument)
+    def _validate_formatting(self, formatting: str, field: str, value: object):
+        """ Adding formatting attribute to support specifying string dates.
+        This is not an actual validation, just a placeholder method
+
+        Args:
+            formatting (str): format specified in the schema def
+            field (str): Variable name
+            value (object): Variable value
+
+        Note: Don't remove below docstring,
+        Cerberus uses it to validate the schema definition.
+
+        The rule's arguments are validated against this schema:
+            {'nullable': False, 'type': 'string', 'allowed': ['date', 'datetime']}
+        """
+
+        if field not in self.dtypes or self.dtypes[field] != 'str':
+            err_msg = 'formatting definition not supported for non string types'
+            self.__add_system_error(field, err_msg)
+            raise ValidationException(err_msg)
 
     def _validate_max(self, max_value: object, field: str, value: object):
         """ Override max rule to support validations wrt current date/year
@@ -219,11 +237,11 @@ class NACCValidator(Validator):
             {'nullable': False}
         """
 
-        dtype = self.__dtypes[field]
         if max_value in (SchemaDefs.CRR_DATE, SchemaDefs.CRR_YEAR):
+            dtype = self.dtypes[field] if field in self.dtypes else 'undefined'
             try:
                 if dtype == 'str':
-                    input_date = parser.parse(value).date()
+                    input_date = utils.convert_to_date(value)
                 elif dtype == 'date':
                     input_date = value
                 elif dtype == 'datetime':
@@ -231,7 +249,7 @@ class NACCValidator(Validator):
                 elif dtype == 'int' and max_value == SchemaDefs.CRR_YEAR:
                     input_date = dt(value, 1, 1).date()
                 else:
-                    message = f'{max_value} not supported for {dtype} type'
+                    message = f'{max_value} not supported for {dtype} datatype'
                     self._error(field, ErrorDefs.INVALID_DATE_MAX, message)
                     return
             except (ValueError, TypeError, parser.ParserError) as error:
@@ -239,15 +257,30 @@ class NACCValidator(Validator):
                 return
 
             curr_date = dt.now().date()
-            try:
-                if max_value == SchemaDefs.CRR_DATE and input_date > curr_date:
-                    self._error(field, ErrorDefs.CURR_DATE_MAX, str(curr_date))
-                elif (max_value == SchemaDefs.CRR_YEAR
-                      and input_date.year > curr_date.year):
-                    self._error(field, ErrorDefs.CURR_YEAR_MAX, curr_date.year)
-            except (TypeError, AttributeError) as error:
-                self._error(field, ErrorDefs.INVALID_DATE_MAX, str(error))
+
+            if max_value == SchemaDefs.CRR_DATE and input_date > curr_date:
+                self._error(field, ErrorDefs.CURR_DATE_MAX, str(curr_date))
+            elif (max_value == SchemaDefs.CRR_YEAR
+                  and input_date.year > curr_date.year):
+                self._error(field, ErrorDefs.CURR_YEAR_MAX, curr_date.year)
         else:
+            if SchemaDefs.FORMATTING in self.schema[field]:
+                methodname = f'convert_to_{self.schema[field][SchemaDefs.FORMATTING]}'
+                func = getattr(utils, methodname, None)
+                if func and callable(func):
+                    try:
+                        max_value = func(max_value)
+                        value = func(value)
+                    except (TypeError, AttributeError,
+                            parser.ParserError) as error:
+                        self._error(field, ErrorDefs.INVALID_DATE_MAX,
+                                    str(error))
+                        return
+                else:
+                    err_msg = f'{methodname} not defined in the validator module'
+                    self.__add_system_error(field, err_msg)
+                    raise ValidationException(err_msg)
+
             super()._validate_max(max_value, field, value)
 
     def _validate_min(self, min_value: object, field: str, value: object):
@@ -265,11 +298,11 @@ class NACCValidator(Validator):
             {'nullable': False}
         """
 
-        dtype = self.__dtypes[field]
         if min_value in (SchemaDefs.CRR_DATE, SchemaDefs.CRR_YEAR):
+            dtype = self.dtypes[field] if field in self.dtypes else 'undefined'
             try:
                 if dtype == 'str':
-                    input_date = parser.parse(value).date()
+                    input_date = utils.convert_to_date(value)
                 elif dtype == 'date':
                     input_date = value
                 elif dtype == 'datetime':
@@ -277,7 +310,7 @@ class NACCValidator(Validator):
                 elif dtype == 'int' and min_value == SchemaDefs.CRR_YEAR:
                     input_date = dt(value, 1, 1).date()
                 else:
-                    message = f'{min_value} not supported for {dtype} type'
+                    message = f'{min_value} not supported for {dtype} datatype'
                     self._error(field, ErrorDefs.INVALID_DATE_MIN, message)
                     return
             except (ValueError, TypeError, parser.ParserError) as error:
@@ -285,15 +318,29 @@ class NACCValidator(Validator):
                 return
 
             curr_date = dt.now().date()
-            try:
-                if min_value == SchemaDefs.CRR_DATE and input_date < curr_date:
-                    self._error(field, ErrorDefs.CURR_DATE_MIN, str(curr_date))
-                elif (min_value == SchemaDefs.CRR_YEAR
-                      and input_date.year < curr_date.year):
-                    self._error(field, ErrorDefs.CURR_YEAR_MIN, curr_date.year)
-            except (TypeError, AttributeError) as error:
-                self._error(field, ErrorDefs.INVALID_DATE_MIN, str(error))
+
+            if min_value == SchemaDefs.CRR_DATE and input_date < curr_date:
+                self._error(field, ErrorDefs.CURR_DATE_MIN, str(curr_date))
+            elif (min_value == SchemaDefs.CRR_YEAR
+                  and input_date.year < curr_date.year):
+                self._error(field, ErrorDefs.CURR_YEAR_MIN, curr_date.year)
         else:
+            if SchemaDefs.FORMATTING in self.schema[field]:
+                methodname = f'convert_to_{self.schema[field][SchemaDefs.FORMATTING]}'
+                func = getattr(utils, methodname, None)
+                if func and callable(func):
+                    try:
+                        min_value = func(min_value)
+                        value = func(value)
+                    except (TypeError, AttributeError) as error:
+                        self._error(field, ErrorDefs.INVALID_DATE_MIN,
+                                    str(error))
+                        return
+                else:
+                    err_msg = f'{methodname} not defined in the validator module'
+                    self.__add_system_error(field, err_msg)
+                    raise ValidationException(err_msg)
+
             super()._validate_min(min_value, field, value)
 
     def _validate_filled(self, filled: bool, field: str, value: object):

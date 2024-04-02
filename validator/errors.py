@@ -123,3 +123,4 @@ class SchemaDefs:
     CRR_YEAR = 'current_year'
     FORMULA = 'formula'
     INDEX = 'index'
+    FORMATTING = 'formatting'
