@@ -18,7 +18,7 @@ class ErrorDefs:
     INVALID_DATE_MAX = ErrorDefinition(0x1002, 'max')
     CURR_DATE_MIN = ErrorDefinition(0x1003, 'min')
     CURR_YEAR_MIN = ErrorDefinition(0x1004, 'min')
-    INVALID_DATE_MIN = ErrorDefinition(0x1005, 'max')
+    INVALID_DATE_MIN = ErrorDefinition(0x1005, 'min')
     FILLED_TRUE = ErrorDefinition(0x1006, 'filled')
     FILLED_FALSE = ErrorDefinition(0x1007, 'filled')
     COMPATIBILITY_TRUE = ErrorDefinition(0x1008, 'compatibility')
@@ -123,3 +123,4 @@ class SchemaDefs:
     CRR_YEAR = 'current_year'
     FORMULA = 'formula'
     INDEX = 'index'
+    FORMATTING = 'formatting'

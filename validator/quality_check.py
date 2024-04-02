@@ -42,7 +42,7 @@ class QualityCheck:
 
     @property
     def pk_field(self) -> str:
-        """ primary key field 
+        """ primary key field
 
         Returns:
             str: primary key field of validated data
