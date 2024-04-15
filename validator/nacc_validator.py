@@ -151,8 +151,8 @@ class NACCValidator(Validator):
         self.__prev_records.clear()
 
     def get_error_messages(self) -> Dict[int, str]:
-        """Returns the list of error messages by error code. 
-        
+        """Returns the list of error messages by error code.
+
         Check ~cerberus.errors.BasicErrorHandler for more info.
 
         Returns:
