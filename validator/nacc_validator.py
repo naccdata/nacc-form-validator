@@ -2,7 +2,7 @@
 library)."""
 
 import logging
-from datetime import datetime as dt
+from datetime import date, datetime
 from typing import Any, Dict, List, Mapping, Optional
 
 from cerberus.validator import Validator
@@ -19,6 +19,8 @@ log = logging.getLogger(__name__)
 class ValidationException(Exception):
     """Raised when an system error occurs during validation."""
 
+RecordValueType = Optional[int|float|bool|date|datetime]
+RecordType = Dict[str, RecordValueType]
 
 class NACCValidator(Validator):
     """NACCValidator class to extend cerberus.Validator."""
@@ -42,7 +44,7 @@ class NACCValidator(Validator):
         self.__pk_field: Optional[str] = None
 
         # Cache of previous records that has been retrieved
-        self.__prev_records: Dict[str, Mapping] = {}
+        self.__prev_records: Dict[str, RecordType] = {}
 
         # List of system errors occured by field
         self.__sys_errors: Dict[str, List[str]] = {}
@@ -161,7 +163,7 @@ class NACCValidator(Validator):
         """
         return self.error_handler.messages
 
-    def cast_record(self, record: Dict[str, Optional[Any]]) -> Dict[str, Any]:
+    def cast_record(self, record: Dict[str, RecordValueType]) -> Dict[str, RecordValueType]:
         """Cast the fields in the record to appropriate data types.
 
         Args:
@@ -188,9 +190,9 @@ class NACCValidator(Validator):
             if key in self.dtypes:
                 try:
                     if self.dtypes[key] == "int":
-                        record[key] = int(value)
+                        record[key] = int(value) # type: ignore
                     elif self.dtypes[key] == "float":
-                        record[key] = float(value)
+                        record[key] = float(value) # type: ignore
                     elif self.dtypes[key] == "bool":
                         record[key] = bool(value)
                     elif self.dtypes[key] == "date":
@@ -262,7 +264,7 @@ class NACCValidator(Validator):
                 elif dtype == "datetime":
                     input_date = value.date()
                 elif dtype == "int" and max_value == SchemaDefs.CRR_YEAR:
-                    input_date = dt(value, 1, 1).date()
+                    input_date = datetime(value, 1, 1).date()
                 else:
                     message = f"{max_value} not supported for {dtype} datatype"
                     self._error(field, ErrorDefs.INVALID_DATE_MAX, message)
@@ -271,7 +273,7 @@ class NACCValidator(Validator):
                 self._error(field, ErrorDefs.INVALID_DATE_MAX, str(error))
                 return
 
-            curr_date = dt.now().date()
+            curr_date = datetime.now().date()
 
             if max_value == SchemaDefs.CRR_DATE and input_date > curr_date:
                 self._error(field, ErrorDefs.CURR_DATE_MAX, str(curr_date))
@@ -326,7 +328,7 @@ class NACCValidator(Validator):
                 elif dtype == "datetime":
                     input_date = value.date()
                 elif dtype == "int" and min_value == SchemaDefs.CRR_YEAR:
-                    input_date = dt(value, 1, 1).date()
+                    input_date = datetime(value, 1, 1).date()
                 else:
                     message = f"{min_value} not supported for {dtype} datatype"
                     self._error(field, ErrorDefs.INVALID_DATE_MIN, message)
@@ -335,7 +337,7 @@ class NACCValidator(Validator):
                 self._error(field, ErrorDefs.INVALID_DATE_MIN, str(error))
                 return
 
-            curr_date = dt.now().date()
+            curr_date = datetime.now().date()
 
             if min_value == SchemaDefs.CRR_DATE and input_date < curr_date:
                 self._error(field, ErrorDefs.CURR_DATE_MIN, str(curr_date))
@@ -471,7 +473,7 @@ class NACCValidator(Validator):
                                     if_conds)
 
     # pylint: disable=(too-many-locals)
-    def _validate_temporalrules(self, temporalrules: Dict[str, Mapping],
+    def _validate_temporalrules(self, temporalrules: Dict[str, Any],
                                 field: str, value: object):
         """Validate the List of longitudial checks specified for a field.
 
@@ -571,7 +573,7 @@ class NACCValidator(Validator):
                         self._error(field, ErrorDefs.TEMPORAL, rule_no,
                                     str(error), prev_conds)
 
-    def _validate_logic(self, logic: Dict[str, Mapping], field: str,
+    def _validate_logic(self, logic: Dict[str, Any], field: str,
                         value: object):
         """Validate a mathematical formula/expression.
 

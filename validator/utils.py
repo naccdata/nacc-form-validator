@@ -1,5 +1,6 @@
 """Utility functions."""
 
+from datetime import date, datetime
 import logging
 import re
 from typing import Any
@@ -9,7 +10,7 @@ from dateutil import parser
 log = logging.getLogger(__name__)
 
 
-def convert_to_date(value) -> Any:
+def convert_to_date(value) -> date:
     """Convert the input value to date object.
 
     Args:
@@ -32,7 +33,7 @@ def convert_to_date(value) -> Any:
         raise parser.ParserError(error) from error
 
 
-def convert_to_datetime(value) -> Any:
+def convert_to_datetime(value) -> datetime:
     """Convert the input value to datetime object.
 
     Args:

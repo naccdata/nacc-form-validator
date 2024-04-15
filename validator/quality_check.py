@@ -6,7 +6,7 @@ from cerberus.errors import DocumentErrorTree
 from cerberus.schema import SchemaError
 
 from validator.datastore import Datastore
-from validator.nacc_validator import (CustomErrorHandler, NACCValidator,
+from validator.nacc_validator import (CustomErrorHandler, NACCValidator, RecordType,
                                       ValidationException)
 
 
@@ -90,8 +90,8 @@ class QualityCheck:
             raise QualityCheckException(f"Schema Error - {error}") from error
 
     def validate_record(
-        self, record: Dict[str, str]
-    ) -> Tuple[bool, bool, Dict[str, List[str]], DocumentErrorTree]:
+        self, record: RecordType
+    ) -> Tuple[bool, bool, Dict[str, List[str]], Optional[DocumentErrorTree]]:
         """Evaluate the record against the defined rules using cerberus.
 
         Args:
