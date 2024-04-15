@@ -13,7 +13,7 @@ class Datastore(ABC):
     @abstractmethod
     def get_previous_instance(
             self, orderby: str, pk_field: str,
-            current_ins: Dict[str, str]) -> Optional[Dict[str, str]]:
+            current_ins: Dict[str, str]) -> Dict[str, str]:
         """Abstract method to return the previous instance of the specified
         record Override this method to retrieve the records from the desired
         datastore/warehouse.
@@ -24,6 +24,6 @@ class Datastore(ABC):
             current_ins (dict[str, str]): Instance currently being validated
 
         Returns:
-            dict[str, str]: Previous instance or None if no instance found
+            dict[str, str]: Previous instance 
         """
-        return None
+        return {}
