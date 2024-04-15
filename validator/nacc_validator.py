@@ -3,7 +3,7 @@ library)."""
 
 import logging
 from datetime import datetime as dt
-from typing import Dict, List, Mapping, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
 from cerberus.validator import Validator
 from dateutil import parser
@@ -29,16 +29,17 @@ class NACCValidator(Validator):
             schema: Validation schema as Dict[variable, rule objects]
         """
 
-        super().__init__(schema, *args, **kwargs)
+        kwargs['schema'] = schema
+        super().__init__(*args, **kwargs)
 
         # Data type map for each field
-        self.__dtypes: Dict[str, str] = self.__populate_data_types()
+        self.__dtypes: Optional[Dict[str, str]] = self.__populate_data_types()
 
         # Datastore instance
-        self.__datastore: Datastore = None
+        self.__datastore: Optional[Datastore] = None
 
         # Primary key field of the project
-        self.__pk_field: str = None
+        self.__pk_field: Optional[str] = None
 
         # Cache of previous records that has been retrieved
         self.__prev_records: Dict[str, Mapping] = {}
@@ -47,12 +48,12 @@ class NACCValidator(Validator):
         self.__sys_errors: Dict[str, List[str]] = {}
 
     @property
-    def dtypes(self) -> Dict[str, str]:
+    def dtypes(self) -> Optional[Dict[str, str]]:
         """Returns the field->datatype mapping for the fields defined in the
         validation schema."""
         return self.__dtypes
 
-    def __populate_data_types(self) -> Dict[str, str] | None:
+    def __populate_data_types(self) -> Optional[Dict[str, str]]:
         """Convert cerberus data types to python data types. Populates a
         field->data type mapping for each field in the schema.
 
@@ -150,24 +151,24 @@ class NACCValidator(Validator):
 
         self.__prev_records.clear()
 
-    def get_error_messages(self) -> Dict[int, str]:
+    def get_error_messages(self) -> Mapping[int, str]:
         """Returns the list of error messages by error code.
 
         Check ~cerberus.errors.BasicErrorHandler for more info.
 
         Returns:
-            Dict[int, str]: list of error messages
+            Mapping[int, str]: list of error messages
         """
         return self.error_handler.messages
 
-    def cast_record(self, record: Dict[str, str]) -> Dict[str, object]:
+    def cast_record(self, record: Dict[str, Optional[Any]]) -> Dict[str, Any]:
         """Cast the fields in the record to appropriate data types.
 
         Args:
             record (Dict[str, str]): Input record Dict[field, value]
 
         Returns:
-            Dict[str, object]: Casted record Dict[field, value]
+            Dict[str, Any]: Casted record Dict[field, value]
         """
 
         if not self.dtypes:
@@ -224,13 +225,15 @@ class NACCValidator(Validator):
         The rule's arguments are validated against this schema:
             {'nullable': False, 'type': 'string', 'allowed': ['date', 'datetime']}
         """
+        if not self.dtypes:
+            raise ValidationException("No field types")
 
         if field not in self.dtypes or self.dtypes[field] != "str":
             err_msg = "formatting definition not supported for non string types"
             self.__add_system_error(field, err_msg)
             raise ValidationException(err_msg)
 
-    def _validate_max(self, max_value: object, field: str, value: object):
+    def _validate_max(self, max_value: object, field: str, value: Any):
         """Override max rule to support validations wrt current date/year.
 
         Args:
@@ -244,6 +247,10 @@ class NACCValidator(Validator):
         The rule's arguments are validated against this schema:
             {'nullable': False}
         """
+        if not self.schema:
+            raise ValidationException("No schema defined")
+        if not self.dtypes:
+            raise ValidationException("No field types defined")
 
         if max_value in (SchemaDefs.CRR_DATE, SchemaDefs.CRR_YEAR):
             dtype = self.dtypes[field] if field in self.dtypes else "undefined"
@@ -290,7 +297,7 @@ class NACCValidator(Validator):
 
             super()._validate_max(max_value, field, value)
 
-    def _validate_min(self, min_value: object, field: str, value: object):
+    def _validate_min(self, min_value: object, field: str, value: Any):
         """Override min rule to support validations wrt current date/year.
 
         Args:
@@ -304,6 +311,10 @@ class NACCValidator(Validator):
         The rule's arguments are validated against this schema:
             {'nullable': False}
         """
+        if not self.schema:
+            raise ValidationException("No schema defined")
+        if not self.dtypes:
+            raise ValidationException("No types defined")
 
         if min_value in (SchemaDefs.CRR_DATE, SchemaDefs.CRR_YEAR):
             dtype = self.dtypes[field] if field in self.dtypes else "undefined"
@@ -418,6 +429,7 @@ class NACCValidator(Validator):
             # Extract conditions for else clause, this is optional
             else_conds = constraint.get(SchemaDefs.ELSE, None)
 
+            subschema: Optional[Dict[str, Any]] = None
             valid = operator != "OR"
             # Check whether the dependency conditions satisfied
             for dep_field, conds in if_conds.items():

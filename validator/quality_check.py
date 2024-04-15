@@ -1,6 +1,6 @@
 """Module for performing data quality checks."""
 
-from typing import Dict, List, Mapping, Tuple
+from typing import Dict, List, Mapping, Optional, Tuple
 
 from cerberus.errors import DocumentErrorTree
 from cerberus.schema import SchemaError
@@ -21,9 +21,9 @@ class QualityCheck:
     def __init__(
         self,
         pk_field: str,
-        schema: Mapping,
+        schema: Dict[str, Mapping[str, object]],
         strict: bool = True,
-        datastore: Datastore = None,
+        datastore: Optional[Datastore] = None,
     ):
         """
 
@@ -40,7 +40,7 @@ class QualityCheck:
         self.__schema: Dict[str, Mapping[str, object]] = schema
 
         # Validator object for rule evaluation
-        self.__validator: NACCValidator = None
+        self.__validator: Optional[NACCValidator] = None
         self.__init_validator(datastore)
 
     @property
@@ -63,7 +63,7 @@ class QualityCheck:
         return self.__schema
 
     @property
-    def validator(self) -> NACCValidator:
+    def validator(self) -> Optional[NACCValidator]:
         """The validator property.
 
         Returns:
@@ -71,7 +71,7 @@ class QualityCheck:
         """
         return self.__validator
 
-    def __init_validator(self, datastore: Datastore = None):
+    def __init_validator(self, datastore: Optional[Datastore] = None):
         """Initialize the validator object.
 
         Raises:
@@ -83,6 +83,7 @@ class QualityCheck:
                 allow_unknown=not self.__strict,
                 error_handler=CustomErrorHandler(self.schema),
             )
+            assert self.validator, "Validator should be defined"
             self.validator.primary_key = self.pk_field
             self.validator.datastore = datastore
         except (SchemaError, RuntimeError) as error:
@@ -103,6 +104,8 @@ class QualityCheck:
             DocumentErrorTree: A dict like object of ValidationError instances
             (check https://docs.python-cerberus.org/errors.html)
         """
+        if not self.validator:
+            raise QualityCheckException("No validator defined")
 
         # All the fields in the input record represented as string values,
         # cast the fields to appropriate data types according to the schema

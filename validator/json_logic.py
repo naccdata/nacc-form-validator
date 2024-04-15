@@ -171,11 +171,11 @@ operations = {
     "or": lambda *args: reduce(lambda total, arg: total or arg, args, False),
     "?:": lambda a, b, c: b if a else c,
     "if": if_,
-    "log": lambda a: logger.info(a) or a,
+    "log": lambda a: logger.info(a) or a, # type: ignore
     "in": lambda a, b: a in b if "__contains__" in dir(b) else False,
     "cat": lambda *args: "".join(str(arg) for arg in args),
     "+": plus,
-    "*": lambda *args: reduce(lambda total, arg: total * float(arg), args, 1),
+    "*": lambda *args: reduce(lambda total, arg: total * float(arg), args, 1.0),
     "-": minus,
     "/": lambda a, b=None: a if b is None else float(a) / float(b),
     "min": lambda *args: min(args),
