@@ -11,3 +11,9 @@ __pycache__/
 # Pants workspace files
 /.pants.d
 /dist/
+
+#
+.env
+
+#
+venv
