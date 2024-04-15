@@ -1,8 +1,7 @@
-""" Module for defining NACC specific data validation rules
-    (extending cerberus library). """
+"""Module for defining NACC specific data validation rules (extending cerberus
+library)."""
 
 import logging
-
 from datetime import datetime as dt
 from typing import Dict, List, Mapping, Optional
 
@@ -16,11 +15,11 @@ log = logging.getLogger(__name__)
 
 
 class ValidationException(Exception):
-    """ Raised when an system error occurs during validation """
+    """Raised when an system error occurs during validation."""
 
 
 class NACCValidator(Validator):
-    """ NACCValidator class to extend cerberus.Validator """
+    """NACCValidator class to extend cerberus.Validator."""
 
     def __init__(self, schema: Mapping, *args, **kwargs):
         """
@@ -47,13 +46,13 @@ class NACCValidator(Validator):
 
     @property
     def dtypes(self) -> Dict[str, str]:
-        """ Returns the field->datatype mapping
-        for the fields defined in the validation schema. """
+        """Returns the field->datatype mapping for the fields defined in the
+        validation schema."""
         return self.__dtypes
 
     def __populate_data_types(self) -> Dict[str, str] | None:
-        """ Convert cerberus data types to python data types.
-            Populates a field->data type mapping for each field in the schema
+        """Convert cerberus data types to python data types. Populates a
+        field->data type mapping for each field in the schema.
 
         Returns:
             Dict[str, str] : Dict of [field, data_type]
@@ -66,29 +65,29 @@ class NACCValidator(Validator):
         data_types = {}
         for key, configs in self.schema.items():
             if SchemaDefs.TYPE in configs:
-                if configs[SchemaDefs.TYPE] == 'integer':
-                    data_types[key] = 'int'
-                elif configs[SchemaDefs.TYPE] == 'string':
-                    data_types[key] = 'str'
-                elif configs[SchemaDefs.TYPE] == 'float':
-                    data_types[key] = 'float'
-                elif configs[SchemaDefs.TYPE] == 'boolean':
-                    data_types[key] = 'bool'
-                elif configs[SchemaDefs.TYPE] == 'date':
-                    data_types[key] = 'date'
-                elif configs[SchemaDefs.TYPE] == 'datetime':
-                    data_types[key] = 'datetime'
+                if configs[SchemaDefs.TYPE] == "integer":
+                    data_types[key] = "int"
+                elif configs[SchemaDefs.TYPE] == "string":
+                    data_types[key] = "str"
+                elif configs[SchemaDefs.TYPE] == "float":
+                    data_types[key] = "float"
+                elif configs[SchemaDefs.TYPE] == "boolean":
+                    data_types[key] = "bool"
+                elif configs[SchemaDefs.TYPE] == "date":
+                    data_types[key] = "date"
+                elif configs[SchemaDefs.TYPE] == "datetime":
+                    data_types[key] = "datetime"
 
         return data_types
 
     @property
     def datastore(self) -> Optional[Datastore]:
-        """ Returns the datastore object or None """
+        """Returns the datastore object or None."""
         return self.__datastore
 
     @datastore.setter
     def datastore(self, datastore: Datastore):
-        """ Set the Datastore instance
+        """Set the Datastore instance.
 
         Args:
             datastore: Datastore instance to retrieve longitudinal data
@@ -98,12 +97,12 @@ class NACCValidator(Validator):
 
     @property
     def primary_key(self) -> Optional[str]:
-        """ Returns the primary key field name or None """
+        """Returns the primary key field name or None."""
         return self.__pk_field
 
     @primary_key.setter
     def primary_key(self, pk_field: str):
-        """ Set the pk_field attribute
+        """Set the pk_field attribute.
 
         Args:
             pk_field (str): Primary key field of the project
@@ -113,15 +112,16 @@ class NACCValidator(Validator):
 
     @property
     def sys_errors(self) -> Dict[str, List[str]]:
-        """ Returns the list of system errors occurred during validation.
-            This is different from the validation errors and can be empty.
-            Examples: Datastore not set for temporal checks
-                      Error in rule definition file
+        """Returns the list of system errors occurred during validation.
+
+        This is different from the validation errors and can be empty.
+        Examples: Datastore not set for temporal checks
+                  Error in rule definition file
         """
         return self.__sys_errors
 
     def __add_system_error(self, field: str, err_msg: str):
-        """ Add system error message
+        """Add system error message.
 
         Args:
             field (str): Variable name
@@ -133,18 +133,18 @@ class NACCValidator(Validator):
             self.__sys_errors[field] = [err_msg]
 
     def reset_sys_errors(self):
-        """ Clear the system errors """
+        """Clear the system errors."""
 
         self.__sys_errors.clear()
 
     def reset_record_cache(self):
-        """ Clear the previous records cache """
+        """Clear the previous records cache."""
 
         self.__prev_records.clear()
 
     def get_error_messages(self) -> Dict[int, str]:
-        """ Returns the list of error messages by error code.
-        Check ~cerberus.errors.BasicErrorHandler for more info
+        """Returns the list of error messages by error code. Check
+        ~cerberus.errors.BasicErrorHandler for more info.
 
         Returns:
             Dict[int, str]: list of error messages
@@ -152,7 +152,7 @@ class NACCValidator(Validator):
         return self.error_handler.messages
 
     def cast_record(self, record: Dict[str, str]) -> Dict[str, object]:
-        """ Cast the fields in the record to appropriate data types.
+        """Cast the fields in the record to appropriate data types.
 
         Args:
             record (Dict[str, str]): Input record Dict[field, value]
@@ -169,7 +169,7 @@ class NACCValidator(Validator):
             # otherwise data type validation is triggered.
             # Don't remove empty fields from the record, if removed, any
             # validation rules defined for that field will not be triggered.
-            if value == '':
+            if value == "":
                 record[key] = None
                 continue
             if value is None:
@@ -177,26 +177,30 @@ class NACCValidator(Validator):
 
             try:
                 if key in self.__dtypes:
-                    if self.__dtypes[key] == 'int':
+                    if self.__dtypes[key] == "int":
                         record[key] = int(value)
-                    elif self.__dtypes[key] == 'float':
+                    elif self.__dtypes[key] == "float":
                         record[key] = float(value)
-                    elif self.__dtypes[key] == 'bool':
+                    elif self.__dtypes[key] == "bool":
                         record[key] = bool(value)
-                    elif self.__dtypes[key] == 'date':
-                        record[key] = dt.strptime(value, '%Y-%m-%d').date()
-                    elif self.__dtypes[key] == 'datetime':
-                        record[key] = dt.strptime(value, '%Y-%m-%d %H:%M:%S')
+                    elif self.__dtypes[key] == "date":
+                        record[key] = dt.strptime(value, "%Y-%m-%d").date()
+                    elif self.__dtypes[key] == "datetime":
+                        record[key] = dt.strptime(value, "%Y-%m-%d %H:%M:%S")
             except (ValueError, TypeError) as error:
                 log.error(
-                    'Failed to cast variable %s, value %s to type %s - %s',
-                    key, value, self.__dtypes[key], error)
+                    "Failed to cast variable %s, value %s to type %s - %s",
+                    key,
+                    value,
+                    self.__dtypes[key],
+                    error,
+                )
                 record[key] = value
 
         return record
 
     def _validate_max(self, max_value: object, field: str, value: object):
-        """ Override max rule to support validations wrt current date/year
+        """Override max rule to support validations wrt current date/year.
 
         Args:
             max_value (object): Maximum value specified in the schema def
@@ -213,7 +217,7 @@ class NACCValidator(Validator):
         if max_value == SchemaDefs.CRR_DATE:
             dtype = self.__dtypes[field]
             curr_date = dt.now()
-            if dtype == 'date':
+            if dtype == "date":
                 curr_date = curr_date.date()
 
             try:
@@ -233,7 +237,7 @@ class NACCValidator(Validator):
             super()._validate_max(max_value, field, value)
 
     def _validate_min(self, min_value: object, field: str, value: object):
-        """ Override min rule to support validations wrt current date/year
+        """Override min rule to support validations wrt current date/year.
 
         Args:
             min_value (object): Minimum value specified in the schema def
@@ -250,7 +254,7 @@ class NACCValidator(Validator):
         if min_value == SchemaDefs.CRR_DATE:
             dtype = self.__dtypes[field]
             curr_date = dt.now()
-            if dtype == 'date':
+            if dtype == "date":
                 curr_date = curr_date.date()
 
             try:
@@ -270,8 +274,8 @@ class NACCValidator(Validator):
             super()._validate_min(min_value, field, value)
 
     def _validate_filled(self, filled: bool, field: str, value: object):
-        """ Custom method to check whether the 'filled' rule is met.
-            This is different from 'nullable' rule.
+        """Custom method to check whether the 'filled' rule is met. This is
+        different from 'nullable' rule.
 
         Args:
             filled (bool): Constraint value specified in the schema def
@@ -293,7 +297,7 @@ class NACCValidator(Validator):
     # pylint: disable=(too-many-locals, unused-argument)
     def _validate_compatibility(self, constraints: List[Mapping], field: str,
                                 value: object):
-        """ Validate the List of compatibility checks specified for a field.
+        """Validate the List of compatibility checks specified for a field.
 
         Args:
             constraints (List[Mapping]): List of constraints specified for the variable
@@ -324,7 +328,7 @@ class NACCValidator(Validator):
         rule_no = 0
         for constraint in constraints:
             # Extract operator if specified, default is AND
-            operator = constraint.get(SchemaDefs.OP, 'AND')
+            operator = constraint.get(SchemaDefs.OP, "AND")
 
             # Extract constraint index if specified, or increment by 1
             rule_no = constraint.get(SchemaDefs.INDEX, rule_no + 1)
@@ -338,15 +342,16 @@ class NACCValidator(Validator):
             # Extract conditions for else clause, this is optional
             else_conds = constraint.get(SchemaDefs.ELSE, None)
 
-            valid = False if (operator == 'OR') else True
+            valid = False if (operator == "OR") else True
             # Check whether the dependency conditions satisfied
             for dep_field, conds in if_conds.items():
                 subschema = {dep_field: conds}
                 temp_validator = NACCValidator(
                     subschema,
                     allow_unknown=True,
-                    error_handler=CustomErrorHandler(subschema))
-                if operator == 'OR':
+                    error_handler=CustomErrorHandler(subschema),
+                )
+                if operator == "OR":
                     valid = valid or temp_validator.validate(self.document)
                 # Evaluate as logical AND operation
                 elif not temp_validator.validate(self.document):
@@ -367,7 +372,8 @@ class NACCValidator(Validator):
                 temp_validator = NACCValidator(
                     subschema,
                     allow_unknown=True,
-                    error_handler=CustomErrorHandler(subschema))
+                    error_handler=CustomErrorHandler(subschema),
+                )
                 if not temp_validator.validate(self.document):
                     errors = temp_validator.errors.items()
                     for error in errors:
@@ -377,7 +383,7 @@ class NACCValidator(Validator):
     # pylint: disable=(too-many-locals)
     def _validate_temporalrules(self, temporalrules: Dict[str, Mapping],
                                 field: str, value: object):
-        """ Validate the List of longitudial checks specified for a field.
+        """Validate the List of longitudial checks specified for a field.
 
         Args:
             temporalrules: Longitudial checks definitions for the variable
@@ -411,15 +417,15 @@ class NACCValidator(Validator):
         """
 
         if not self.__datastore:
-            err_msg = ('Datastore not set for validating temporal rules, '
-                       'use set_datastore() method.')
+            err_msg = ("Datastore not set for validating temporal rules, "
+                       "use set_datastore() method.")
             self.__add_system_error(field, err_msg)
             raise ValidationException(err_msg)
 
         if not self.primary_key:
             err_msg = (
-                'Primary key field not set for validating temporal rules, '
-                'use set_primary_key_field() method.')
+                "Primary key field not set for validating temporal rules, "
+                "use set_primary_key_field() method.")
             self.__add_system_error(field, err_msg)
             raise ValidationException(err_msg)
 
@@ -460,12 +466,14 @@ class NACCValidator(Validator):
             prev_validator = NACCValidator(
                 prev_schema,
                 allow_unknown=True,
-                error_handler=CustomErrorHandler(prev_schema))
+                error_handler=CustomErrorHandler(prev_schema),
+            )
             if prev_validator.validate(prev_ins):
                 temp_validator = NACCValidator(
                     curr_schema,
                     allow_unknown=True,
-                    error_handler=CustomErrorHandler(curr_schema))
+                    error_handler=CustomErrorHandler(curr_schema),
+                )
                 if not temp_validator.validate({field: value}):
                     errors = temp_validator.errors.items()
                     for error in errors:
@@ -474,7 +482,7 @@ class NACCValidator(Validator):
 
     def _validate_logic(self, logic: Dict[str, Mapping], field: str,
                         value: object):
-        """ Validate a mathematical formula/expression.
+        """Validate a mathematical formula/expression.
 
         Args:
             logic: Validation logic specified in the rule definition
@@ -490,13 +498,12 @@ class NACCValidator(Validator):
                         'errmsg': {'type': 'string', 'required': False, 'empty': False}
                        }
             }
-
         """
 
         formula = logic[SchemaDefs.FORMULA]
         err_msg = logic.get(SchemaDefs.ERRMSG, None)
         if not err_msg:
-            err_msg = f'value {value} does not satisfy the specified formula'
+            err_msg = f"value {value} does not satisfy the specified formula"
         try:
             if not jsonLogic(formula, self.document):
                 self._error(field, ErrorDefs.FORMULA, err_msg)
@@ -504,7 +511,7 @@ class NACCValidator(Validator):
             self._error(field, ErrorDefs.FORMULA, str(error))
 
     def _validate_function(self, function: str, field: str, value: object):
-        """ Validate using a custom defined function
+        """Validate using a custom defined function.
 
         Args:
             function (str): Function name
@@ -522,12 +529,12 @@ class NACCValidator(Validator):
         if func and callable(func):
             func(value)
         else:
-            err_msg = f'{function} not defined in the validator module'
+            err_msg = f"{function} not defined in the validator module"
             self.__add_system_error(field, err_msg)
             raise ValidationException(err_msg)
 
     def _check_with_gds(self, field: str, value: object):
-        """ Validate Geriatric Depression Scale (GDS) calculation
+        """Validate Geriatric Depression Scale (GDS) calculation.
 
         Args:
             field (str): Variable name
@@ -535,17 +542,29 @@ class NACCValidator(Validator):
         """
 
         nogds = 0
-        if 'nogds' in self.document:
-            nogds = self.document['nogds']
+        if "nogds" in self.document:
+            nogds = self.document["nogds"]
 
         if nogds == 1 and value != 88:
             self._error(field, ErrorDefs.CHECK_GDS_1)
             return
 
         keys = [
-            "satis", "dropact", "empty", "bored", "spirits", "afraid", "happy",
-            "helpless", "stayhome", "memprob", "wondrful", "wrthless",
-            "energy", "hopeless", "better"
+            "satis",
+            "dropact",
+            "empty",
+            "bored",
+            "spirits",
+            "afraid",
+            "happy",
+            "helpless",
+            "stayhome",
+            "memprob",
+            "wondrful",
+            "wrthless",
+            "energy",
+            "hopeless",
+            "better",
         ]
 
         num_valid = 0

@@ -1,27 +1,30 @@
-""" Module for performing data quality checks """
+"""Module for performing data quality checks."""
 
 from typing import Dict, List, Mapping, Tuple
 
 from cerberus.errors import DocumentErrorTree
 from cerberus.schema import SchemaError
+
 from validator.datastore import Datastore
 from validator.nacc_validator import (CustomErrorHandler, NACCValidator,
                                       ValidationException)
 
 
 class QualityCheckException(Exception):
-    """ Raised if something goes wrong while loading rule definitions """
+    """Raised if something goes wrong while loading rule definitions."""
 
 
 class QualityCheck:
-    """ Class to initiate validator object with the provided schema
-    and run the data quality checks """
+    """Class to initiate validator object with the provided schema and run the
+    data quality checks."""
 
-    def __init__(self,
-                 pk_field: str,
-                 schema: Mapping,
-                 strict: bool = True,
-                 datastore: Datastore = None):
+    def __init__(
+        self,
+        pk_field: str,
+        schema: Mapping,
+        strict: bool = True,
+        datastore: Datastore = None,
+    ):
         """
 
         Args:
@@ -42,7 +45,7 @@ class QualityCheck:
 
     @property
     def pk_field(self) -> str:
-        """ primary key field 
+        """primary key field.
 
         Returns:
             str: primary key field of validated data
@@ -51,7 +54,7 @@ class QualityCheck:
 
     @property
     def schema(self) -> Dict[str, Mapping[str, object]]:
-        """ The schema property
+        """The schema property.
 
         Returns:
             Dict[str, Mapping[str, object]]:
@@ -61,7 +64,7 @@ class QualityCheck:
 
     @property
     def validator(self) -> NACCValidator:
-        """ The validator property
+        """The validator property.
 
         Returns:
             NACCValidator: Validator object for rule evaluation
@@ -69,25 +72,26 @@ class QualityCheck:
         return self.__validator
 
     def __init_validator(self, datastore: Datastore = None):
-        """ Initialize the validator object
+        """Initialize the validator object.
 
         Raises:
             QualityCheckException: If there is an schema error
         """
         try:
-            self.__validator = NACCValidator(self.schema,
-                                             allow_unknown=not self.__strict,
-                                             error_handler=CustomErrorHandler(
-                                                 self.schema))
+            self.__validator = NACCValidator(
+                self.schema,
+                allow_unknown=not self.__strict,
+                error_handler=CustomErrorHandler(self.schema),
+            )
             self.validator.primary_key = self.pk_field
             self.validator.datastore = datastore
         except (SchemaError, RuntimeError) as error:
-            raise QualityCheckException(f'Schema Error - {error}') from error
+            raise QualityCheckException(f"Schema Error - {error}") from error
 
     def validate_record(
         self, record: Dict[str, str]
     ) -> Tuple[bool, bool, Dict[str, List[str]], DocumentErrorTree]:
-        """ Evaluate the record against the defined rules using cerberus.
+        """Evaluate the record against the defined rules using cerberus.
 
         Args:
             record (Dict[str, str]): Record to be validated, Dict[field, value]

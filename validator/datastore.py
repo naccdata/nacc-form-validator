@@ -1,4 +1,4 @@
-""" Datastore module """
+"""Datastore module."""
 
 from abc import ABC, abstractmethod
 
@@ -6,14 +6,16 @@ from abc import ABC, abstractmethod
 
 
 class Datastore(ABC):
-    """ Abstract class to represent the datastore (or warehouse) where previous records stored. """
+    """Abstract class to represent the datastore (or warehouse) where previous
+    records stored."""
 
     @abstractmethod
     def get_previous_instance(
             self, orderby: str, pk_field: str,
             current_ins: dict[str, str]) -> dict[str, str] | None:
-        """ Abstract method to return the previous instance of the specified record
-            Override this method to retrieve the records from the desired datastore/warehouse
+        """Abstract method to return the previous instance of the specified
+        record Override this method to retrieve the records from the desired
+        datastore/warehouse.
 
         Args:
             orderby (str): Variable name that instances are sorted by

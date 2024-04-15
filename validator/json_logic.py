@@ -1,8 +1,6 @@
-""" 
-This code is from json-logic-py GitHub project by nadirizr
-https://github.com/nadirizr/json-logic-py
-Which is a Python implementation of the following jsonLogic JS library,
-https://github.com/jwadhams/json-logic-js
+"""This code is from json-logic-py GitHub project by nadirizr
+https://github.com/nadirizr/json-logic-py Which is a Python implementation of
+the following jsonLogic JS library, https://github.com/jwadhams/json-logic-js.
 
 The MIT License (MIT)
 
@@ -25,11 +23,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+"""
 
-""" 
-
-from functools import reduce
 import logging
+from functools import reduce
 
 logger = logging.getLogger(__name__)
 
@@ -80,12 +77,12 @@ def less_or_equal(a, b, *args):
 
 
 def to_numeric(arg):
-    """
-    Converts a string either to int or to float.
+    """Converts a string either to int or to float.
+
     This is important, because e.g. {"!==": [{"+": "0"}, 0.0]}
     """
     if isinstance(arg, str):
-        if '.' in arg:
+        if "." in arg:
             return float(arg)
         else:
             return int(arg)
@@ -118,7 +115,7 @@ def merge(*args):
 def get_var(data, var_name, not_found=None):
     """Gets variable value from data dictionary."""
     try:
-        for key in str(var_name).split('.'):
+        for key in str(var_name).split("."):
             try:
                 data = data[key]
             except TypeError:
@@ -159,32 +156,32 @@ def missing_some(data, args, min_required=1):
 
 
 operations = {
-    '==': soft_equals,
-    '===': hard_equals,
-    '!=': lambda a, b: not soft_equals(a, b),
-    '!==': lambda a, b: not hard_equals(a, b),
-    '>': lambda a, b: less(b, a),
-    '>=': lambda a, b: less(b, a) or soft_equals(a, b),
-    '<': less,
-    '<=': less_or_equal,
-    '!': lambda a: not a,
-    '!!': bool,
-    '%': lambda a, b: a % b,
-    'and': lambda *args: reduce(lambda total, arg: total and arg, args, True),
-    'or': lambda *args: reduce(lambda total, arg: total or arg, args, False),
-    '?:': lambda a, b, c: b if a else c,
-    'if': if_,
-    'log': lambda a: logger.info(a) or a,
-    'in': lambda a, b: a in b if '__contains__' in dir(b) else False,
-    'cat': lambda *args: ''.join(str(arg) for arg in args),
-    '+': plus,
-    '*': lambda *args: reduce(lambda total, arg: total * float(arg), args, 1),
-    '-': minus,
-    '/': lambda a, b=None: a if b is None else float(a) / float(b),
-    'min': lambda *args: min(args),
-    'max': lambda *args: max(args),
-    'merge': merge,
-    'count': lambda *args: sum(1 if a else 0 for a in args),
+    "==": soft_equals,
+    "===": hard_equals,
+    "!=": lambda a, b: not soft_equals(a, b),
+    "!==": lambda a, b: not hard_equals(a, b),
+    ">": lambda a, b: less(b, a),
+    ">=": lambda a, b: less(b, a) or soft_equals(a, b),
+    "<": less,
+    "<=": less_or_equal,
+    "!": lambda a: not a,
+    "!!": bool,
+    "%": lambda a, b: a % b,
+    "and": lambda *args: reduce(lambda total, arg: total and arg, args, True),
+    "or": lambda *args: reduce(lambda total, arg: total or arg, args, False),
+    "?:": lambda a, b, c: b if a else c,
+    "if": if_,
+    "log": lambda a: logger.info(a) or a,
+    "in": lambda a, b: a in b if "__contains__" in dir(b) else False,
+    "cat": lambda *args: "".join(str(arg) for arg in args),
+    "+": plus,
+    "*": lambda *args: reduce(lambda total, arg: total * float(arg), args, 1),
+    "-": minus,
+    "/": lambda a, b=None: a if b is None else float(a) / float(b),
+    "min": lambda *args: min(args),
+    "max": lambda *args: max(args),
+    "merge": merge,
+    "count": lambda *args: sum(1 if a else 0 for a in args),
 }
 
 
@@ -207,15 +204,14 @@ def jsonLogic(tests, data=None):
     # Recursion!
     values = [jsonLogic(val, data) for val in values]
 
-    if operator == 'var':
+    if operator == "var":
         return get_var(data, *values)
-    if operator == 'missing':
+    if operator == "missing":
         return missing(data, *values)
-    if operator == 'missing_some':
+    if operator == "missing_some":
         return missing_some(data, *values)
 
     if operator not in operations:
-        raise ValueError(f'Unrecognized operation {operator}')
+        raise ValueError(f"Unrecognized operation {operator}")
 
     return operations[operator](*values)
-    
