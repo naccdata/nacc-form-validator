@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-# pylint: disable=(too-few-public-methods)
+# pylint: disable=(too-few-public-methods, no-self-use, unused-argument)
 
 
 class Datastore(ABC):

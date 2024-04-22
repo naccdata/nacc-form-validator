@@ -31,8 +31,8 @@ class QualityCheck:
             pk_field: Primary key field of the project
             schema: Validation rules schema as Dict[field, rule objects].
             strict (optional): Validation mode, defaults to True.
-                        If False, unknown forms/fields are skipped from validation.
-            datastore (optional): Datastore instance to retrieve longitudinal data.
+                    If False, unknown forms/fields are skipped from validation
+            datastore (optional): Datastore instance to retrieve previous data
         """
 
         self.__pk_field: str = pk_field
