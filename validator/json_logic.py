@@ -60,7 +60,7 @@ def hard_equals(a, b):
 
 def less(a, b, *args):
     """Implements the '<' operator with JS-style type coertion."""
-    types = set([type(a), type(b)])
+    types = {type(a), type(b)}
     if float in types or int in types:
         try:
             a, b = float(a), float(b)
