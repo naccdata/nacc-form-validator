@@ -278,8 +278,12 @@ class NACCValidator(Validator):
                     try:
                         max_value = func(max_value)
                         value = func(value)
-                    except (TypeError, AttributeError,
-                            parser.ParserError) as error:
+                    except (
+                            AttributeError,
+                            parser.ParserError,
+                            TypeError,
+                            ValueError,
+                    ) as error:
                         self._error(field, ErrorDefs.INVALID_DATE_MAX,
                                     str(error))
                         return
@@ -338,7 +342,12 @@ class NACCValidator(Validator):
                     try:
                         min_value = func(min_value)
                         value = func(value)
-                    except (TypeError, AttributeError) as error:
+                    except (
+                            AttributeError,
+                            parser.ParserError,
+                            TypeError,
+                            ValueError,
+                    ) as error:
                         self._error(field, ErrorDefs.INVALID_DATE_MIN,
                                     str(error))
                         return
