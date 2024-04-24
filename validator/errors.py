@@ -33,6 +33,7 @@ class ErrorDefs:
     CHECK_GDS_3 = ErrorDefinition(0x2006, "check_with")
     CHECK_GDS_4 = ErrorDefinition(0x2007, "check_with")
     CHECK_GDS_5 = ErrorDefinition(0x2008, "check_with")
+    COMPARE_WITH = ErrorDefinition(0x2009, "compare_with")
 
 
 class CustomErrorHandler(BasicErrorHandler):
@@ -82,6 +83,7 @@ class CustomErrorHandler(BasicErrorHandler):
             "less than 12 questions has valid scores, GDS cannot be computed",
             0x2007: "incorrect total GDS score {0}, expected value {1}",
             0x2008: "incorrect partial GDS score {0}, expected value {1}",
+            0x2009: "input value doesn't satisfy the condition {0}",
         }
 
         self.messages.update(custom_errors)
@@ -121,6 +123,11 @@ class SchemaDefs:
     PREVIOUS = "previous"
     CRR_DATE = "current_date"
     CRR_YEAR = "current_year"
+    CRR_MONTH = "current_month"
+    CRR_DAY = "current_day"
     FORMULA = "formula"
     INDEX = "index"
     FORMATTING = "formatting"
+    COMPARATOR = "comparator"
+    BASE = "base"
+    ADJUST = "adjustment"
