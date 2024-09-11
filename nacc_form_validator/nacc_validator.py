@@ -8,10 +8,10 @@ from typing import Any, Dict, List, Mapping, Optional
 from cerberus.validator import Validator
 from dateutil import parser
 
-from validator import utils
-from validator.datastore import Datastore
-from validator.errors import CustomErrorHandler, ErrorDefs, SchemaDefs
-from validator.json_logic import jsonLogic
+from nacc_form_validator import utils
+from nacc_form_validator.datastore import Datastore
+from nacc_form_validator.errors import CustomErrorHandler, ErrorDefs, SchemaDefs
+from nacc_form_validator.json_logic import jsonLogic
 
 log = logging.getLogger(__name__)
 

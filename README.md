@@ -36,7 +36,7 @@ Next, you'll need to get the distribution for this package. The strategies to us
 Once you have the distribution, you can install it with
 
 ```
-pip3 install nacc_form_validator-VERSION-py3-none-any.whl
+pip3 install dist/nacc_form_validator-VERSION-py3-none-any.whl
 ```
 
 ### Installing Pants
@@ -101,3 +101,11 @@ On macOS, if you see a long error that ends with the following when trying to bu
 ```
 
 make sure that the `pants_version` in `pants.toml` is `>=2.22.0`.
+
+
+## Using the NACCValidator
+
+There are two ways to use the NACC Form Validator:
+
+1. Importing the `NACCValidator` class (`from nacc_form_validator import NACCValidator`) and using the class directly, or
+2. Using the `run_nacc_validator.py` script

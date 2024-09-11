@@ -5,9 +5,9 @@ from typing import Dict, List, Mapping, Tuple
 from cerberus.errors import DocumentErrorTree
 from cerberus.schema import SchemaError
 
-from validator.datastore import Datastore
-from validator.nacc_validator import (CustomErrorHandler, NACCValidator,
-                                      ValidationException)
+from nacc_form_validator.datastore import Datastore
+from nacc_form_validator.nacc_validator import (CustomErrorHandler, NACCValidator,
+                                                ValidationException)
 
 
 class QualityCheckException(Exception):
