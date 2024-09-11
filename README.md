@@ -13,6 +13,8 @@ See the [Cerberus usage examples](https://docs.python-cerberus.org/en/stable/usa
     * [Common Build Issues](#common-build-issues)
 * [Using the NACCValidator](#using-the-nacc-validator)
 
+Also see [Data Quality Rule Definition Guidelines](./docs/data-quality-rule-definition-guidelines.md) for more information on how the quality rules work.
+
 ## Setup
 
 Before getting started, it is recommended to do your installations and work in a [virtual environment](https://www.geeksforgeeks.org/python-virtual-environment/). You can set one up with the following command:
@@ -102,10 +104,35 @@ On macOS, if you see a long error that ends with the following when trying to bu
 
 make sure that the `pants_version` in `pants.toml` is `>=2.22.0`.
 
-
 ## Using the NACCValidator
 
 There are two ways to use the NACC Form Validator:
 
 1. Importing the `NACCValidator` class (`from nacc_form_validator import NACCValidator`) and using the class directly, or
 2. Using the `run_nacc_validator.py` script
+
+JSON rules schemas for NACC forms are provided under `docs/form-rules/`.
+
+### NACCValidator Class
+
+`NACCValidator` extends the Cerberus `Validator` class, so can be invoked similarly with
+
+```
+from nacc_form_validator import NACCValidator
+
+schema = {"schema": "the rules form schema"}
+v = NACCValidator(schema)
+
+document = {"form": "your form to validate"}
+v.validate(document)
+
+# returns True if valid, False otherwise
+```
+
+### run_nacc_validator.py
+
+`run_nacc_validator.py` simply provides a CLI entrypoint to run the `NACCValidator`, and effectively does the same as the above:
+
+```
+./run_nacc_validator.py --schema ./path-to-form-schema.json --form ./path-to-form.json
+```
