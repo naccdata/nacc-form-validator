@@ -3,7 +3,7 @@ library)."""
 
 import logging
 from datetime import datetime as dt
-from typing import Dict, List, Mapping, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
 from cerberus.validator import Validator
 from dateutil import parser
@@ -208,6 +208,32 @@ class NACCValidator(Validator):
 
         return record
 
+    def __get_base_val(self, key: str) -> Optional[Any]:
+        """Find the value for the specified key.
+
+        Args:
+            key (str): key (field name or special key such as current_year)
+
+        Returns:
+            Any: Value of the specified key or None
+        """
+        if key == SchemaDefs.CRR_DATE:
+            return dt.now().date()
+
+        if key == SchemaDefs.CRR_YEAR:
+            return dt.now().date().year
+
+        if key == SchemaDefs.CRR_MONTH:
+            return dt.now().date().month
+
+        if key == SchemaDefs.CRR_DAY:
+            return dt.now().date().day
+
+        if self.document and key in self.document:
+            return self.document[key]
+
+        return None
+
     # pylint: disable=(unused-argument)
     def _validate_formatting(self, formatting: str, field: str, value: object):
         """Adding formatting attribute to support specifying string dates. This
@@ -222,7 +248,11 @@ class NACCValidator(Validator):
         Cerberus uses it to validate the schema definition.
 
         The rule's arguments are validated against this schema:
-            {'nullable': False, 'type': 'string', 'allowed': ['date', 'datetime']}
+            {
+                'nullable': False,
+                'type': 'string',
+                'allowed': ['date', 'datetime']
+            }
         """
 
         if field not in self.dtypes or self.dtypes[field] != "str":
@@ -268,7 +298,8 @@ class NACCValidator(Validator):
 
             if max_value == SchemaDefs.CRR_DATE and input_date > curr_date:
                 self._error(field, ErrorDefs.CURR_DATE_MAX, str(curr_date))
-            elif max_value == SchemaDefs.CRR_YEAR and input_date.year > curr_date.year:
+            elif max_value == (SchemaDefs.CRR_YEAR
+                               and input_date.year > curr_date.year):
                 self._error(field, ErrorDefs.CURR_YEAR_MAX, curr_date.year)
         else:
             if SchemaDefs.FORMATTING in self.schema[field]:
@@ -278,8 +309,12 @@ class NACCValidator(Validator):
                     try:
                         max_value = func(max_value)
                         value = func(value)
-                    except (TypeError, AttributeError,
-                            parser.ParserError) as error:
+                    except (
+                            AttributeError,
+                            parser.ParserError,
+                            TypeError,
+                            ValueError,
+                    ) as error:
                         self._error(field, ErrorDefs.INVALID_DATE_MAX,
                                     str(error))
                         return
@@ -328,7 +363,8 @@ class NACCValidator(Validator):
 
             if min_value == SchemaDefs.CRR_DATE and input_date < curr_date:
                 self._error(field, ErrorDefs.CURR_DATE_MIN, str(curr_date))
-            elif min_value == SchemaDefs.CRR_YEAR and input_date.year < curr_date.year:
+            elif min_value == (SchemaDefs.CRR_YEAR
+                               and input_date.year < curr_date.year):
                 self._error(field, ErrorDefs.CURR_YEAR_MIN, curr_date.year)
         else:
             if SchemaDefs.FORMATTING in self.schema[field]:
@@ -338,7 +374,12 @@ class NACCValidator(Validator):
                     try:
                         min_value = func(min_value)
                         value = func(value)
-                    except (TypeError, AttributeError) as error:
+                    except (
+                            AttributeError,
+                            parser.ParserError,
+                            TypeError,
+                            ValueError,
+                    ) as error:
                         self._error(field, ErrorDefs.INVALID_DATE_MIN,
                                     str(error))
                         return
@@ -388,7 +429,7 @@ class NACCValidator(Validator):
                 'type': 'list',
                 'schema': {
                     'type': 'dict',
-                    'schema':{
+                    'schema': {
                         'index': {'type': 'integer', 'required': False},
                         'op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR']},
                         'if': {'type': 'dict', 'required': True, 'empty': False},
@@ -459,7 +500,7 @@ class NACCValidator(Validator):
                                     if_conds)
 
     # pylint: disable=(too-many-locals)
-    def _validate_temporalrules(self, temporalrules: Dict[str, Mapping],
+    def _validate_temporalrules(self, temporalrules: Dict[str, Any],
                                 field: str, value: object):
         """Validate the List of longitudial checks specified for a field.
 
@@ -559,7 +600,7 @@ class NACCValidator(Validator):
                         self._error(field, ErrorDefs.TEMPORAL, rule_no,
                                     str(error), prev_conds)
 
-    def _validate_logic(self, logic: Dict[str, Mapping], field: str,
+    def _validate_logic(self, logic: Dict[str, Any], field: str,
                         value: object):
         """Validate a mathematical formula/expression.
 
@@ -572,10 +613,12 @@ class NACCValidator(Validator):
         Cerberus uses it to validate the schema definition.
 
         The rule's arguments are validated against this schema:
-            {'type': 'dict',
-             'schema': {'formula': {'type': 'dict', 'required': True, 'empty': False},
-                        'errmsg': {'type': 'string', 'required': False, 'empty': False}
-                       }
+            {
+                'type': 'dict',
+                'schema': {
+                    'formula': {'type': 'dict', 'required': True, 'empty': False},
+                    'errmsg': {'type': 'string', 'required': False, 'empty': False}
+                }
             }
         """
 
@@ -668,3 +711,98 @@ class NACCValidator(Validator):
 
         if gds != value:
             self._error(field, error_def, value, gds)
+
+    def _validate_compare_with(self, comparison: Dict[str, Any], field: str,
+                               value: object):
+        """Apply the speified comparison.
+
+        Args:
+            comparison: Comparison specified in the rule definition
+            field: Variable name
+            value: Variable value
+
+        Note: Don't remove below docstring,
+        Cerberus uses it to validate the schema definition.
+
+        The rule's arguments are validated against this schema:
+            {
+                'type': 'dict',
+                'schema': {
+                    'comparator': {
+                        'type': 'string',
+                        'required': True,
+                        'empty': False,
+                        'allowed': [">", "<", ">=", "<=", "==", "!="]
+                    },
+                    'base': {
+                        'type': 'string',
+                        'required': True,
+                        'empty': False
+                    },
+                    'adjustment': {
+                        'required': False,
+                        'empty': False,
+                        'dependencies': 'op'
+                    },
+                    'op': {
+                        'type': 'string',
+                        'required': False,
+                        'empty': False,
+                        'allowed': ["+", "-", "*", "/"],
+                        'dependencies': 'adjustment'
+                    }
+                }
+            }
+        """
+
+        comparator = comparison[SchemaDefs.COMPARATOR]
+        base = comparison[SchemaDefs.BASE]
+        adjustment = None
+        operator = None
+        if SchemaDefs.ADJUST in comparison:
+            adjustment = comparison[SchemaDefs.ADJUST]
+        if SchemaDefs.OP in comparison:
+            operator = comparison[SchemaDefs.OP]
+
+        comparison_str = field + " " + comparator
+        if adjustment and operator:
+            comparison_str += " " + base + " " + operator + " " + str(
+                adjustment)
+
+        base_val = self.__get_base_val(base)
+        if not base_val:
+            self._error(field, ErrorDefs.COMPARE_WITH, comparison_str)
+            return
+
+        adjusted_value = base_val
+        if adjustment and operator:
+            if operator == "+":
+                adjusted_value = base_val + adjustment
+            elif operator == "-":
+                adjusted_value = base_val - adjustment
+            elif operator == "*":
+                adjusted_value = base_val * adjustment
+            elif operator == "/":
+                adjusted_value = base_val / adjustment
+
+        valid = True
+        if comparator == ">=" and value < adjusted_value:
+            valid = False
+
+        if comparator == ">" and value <= adjusted_value:
+            valid = False
+
+        if comparator == "<=" and value > adjusted_value:
+            valid = False
+
+        if comparator == "<" and value >= adjusted_value:
+            valid = False
+
+        if comparator == "==" and value != adjusted_value:
+            valid = False
+
+        if comparator == "!=" and value == adjusted_value:
+            valid = False
+
+        if not valid:
+            self._error(field, ErrorDefs.COMPARE_WITH, comparison_str)
