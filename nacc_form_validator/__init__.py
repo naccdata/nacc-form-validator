@@ -1,1 +1,1 @@
-from .nacc_validator import NACCValidator
+from .quality_check import QualityCheck

@@ -11,9 +11,8 @@ See the [Cerberus usage examples](https://docs.python-cerberus.org/en/stable/usa
     * [Installing Pants](#installing-pants)
     * [Building a Distribution](#building-a-distribution)
     * [Common Build Issues](#common-build-issues)
-* [Using the NACCValidator](#using-the-nacc-validator)
 
-Also see [Data Quality Rule Definition Guidelines](./docs/data-quality-rule-definition-guidelines.md) for more information on how the quality rules work.
+See [Using the NACC Form Validator](./docs/usage.md) for a usage guide. In general, all documentation outside this README lives under `docs`.
 
 ## Setup
 
@@ -43,7 +42,7 @@ pip3 install dist/nacc_form_validator-VERSION-py3-none-any.whl
 
 ### Installing Pants
 
-This repository is setup to use [pants](pantsbuild.org) for developing and building the distributions.
+This repository uses [pants](pantsbuild.org) for developing and building the distributions.
 
 Install pants with one of the following. See [Installing Pants](https://www.pantsbuild.org/stable/docs/getting-started/installing-pants) for more information.
 
@@ -103,36 +102,3 @@ On macOS, if you see a long error that ends with the following when trying to bu
 ```
 
 make sure that the `pants_version` in `pants.toml` is `>=2.22.0`.
-
-## Using the NACCValidator
-
-There are two ways to use the NACC Form Validator:
-
-1. Importing the `NACCValidator` class (`from nacc_form_validator import NACCValidator`) and using the class directly, or
-2. Using the `run_nacc_validator.py` script
-
-JSON rules schemas for NACC forms are provided under `docs/form-rules/`.
-
-### NACCValidator Class
-
-`NACCValidator` extends the Cerberus `Validator` class, so can be invoked similarly with
-
-```
-from nacc_form_validator import NACCValidator
-
-schema = {"schema": "the rules form schema"}
-v = NACCValidator(schema)
-
-document = {"form": "your form to validate"}
-v.validate(document)
-
-# returns True if valid, False otherwise
-```
-
-### run_nacc_validator.py
-
-`run_nacc_validator.py` simply provides a CLI entrypoint to run the `NACCValidator`, and effectively does the same as the above:
-
-```
-./run_nacc_validator.py --schema ./path-to-form-schema.json --form ./path-to-form.json
-```
