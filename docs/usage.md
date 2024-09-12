@@ -176,4 +176,4 @@ passed, sys_failure, errors, error_tree = qc.validate_record(record)
 
 It is likely you will want to validate multiple records at once. This is easily achieved by instantiating a `QualityCheck` with the corresponding schema and pass the record(s) you want to validate as Python `dict` objects. What this data looks like outside of that is up to you - maybe you wish to read in forms from external files (JSONs, YAML, or CSVs), or directly from a database.
 
-`docs/validate_csv_records.py` sets up an example CLI script to read in multiple records from a CSV file and validate them against a schema similarly passed as a JSON file. It then summarizes the results and prints them to a CSV file, if specified, else `stdout`.
+`docs/validate_csv_records.py` sets up an example CLI script to read in multiple records from a CSV file and validate them against a schema similarly passed as a JSON file. It then summarizes the results and prints them to a CSV or JSON file (based on file extension, defaults to CSV if no extension is provided), or `stdout` (in JSON) if no output file is specified.
