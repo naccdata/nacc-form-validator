@@ -12,7 +12,7 @@ See the [Cerberus usage examples](https://docs.python-cerberus.org/en/stable/usa
     * [Building a Distribution](#building-a-distribution)
     * [Common Build Issues](#common-build-issues)
 
-See [Using the NACC Form Validator](./docs/usage.md) for a usage guide. In general, all documentation outside this README lives under `docs`.
+See the [Usage doc](./docs/usage.md) for a quick-start usage guide with examples. In general, all documentation outside this README lives under `docs`.
 
 ## Setup
 

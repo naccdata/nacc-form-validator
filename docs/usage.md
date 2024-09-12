@@ -6,13 +6,18 @@ The JSON rules (validation schemas) for all NACC forms are stored under `docs/na
 
 ## Table of Contents
 
-* [Example Usage - Hello World](#example-usage-hello-world)
-* [Example Usage - Records and Datastores](#example-usage-records-and-datastores)
-* [Overview of the Code](#overview-of-the-code)
+* [Overview](#overview)
+* [Example Usage - Hello World](#example-usage---hello-world)
+* [Example Usage - Records and Datastores](#example-usage---records-and-datastores)
+* [Example Usage - Bulk Validation](#example-usage---bulk-validation)
+
+## Overview
+
+The main "entrypoint", or class to instantiate for validation, is `QualityCheck`, which in turn creates a `NACCValidator` to both validate the schema and return extra information from the validator. `NACCValidator` itself is an extension of [Cerberus' `Validator` class](https://docs.python-cerberus.org/api.html#cerberus.Validator). It can also use an optional `Datastore` object which you can implement to access records in your own database. See [Example Usage - Records and Datastores](#example-usage---records-and-datastores) for more information.
 
 ## Example Usage - Hello World
 
-The following is a simple example of using this package. The main "entrypoint", or object to instantiate for validation, is `QualityCheck`, which in turn creates a `NACCValidator` to both validate the schema and return extra information from the validator. `NACCValidator` itself is an extension of [Cerberus' `Validator` class](https://docs.python-cerberus.org/api.html#cerberus.Validator).
+The following is a simple example of using this package.
 
 ```python
 from nacc_form_validator import QualityCheck
@@ -166,3 +171,9 @@ passed, sys_failure, errors, error_tree = qc.validate_record(record)
 #     ],{}
 # }
 ```
+
+## Example Usage - Bulk Validation
+
+It is likely you will want to validate multiple records at once. This is easily achieved by instantiating a `QualityCheck` with the corresponding schema and pass the record(s) you want to validate as Python `dict` objects. What this data looks like outside of that is up to you - maybe you wish to read in forms from external files (JSONs, YAML, or CSVs), or directly from a database.
+
+`docs/validate_csv_records.py` sets up an example CLI script to read in multiple records from a CSV file and validate them against a schema similarly passed as a JSON file. It then summarizes the results and prints them to a CSV file, if specified, else `stdout`.
