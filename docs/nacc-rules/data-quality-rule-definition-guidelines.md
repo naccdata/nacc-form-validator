@@ -7,7 +7,9 @@ Documentation adapted from [here](https://github.com/naccdata/uniform-data-set/b
 * [Introduction](#introduction)
 * [Validation Rules](#validation-rules)
 * [Custom Rules Defined for UDS](#custom-rules-defined-for-uds)
+    * [compare_with](#compare_with)
     * [compatibility](#compatibility)
+    * [logic](#logic)
     * [temporalrules](#temporalrules)
 
 ## Introduction
@@ -262,6 +264,79 @@ data = {"email": "john_at_example_dot_com"}     # fails
 
 ## Custom Rules Defined for UDS
 
+These are defined in the `NACCValidator` class.
+
+### compare_with
+
+Used to constrain based on comparison with another value, with optional adjustments.
+
+* `comparator`: The comparison expression; can be one of `[">", "<", ">=", "<=", "==", "!="]`
+* `base`: The value to compare to
+* `adjustment`: The adjustment value to make to the base expression, if any. If specified `op` must also be provided 
+* `op`: The operation to make the adjustment for; can be one of `["+", "-", "*", "/"]`. If specified, `adjustment` must also be provided
+
+The value to compare to (`base`) can be another field in the schema OR one of the four special keywords related to the current date (i.e. the exact time/date at time of validation).
+
+* `current_date`: Compare to the current date
+* `current_year`: Compare to the current year
+* `current_month`: Compare to the current month
+* `current_day`: Compare to the current day
+
+The rule definition for `compare_with` should follow the following format:
+
+```json
+{
+    "<variable_name>": {
+        "compare_with": {
+            "comparator": "one of >, <, >=, <=, ==, !=",
+            "base": "value to compare variable_name to",
+            "adjustment": "(optional) the adjustment value",
+            "op": "the operator to make the adjustment for"
+        }
+}
+```
+
+**Example:**
+
+`birthyr <= current_year - 15`, e.g. `birthyr` must be at least 15 years prior to the current year.
+
+<table>
+<tr>
+<th> YAML Rule Definition </th> <th> JSON Rule Definition </th>
+<tr>
+<td>
+
+```yaml
+birthyr:
+  type: integer
+  required: true
+  compare_with:
+    comparator: "<="
+    base: current_year
+    adjustment: 15
+    op: "-"
+```
+</td>
+<td>
+
+```json
+{
+    "birthyr": {
+        "type": "integer",
+        "required": true,
+        "compare_with": {
+            "comparator": "<=",
+            "base": "current_year",
+            "adjustment": 15,
+            "op": "-"
+        }
+    }
+}
+```
+</td>
+</table>
+
+
 ### compatibility
 
 Used to specify the list of compatibility constraints for a given variable with other variables within the form or across multiple forms.
@@ -387,6 +462,100 @@ incntmdx:
                 }
             }
         ]
+    }
+}
+```
+</td>
+</table>
+
+
+### logic
+
+Used to specify a mathematicaal formula/expression to validate against, and utilizes [json-logic-py](https://github.com/nadirizr/json-logic-py) (saved as `json_logic.py`). This rule overlaps with `compare_with`, but allows for comparison between multiple variables, as opposed to just two (and does not account for special keywords).
+
+* `formula`: The mathematical formula/expression to apply; see the `operations` dict in `json_logic.py` to see the full list of available operators. Each operator expects differently formatted arguments
+* `errormsg`: A custom message to supply if validation fails. This key is optional; if not provided the error message will simply be `value {value} does not satisify the specified formula`
+
+The rule definition for `logic` should follow the following format:
+
+```json
+{
+    "<variable_name>": {
+        "logic": {
+            "formula": {
+                "operator": "list of arguments for the operator"
+            },
+            "errormsg": "<optional error message to supply if validation fails>"
+        }
+}
+```
+
+**Example:**
+
+One of `var1`, `var2`, or `var3` must be `1`.
+
+<table>
+<tr>
+<th> YAML Rule Definition </th> <th> JSON Rule Definition </th>
+<tr>
+<td>
+
+```yaml
+var1:
+  type: integer
+  nullable: true
+
+var2:
+  type: integer
+  nullable: true
+
+var3:
+  type: integer
+  nullable: true
+  logic:
+    formula:
+      or:
+        - ==:
+            - 1
+            - var: var1
+        - ==:
+            - 1
+            - var: var2
+        - ==:
+            - 1
+            - var: var3
+```
+</td>
+<td>
+
+```json
+{
+    "var1": {
+        "type": "integer",
+        "nullable": true,
+    },
+    "var2": {
+        "type": "integer",
+        "nullable": true,
+    },
+    "var3": {
+        "type": "integer",
+        "nullable": true,
+        "logic": {
+            "formula": {
+                "or": [
+                    {
+                        "==": [1, {"var": "var1"}]
+                    },
+                    {
+                        "==": [1, {"var": "var2"}]
+                    },
+                    {
+                        "==": [1, {"var": "var3"}]
+                    }
+                ]
+            }
+        }
     }
 }
 ```
