@@ -206,6 +206,10 @@ class NACCValidator(Validator):
                     )
                     record[key] = value
 
+        for key in self.dtypes:
+            if key not in record:
+                record[key] = None
+
         return record
 
     def __get_base_val(self, key: str) -> Optional[Any]:
@@ -463,6 +467,9 @@ class NACCValidator(Validator):
             # Check whether the dependency conditions satisfied
             for dep_field, conds in if_conds.items():
                 subschema = {dep_field: conds}
+                if dep_field == 'logic':
+                    subschema = {field: subschema}
+
                 temp_validator = NACCValidator(
                     subschema,
                     allow_unknown=True,

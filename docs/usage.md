@@ -13,7 +13,12 @@ The JSON rules (validation schemas) for all NACC forms are stored under `docs/na
 
 ## Overview
 
-The main "entrypoint", or class to instantiate for validation, is `QualityCheck`, which in turn creates a `NACCValidator` to both validate the schema and return extra information from the validator. `NACCValidator` itself is an extension of [Cerberus' `Validator` class](https://docs.python-cerberus.org/api.html#cerberus.Validator). It can also use an optional `Datastore` object which you can implement to access records in your own database. See [Example Usage - Records and Datastores](#example-usage---records-and-datastores) for more information.
+The main "entry point", or class to instantiate for validation, is `QualityCheck`, which in turn creates a `NACCValidator` to both validate the schema and return extra information from the validator. `NACCValidator` itself is an extension of [Cerberus' `Validator` class](https://docs.python-cerberus.org/api.html#cerberus.Validator). It can also use an optional `Datastore` object which you can implement to access records in your own database. See [Example Usage - Records and Datastores](#example-usage---records-and-datastores) for more information.
+
+There isn't really any benefit to using `NACCValidator` directly, but if you decide to just keep in mind the following:
+
+* If the records you're validating on have _missing_ fields (e.g. passing an empty `dict` as a "record" as opposed to a `dict` with all fields set to `None`), some of the more complicated rules like `logic` may not entirely behave as expected. The `cast_record` resolves this by setting any missing fields (based on the schema) to `None`, **so you need to call this method before validating**
+* The `errors` property only reports the error of the _last validation that failed_, so if you want to keep track of all of them you'll need to keep track of them (an example of this is done in [Example Usage - Bulk Validation](#example-usage---bulk-validation) but more externally through `QualityCheck`)
 
 ## Example Usage - Hello World
 
