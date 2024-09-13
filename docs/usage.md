@@ -15,9 +15,10 @@ The JSON rules (validation schemas) for all NACC forms are stored under `docs/na
 
 The main "entry point", or class to instantiate for validation, is `QualityCheck`, which in turn creates a `NACCValidator` to both validate the schema and return extra information from the validator. `NACCValidator` itself is an extension of [Cerberus' `Validator` class](https://docs.python-cerberus.org/api.html#cerberus.Validator). It can also use an optional `Datastore` object which you can implement to access records in your own database. See [Example Usage - Records and Datastores](#example-usage---records-and-datastores) for more information.
 
-There isn't really any benefit to using `NACCValidator` directly, but if you decide to just keep in mind the following:
+There isn't really any benefit to using `NACCValidator` directly, but if you decide to just keep in mind the following (e.g. duplicate what `QualityCheck` will handle for you):
 
 * If the records you're validating on have _missing_ fields (e.g. passing an empty `dict` as a "record" as opposed to a `dict` with all fields set to `None`), some of the more complicated rules like `logic` may not entirely behave as expected. The `cast_record` resolves this by setting any missing fields (based on the schema) to `None`, **so you need to call this method before validating**
+* Similarly, if using `primary_key` and `datastore`, those properties will need to be explicitly set on the `NACCValidator` object
 * The `errors` property only reports the error of the _last validation that failed_, so if you want to keep track of all of them you'll need to keep track of them (an example of this is done in [Example Usage - Bulk Validation](#example-usage---bulk-validation) but more externally through `QualityCheck`)
 
 ## Example Usage - Hello World
@@ -74,6 +75,8 @@ This is where `pk_name` and `datastore` come in, in which `pk_name` is the "prim
 Say `pk_name` is the `patient_id`. For sake of simplicity, the "database" in this example will be a hard-coded Python dict, but yours will likely be much more complicated. Next our validation scheme checks to see if a patient filled out taxes in a previous visit (0); if so, the current record cannot indicate that they never did it (8).
 
 ```python
+import copy
+
 from nacc_form_validator import QualityCheck
 from nacc_form_validator.datastore import Datastore
 
@@ -95,11 +98,20 @@ class CustomDatastore(Datastore):
         }
 
     def get_previous_instance(self, orderby: str, pk_field: str, current_ins: dict[str, str]) -> dict[str, str] | None:
+        """
+        See where this record would fit in the sorted record and return the previous instance
+        Making a deep copy since we don't actually want to modify the record in this method
+        """
         key = current_ins[pk_field]
         if key not in self.__db:
             return None
+        
+        sorted_record = copy.deepcopy(self.__db[key])
+        sorted_record.append(current_ins)
+        sorted_record.sort(key=lambda record: record[orderby])
 
-        return sorted(self.__db[key], key=lambda record: record[orderby])[-1]
+        index = sorted_record.index(current_ins)
+        return sorted_record[index - 1] if index != 0 else None
 
 
 pk_name = "patient_id"

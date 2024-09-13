@@ -78,7 +78,10 @@ def test_cast_record(nv):
     }
 
 def test_cast_record_invalid(nv):
-    """ Test the cast_record method; should not actually throw an error, but return the value as-is """
+    """
+    Test the cast_record method; should not actually throw an error, but return the value as-is
+    Should also recurn `dummy_str: None` since it was not explicitly set by record
+    """
     record = {
         'dummy_int': 'hello',
         'dummy_float': 'world',
@@ -110,7 +113,7 @@ def test_validate_formatting_invalid_field(nv):
     }
 
 """
-The following test common rules used in NACC forms that are "custom" relative to what
+The following test common rules used in NACC forms that are "custom" or complex relative to what
 the base Cerberus Validator provides.
 """
 
@@ -153,7 +156,6 @@ def test_date_format(date_constraint):
     assert nv.errors == {'frmdate': [f"value does not match regex '{date_constraint}'"]}
     assert not nv.validate({'frmdate': 'hello world'})
     assert nv.errors == {'frmdate': [f"value does not match regex '{date_constraint}'"]}
-
 
 def test_compatibility_if_then(nv):
     """ Tests if/then compatibility rule, which also tests '_validate_filled' by extension """
@@ -316,4 +318,44 @@ def test_compatibility_with_nested_logic():
     assert not nv.validate({'raceaian': 1, 'raceunkn': 1})
     assert nv.errors == {'raceunkn': ["('raceunkn', ['must be empty']) for {'logic': {'formula': {'or': [{'==': [1, {'var': 'raceaian'}]}, {'==': [1, {'var': 'raceasian'}]}, {'==': [1, {'var': 'raceblack'}]}]}}} - compatibility rule no: 1"]}
 
-# TODO: test temporal rules
+def test_compare_with_current_year():
+    """ Test compare_with operator, both with an adjustment and without; and with special key current_year """
+    schema = {
+        "birthyr": {
+            "type": "integer",
+            "required": True,
+            "min": 1850,
+            "compare_with": {
+                "comparator": "<=",
+                "base": "current_year"
+            }
+        },
+        "birthyradj": {
+            "type": "integer",
+            "required": True,
+            "min": 1850,
+            "compare_with": {
+                "comparator": "<=",
+                "base": "current_year",
+                "adjustment": 15,
+                "op": "-"
+            }
+        }
+    }
+
+    nv = create_nacc_validator(schema)
+
+    # valid cases
+    assert nv.validate({'birthyr': 2000, 'birthyradj': 2000})
+
+    # invalid cases - breaks min (so also testing min)
+    assert not nv.validate({'birthyr': 1800, 'birthyradj': 1800})
+    assert nv.errors == {'birthyr': ['min value is 1850'], 'birthyradj': ['min value is 1850']}
+
+    # breaks current_year comparison - these will need to change once we hit 2038 :)
+    assert not nv.validate({'birthyr': 2038, 'birthyradj': 2000})
+    assert nv.errors == {'birthyr': ["input value doesn't satisfy the condition birthyr <="]}
+    assert not nv.validate({'birthyr': 2023, 'birthyradj': 2023})
+    assert nv.errors == {'birthyradj': ["input value doesn't satisfy the condition birthyradj <= current_year - 15"]}
+    assert not nv.validate({'birthyr': 2038, 'birthyradj': 2038})
+    assert nv.errors == {'birthyr': ["input value doesn't satisfy the condition birthyr <="], 'birthyradj': ["input value doesn't satisfy the condition birthyradj <= current_year - 15"]}
