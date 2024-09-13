@@ -721,7 +721,7 @@ class NACCValidator(Validator):
 
     def _validate_compare_with(self, comparison: Dict[str, Any], field: str,
                                value: object):
-        """Apply the speified comparison.
+        """Apply the specified comparison.
 
         Args:
             comparison: Comparison specified in the rule definition
@@ -792,24 +792,27 @@ class NACCValidator(Validator):
             elif operator == "/":
                 adjusted_value = base_val / adjustment
 
-        valid = True
-        if comparator == ">=" and value < adjusted_value:
-            valid = False
+        try:
+            valid = True
+            if comparator == ">=" and value < adjusted_value:
+                valid = False
 
-        if comparator == ">" and value <= adjusted_value:
-            valid = False
+            if comparator == ">" and value <= adjusted_value:
+                valid = False
 
-        if comparator == "<=" and value > adjusted_value:
-            valid = False
+            if comparator == "<=" and value > adjusted_value:
+                valid = False
 
-        if comparator == "<" and value >= adjusted_value:
-            valid = False
+            if comparator == "<" and value >= adjusted_value:
+                valid = False
 
-        if comparator == "==" and value != adjusted_value:
-            valid = False
+            if comparator == "==" and value != adjusted_value:
+                valid = False
 
-        if comparator == "!=" and value == adjusted_value:
-            valid = False
+            if comparator == "!=" and value == adjusted_value:
+                valid = False
 
-        if not valid:
-            self._error(field, ErrorDefs.COMPARE_WITH, comparison_str)
+            if not valid:
+                self._error(field, ErrorDefs.COMPARE_WITH, comparison_str)
+        except TypeError:
+            pass

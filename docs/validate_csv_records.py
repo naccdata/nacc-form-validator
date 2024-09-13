@@ -61,7 +61,6 @@ if __name__ == "__main__":
     error_headers = set(['row'])
     with args.input_records_csv.open('r') as fh:
         reader = csv.DictReader(fh)
-        headers = {x: {} for x in reader.fieldnames}
 
         # start at "row 1" since ignoring headers
         for i, record in enumerate(reader, 1):

@@ -79,10 +79,7 @@ def test_cast_record(nv):
     }
 
 def test_cast_record_invalid(nv):
-    """
-    Test the cast_record method; should not actually throw an error, but return the value as-is
-    Should also recurn `dummy_str: None` since it was not explicitly set by record
-    """
+    """ Test the cast_record method; should not actually throw an error, but return the value as-is """
     record = {
         'dummy_int': 'hello',
         'dummy_float': 'world',

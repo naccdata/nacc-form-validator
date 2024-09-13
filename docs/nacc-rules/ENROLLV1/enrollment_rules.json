@@ -1,0 +1,528 @@
+{
+    "adcid": {
+        "type": "integer",
+        "required": true,
+        "allowed": [
+            0,
+            2,
+            4,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            18,
+            19,
+            21,
+            22,
+            26,
+            27,
+            30,
+            31,
+            33,
+            35,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            47,
+            48,
+            49,
+            65,
+            67,
+            68
+        ]
+    },
+    "ptid": {
+        "required": true
+    },
+    "frmdate_enrl": {
+        "type": "string",
+        "required": true,
+        "formatting": "date",
+        "regex": "(^(0[1-9]|1[0-2])[-\/](0[1-9]|[12][0-9]|3[01])[-\/](\\d{4})$)|(^(\\d{4})[-\/](0[1-9]|1[0-2])[-\/](0[1-9]|[12][0-9]|3[01])$)",
+        "min": "2024-05-17"
+    },
+    "initials_enrl": {
+        "nullable": true
+    },
+    "enrltype": {
+        "type": "integer",
+        "required": true,
+        "allowed": [
+            1,
+            2
+        ]
+    },
+    "enrlbirthmo": {
+        "type": "integer",
+        "required": true,
+        "min": 1,
+        "max": 12
+    },
+    "enrlbirthyr": {
+        "type": "integer",
+        "required": true,
+        "min": 1850,
+        "compare_with": {
+            "comparator": "<=",
+            "base": "current_year",
+            "adjustment": 15,
+            "op": "-"
+        }
+    },
+    "enrleduc": {
+        "type": "integer",
+        "required": true,
+        "anyof": [
+            {
+                "min": 0,
+                "max": 36
+            },
+            {
+                "allowed": [
+                    99
+                ]
+            }
+        ]
+    },
+    "enrlgenman": {
+        "type": "integer",
+        "nullable": true,
+        "allowed": [
+            1
+        ],
+        "logic": {
+            "formula": {
+                "or": [
+                    {
+                        "==": [
+                            1,
+                            {
+                                "var": "enrlgenman"
+                            }
+                        ]
+                    },
+                    {
+                        "==": [
+                            1,
+                            {
+                                "var": "enrlgenwoman"
+                            }
+                        ]
+                    },
+                    {
+                        "==": [
+                            1,
+                            {
+                                "var": "enrlgentrman"
+                            }
+                        ]
+                    },
+                    {
+                        "==": [
+                            1,
+                            {
+                                "var": "enrlgentrwoman"
+                            }
+                        ]
+                    },
+                    {
+                        "==": [
+                            1,
+                            {
+                                "var": "enrlgennonbi"
+                            }
+                        ]
+                    },
+                    {
+                        "==": [
+                            1,
+                            {
+                                "var": "enrlgentwospir"
+                            }
+                        ]
+                    },
+                    {
+                        "==": [
+                            1,
+                            {
+                                "var": "enrlgenoth"
+                            }
+                        ]
+                    },
+                    {
+                        "==": [
+                            1,
+                            {
+                                "var": "enrlgendkn"
+                            }
+                        ]
+                    },
+                    {
+                        "==": [
+                            1,
+                            {
+                                "var": "enrlgennoans"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "enrlgenwoman": {
+        "type": "integer",
+        "nullable": true,
+        "allowed": [
+            1
+        ]
+    },
+    "enrlgentrman": {
+        "type": "integer",
+        "nullable": true,
+        "allowed": [
+            1
+        ]
+    },
+    "enrlgentrwoman": {
+        "type": "integer",
+        "nullable": true,
+        "allowed": [
+            1
+        ]
+    },
+    "enrlgennonbi": {
+        "type": "integer",
+        "nullable": true,
+        "allowed": [
+            1
+        ]
+    },
+    "enrlgentwospir": {
+        "type": "integer",
+        "nullable": true,
+        "allowed": [
+            1
+        ]
+    },
+    "enrlgenoth": {
+        "type": "integer",
+        "nullable": true,
+        "allowed": [
+            1
+        ]
+    },
+    "enrlgenothx": {
+        "type": "string",
+        "nullable": true,
+        "compatibility": [
+            {
+                "index": 0,
+                "if": {
+                    "enrlgenoth": {
+                        "allowed": [
+                            1
+                        ]
+                    }
+                },
+                "then": {
+                    "nullable": false
+                }
+            },
+            {
+                "index": 1,
+                "if": {
+                    "enrlgenoth": {
+                        "nullable": true,
+                        "filled": false
+                    }
+                },
+                "then": {
+                    "nullable": true,
+                    "filled": false
+                }
+            }
+        ]
+    },
+    "enrlgendkn": {
+        "type": "integer",
+        "nullable": true,
+        "allowed": [
+            1
+        ]
+    },
+    "enrlgennoans": {
+        "type": "integer",
+        "nullable": true,
+        "allowed": [
+            1
+        ]
+    },
+    "guidavail": {
+        "type": "integer",
+        "required": true,
+        "allowed": [
+            0,
+            1
+        ]
+    },
+    "guid": {
+        "nullable": true,
+        "compatibility": [
+            {
+                "index": 0,
+                "if": {
+                    "guidavail": {
+                        "allowed": [
+                            1
+                        ]
+                    }
+                },
+                "then": {
+                    "nullable": false
+                }
+            },
+            {
+                "index": 1,
+                "if": {
+                    "guidavail": {
+                        "allowed": [
+                            0
+                        ]
+                    }
+                },
+                "then": {
+                    "nullable": true,
+                    "filled": false
+                }
+            }
+        ]
+    },
+    "prevenrl": {
+        "type": "integer",
+        "required": true,
+        "allowed": [
+            0,
+            1,
+            9
+        ],
+        "compatibility": [
+            {
+                "index": 0,
+                "if": {
+                    "enrltype": {
+                        "allowed": [
+                            2
+                        ]
+                    }
+                },
+                "then": {
+                    "allowed": [
+                        1
+                    ]
+                }
+            }
+        ]
+    },
+    "oldadcid": {
+        "type": "integer",
+        "nullable": true,
+        "allowed": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            25,
+            26,
+            27,
+            28,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            46,
+            47,
+            48,
+            49,
+            65,
+            67,
+            68
+        ],
+        "compatibility": [
+            {
+                "index": 0,
+                "if": {
+                    "prevenrl": {
+                        "allowed": [
+                            1
+                        ]
+                    }
+                },
+                "then": {
+                    "nullable": false
+                }
+            },
+            {
+                "index": 1,
+                "if": {
+                    "prevenrl": {
+                        "allowed": [
+                            0,
+                            9
+                        ]
+                    }
+                },
+                "then": {
+                    "nullable": true,
+                    "filled": false
+                }
+            }
+        ],
+        "logic": {
+            "formula": {
+                "!=": [
+                    {
+                        "var": "oldadcid"
+                    },
+                    {
+                        "var": "adcid"
+                    }
+                ]
+            }
+        }
+    },
+    "oldptid": {
+        "nullable": true
+    },
+    "naccidknwn": {
+        "type": "integer",
+        "nullable": true,
+        "allowed": [
+            0,
+            1,
+            8
+        ],
+        "compatibility": [
+            {
+                "index": 0,
+                "if": {
+                    "enrltype": {
+                        "allowed": [
+                            2
+                        ]
+                    }
+                },
+                "then": {
+                    "allowed": [
+                        0,
+                        1
+                    ]
+                }
+            },
+            {
+                "index": 1,
+                "if": {
+                    "enrltype": {
+                        "allowed": [
+                            1
+                        ]
+                    }
+                },
+                "then": {
+                    "nullable": true,
+                    "allowed": [
+                        8
+                    ]
+                }
+            }
+        ]
+    },
+    "naccid": {
+        "type": "string",
+        "nullable": true,
+        "compatibility": [
+            {
+                "index": 0,
+                "if": {
+                    "naccidknwn": {
+                        "allowed": [
+                            1
+                        ]
+                    }
+                },
+                "then": {
+                    "nullable": false
+                }
+            },
+            {
+                "index": 1,
+                "if": {
+                    "naccidknwn": {
+                        "nullable": true,
+                        "allowed": [
+                            0,
+                            8
+                        ]
+                    }
+                },
+                "then": {
+                    "nullable": true,
+                    "filled": false
+                }
+            }
+        ]
+    },
+    "ptidconf": {
+        "required": true,
+        "logic": {
+            "formula": {
+                "==": [
+                    {
+                        "var": "ptidconf"
+                    },
+                    {
+                        "var": "ptid"
+                    }
+                ]
+            }
+        }
+    }
+}
