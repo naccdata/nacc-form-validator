@@ -15,11 +15,19 @@ The JSON rules (validation schemas) for all NACC forms are stored under `docs/na
 
 The main "entry point", or class to instantiate for validation, is `QualityCheck`, which in turn creates a `NACCValidator` to both validate the schema and return extra information from the validator. `NACCValidator` itself is an extension of [Cerberus' `Validator` class](https://docs.python-cerberus.org/api.html#cerberus.Validator). It can also use an optional `Datastore` object which you can implement to access records in your own database. See [Example Usage - Records and Datastores](#example-usage---records-and-datastores) for more information.
 
-There isn't really any benefit to using `NACCValidator` directly, but if you decide to just keep in mind the following (e.g. duplicate what `QualityCheck` will handle for you):
+The general workflow is to instantiate a `QualityCheck` object with the schema you want to validate against, and then pass the record to validate to `validate_record`. This method returns 4 variables:
+
+| Variable | Type | Description |
+| -------- | ---- | ----------- |
+| `passed` | `bool` | Whether or not the record satisfied all validation rules |
+| `sys_failure` | `bool` | Whether or not a system error occured |
+| `errors` | `dict[str, list[str]]` | Dict of errors encountered keyed by the variable that failed. Empty if no errors encountered. |
+| `error_tree` | `DocumentErrorTree` | A dict-like object of `ValidationError` instances. See Cerberus' [Errors documentation](https://docs.python-cerberus.org/errors.html) for more information. |
+
+`QualityCheck` itself is fairly straightforward - the actual validation logic is handled by `NACCValidator`. There isn't really any reason to using `NACCValidator` directly, but if you decide to just keep in mind the following (e.g. duplicate what `QualityCheck` will handle for you):
 
 * If the records you're validating on have _missing_ fields (e.g. passing an empty `dict` as a "record" as opposed to a `dict` with all fields set to `None`), some of the more complicated rules like `logic` may not entirely behave as expected. The `cast_record` resolves this by setting any missing fields (based on the schema) to `None`, **so you need to call this method before validating**
 * Similarly, if using `primary_key` and `datastore`, those properties will need to be explicitly set on the `NACCValidator` object
-* The `errors` property only reports the error of the _last validation that failed_, so if you want to keep track of all of them you'll need to keep track of them (an example of this is done in [Example Usage - Bulk Validation](#example-usage---bulk-validation) but more externally through `QualityCheck`)
 
 ## Example Usage - Hello World
 

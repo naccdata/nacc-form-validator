@@ -99,7 +99,7 @@ class QualityCheck:
         Returns:
             bool: True if the record satisfied all rules
             bool: True if system error occurred
-            Dict[str, List[str]: List of formatted error messages by variable
+            Dict[str, List[str]: Dict of formatted error messages by variable
             DocumentErrorTree: A dict like object of ValidationError instances
             (check https://docs.python-cerberus.org/errors.html)
         """
