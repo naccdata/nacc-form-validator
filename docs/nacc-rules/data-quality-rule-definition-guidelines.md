@@ -248,7 +248,7 @@ data = {"age": 200}     # fails
 schema = {
     "email": {
         "type": "string",
-        "regex": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$ "
+        "regex": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$ "
     }
 }
 
