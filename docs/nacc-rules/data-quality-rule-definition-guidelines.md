@@ -288,10 +288,10 @@ The rule definition for `compare_with` should follow the following format:
 {
     "<variable_name>": {
         "compare_with": {
-            "comparator": "one of >, <, >=, <=, ==, !=",
+            "comparator": "comparator, one of >, <, >=, <=, ==, !=",
             "base": "value to compare variable_name to",
             "adjustment": "(optional) the adjustment value",
-            "op": "the operator to make the adjustment for"
+            "op": "operation, one of +, -, *, /"
         }
 }
 ```
