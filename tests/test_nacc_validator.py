@@ -9,6 +9,7 @@ from nacc_form_validator.nacc_validator import (NACCValidator,
                                                 ValidationException)
 
 def create_nacc_validator(schema: dict[str, object]) -> NACCValidator:
+    """ Create nacc validator """
     return NACCValidator(schema,
                          allow_unknown=False,
                          error_handler=CustomErrorHandler(schema))
@@ -113,11 +114,12 @@ def test_validate_formatting_invalid_field(nv):
     }
 
 """
-The following test common rules used in NACC forms that are "custom" or complex relative to what
+The following test common rules used in NACC forms that are custom or complex relative to what
 the base Cerberus Validator provides.
 """
 
 def test_required():
+    """ Test required case """
     schema = {'dummy_var': {'required': True, 'type': 'string'}}
     nv = create_nacc_validator(schema)
 
@@ -126,12 +128,40 @@ def test_required():
     assert nv.errors == {'dummy_var': ['required field']}
 
 def test_nullable():
+    """ Test nullable case """
     schema = {'dummy_var': {'nullable': True, 'type': 'string'}}
     nv = create_nacc_validator(schema)
 
     assert nv.validate({'dummy_var': 'hello'})
     assert nv.validate({'dummy_var': ''})
     assert nv.validate({})
+
+def test_anyof():
+    """ Test anyof case """
+    schema = {
+        "dummy_var": {
+                "type": "integer",
+                "required": True,
+                "anyof": [
+                    {
+                        "min": 0,
+                        "max": 36
+                    },
+                    {
+                        "allowed": [99]
+                    }
+                ]
+            }
+    }
+    nv = create_nacc_validator(schema)
+
+    for i in range(0, 37):
+        assert nv.validate({'dummy_var': i})
+    assert nv.validate({'dummy_var': 99})
+    assert not nv.validate({'dummy_var': 100})
+    assert nv.errors == {'dummy_var': ['no definitions validate', {'anyof definition 0': ['max value is 36'], 'anyof definition 1': ['unallowed value 100']}]}
+    assert not nv.validate({'dummy_var': -1})
+    assert nv.errors == {'dummy_var': ['no definitions validate', {'anyof definition 0': ['min value is 0'], 'anyof definition 1': ['unallowed value -1']}]}
 
 @pytest.fixture
 def date_constraint():
@@ -318,6 +348,49 @@ def test_compatibility_with_nested_logic():
     assert not nv.validate({'raceaian': 1, 'raceunkn': 1})
     assert nv.errors == {'raceunkn': ["('raceunkn', ['must be empty']) for {'logic': {'formula': {'or': [{'==': [1, {'var': 'raceaian'}]}, {'==': [1, {'var': 'raceasian'}]}, {'==': [1, {'var': 'raceblack'}]}]}}} - compatibility rule no: 1"]}
 
+def test_multiple_compatibility():
+    """ Test multiple compatibility rules """
+    schema = {
+        "enrlgenoth": {
+            "type": "integer",
+            "nullable": True,
+            "allowed": [1]
+        },
+        "enrlgenothx": {
+            "type": "string",
+            "nullable": True,
+            "compatibility": [
+                {
+                    "index": 0,
+                    "if": {
+                        "enrlgenoth": {"allowed": [1]}
+                    },
+                    "then": {"nullable": False}
+                },
+                {
+                    "index": 1,
+                    "if": {
+                        "enrlgenoth": {"nullable": True, "filled": False}
+                    },
+                    "then": {"nullable": True, "filled": False}
+                }
+            ]
+        }
+    }
+
+    nv = create_nacc_validator(schema)
+
+    # valid cases
+    assert nv.validate({'enrlgenoth': 1, 'enrlgenothx': 'somevalue'})
+    assert nv.validate({'enrlgenoth': None, 'enrlgenothx': None})
+    assert nv.validate({})
+
+    # invalid cases
+    assert not nv.validate({'enrlgenoth': 1, 'enrlgenothx': None})
+    assert nv.errors == {'enrlgenothx': ["('enrlgenothx', ['null value not allowed']) for {'enrlgenoth': {'allowed': [1]}} - compatibility rule no: 0"]}
+    assert not nv.validate({'enrlgenoth': None, 'enrlgenothx': 'somevalue'})
+    assert nv.errors == {'enrlgenothx': ["('enrlgenothx', ['must be empty']) for {'enrlgenoth': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
+
 def test_compare_with_current_year():
     """ Test compare_with operator, both with an adjustment and without; and with special key current_year """
     schema = {
@@ -359,3 +432,73 @@ def test_compare_with_current_year():
     assert nv.errors == {'birthyradj': ["input value doesn't satisfy the condition birthyradj <= current_year - 15"]}
     assert not nv.validate({'birthyr': 2038, 'birthyradj': 2038})
     assert nv.errors == {'birthyr': ["input value doesn't satisfy the condition birthyr <="], 'birthyradj': ["input value doesn't satisfy the condition birthyradj <= current_year - 15"]}
+
+def test_lots_of_rules():
+    """ Test when a specific field has a lot of rules associated with it (in this case oldadcid) """
+    schema = {
+        "adcid": {
+            "type": "integer",
+            "required": True,
+            "min": 0,
+            "max": 68
+        },
+        "prevenrl": {
+            "type": "integer",
+            "required": True,
+            "allowed": [0, 1, 9]
+        },
+        "oldadcid": {
+            "type": "integer",
+            "nullable": True,
+            "anyof": [
+                {"min": 0, "max": 68},
+                {"allowed": [-1]}
+            ],
+            "compatibility": [
+                {
+                    "index": 0,
+                    "if": {
+                        "prevenrl": {
+                            "allowed": [1]
+                        }
+                    },
+                    "then": {"nullable": False}
+                },
+                {
+                    "index": 1,
+                    "if": {
+                        "prevenrl": {
+                            "allowed": [0, 9]
+                        }
+                    },
+                    "then": {"nullable": True, "filled": False}
+                }
+            ],
+            "logic": {
+                "formula": {
+                    "!=": [
+                        {"var": "oldadcid"},
+                        {"var": "adcid"}
+                    ]
+                }
+            }
+        }
+    }
+
+    nv = create_nacc_validator(schema)
+
+    # valid cases
+    assert nv.validate({'adcid': 0, 'prevenrl': 1, 'oldadcid': -1})
+    assert nv.validate({'adcid': 0, 'prevenrl': 1, 'oldadcid': 10})
+    assert nv.validate({'adcid': 0, 'prevenrl': 0, 'oldadcid': None})
+    assert nv.validate({'adcid': 0, 'prevenrl': 9, 'oldadcid': None})
+
+    # invalid cases - compatibility
+    assert not nv.validate({'adcid': 0, 'prevenrl': 1, 'oldadcid': None})
+    assert nv.errors == {'oldadcid': ["('oldadcid', ['null value not allowed']) for {'prevenrl': {'allowed': [1]}} - compatibility rule no: 0"]}
+    assert not nv.validate({'adcid': 0, 'prevenrl': 0, 'oldadcid': 1})
+    assert nv.errors == {'oldadcid': ["('oldadcid', ['must be empty']) for {'prevenrl': {'allowed': [0, 9]}} - compatibility rule no: 1"]}
+
+    # invalid cases, logic (adcid != oldadcid)
+    assert not nv.validate({'adcid': 0, 'prevenrl': 1, 'oldadcid': 0})
+    assert nv.errors == {'oldadcid': ['error in formula evaluation - value 0 does not satisfy the specified formula']}
