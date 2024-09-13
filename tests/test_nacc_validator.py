@@ -133,6 +133,28 @@ def test_nullable():
     assert nv.validate({'dummy_var': ''})
     assert nv.validate({})
 
+def test_minmax():
+    """ Test min/max case """
+    schema = {
+        "dummy_var": {
+                "type": "integer",
+                "required": True,
+                "min": 0,
+                "max": 10
+            }
+    }
+    nv = create_nacc_validator(schema)
+
+    for i in range(0, 10):
+        assert nv.validate({'dummy_var': i})
+
+    assert not nv.validate({'dummy_var': 11})
+    assert nv.errors == {'dummy_var': ['max value is 10']}
+    assert not nv.validate({'dummy_var': -1})
+    assert nv.errors == {'dummy_var': ['min value is 0']}
+    assert not nv.validate({'dummy_var': None})
+    assert nv.errors == {'dummy_var': ['null value not allowed']}
+
 def test_anyof():
     """ Test anyof case """
     schema = {
@@ -142,7 +164,7 @@ def test_anyof():
                 "anyof": [
                     {
                         "min": 0,
-                        "max": 36
+                        "max": 10
                     },
                     {
                         "allowed": [99]
@@ -152,11 +174,11 @@ def test_anyof():
     }
     nv = create_nacc_validator(schema)
 
-    for i in range(0, 37):
+    for i in range(0, 10):
         assert nv.validate({'dummy_var': i})
     assert nv.validate({'dummy_var': 99})
     assert not nv.validate({'dummy_var': 100})
-    assert nv.errors == {'dummy_var': ['no definitions validate', {'anyof definition 0': ['max value is 36'], 'anyof definition 1': ['unallowed value 100']}]}
+    assert nv.errors == {'dummy_var': ['no definitions validate', {'anyof definition 0': ['max value is 10'], 'anyof definition 1': ['unallowed value 100']}]}
     assert not nv.validate({'dummy_var': -1})
     assert nv.errors == {'dummy_var': ['no definitions validate', {'anyof definition 0': ['min value is 0'], 'anyof definition 1': ['unallowed value -1']}]}
 
