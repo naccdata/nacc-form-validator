@@ -111,7 +111,7 @@ def test_validate_formatting_invalid_field(nv):
     }
 
 """
-The following test common rules used in NACC forms that are custom or complex relative to what
+The following test common rules used in NACC forms, particularly those that are custom or complex relative to what
 the base Cerberus Validator provides.
 """
 
@@ -154,6 +154,28 @@ def test_minmax():
     assert nv.errors == {'dummy_var': ['min value is 0']}
     assert not nv.validate({'dummy_var': None})
     assert nv.errors == {'dummy_var': ['null value not allowed']}
+
+def test_regex():
+    """ Test regex """
+    schema = {
+        "zip": {
+            "type": "string",
+            "nullable": True,
+            "regex": "^(00[6-9]|0[1-9]\\d|[1-9]\\d{2})$"
+        }
+    }
+    nv = create_nacc_validator(schema)
+
+    assert nv.validate({'zip': "006"})
+    assert nv.validate({'zip': "012"})
+    assert nv.validate({'zip': "999"})
+
+    assert not nv.validate({'zip': "6"})
+    assert nv.errors == {'zip': ["value does not match regex '^(00[6-9]|0[1-9]\\d|[1-9]\\d{2})$'"]}
+    assert not nv.validate({'zip': "12"})
+    assert nv.errors == {'zip': ["value does not match regex '^(00[6-9]|0[1-9]\\d|[1-9]\\d{2})$'"]}
+    assert not nv.validate({'zip': "1000"})
+    assert nv.errors == {'zip': ["value does not match regex '^(00[6-9]|0[1-9]\\d|[1-9]\\d{2})$'"]}
 
 def test_anyof():
     """ Test anyof case """

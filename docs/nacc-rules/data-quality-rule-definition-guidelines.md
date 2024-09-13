@@ -239,6 +239,25 @@ data = {"age": 200}     # fails
 
 </td>
 </tr>
+<tr>
+<td> regex </td>
+<td> Regex to validate against; only valid for string values. </td>
+<td>
+
+```python
+schema = {
+    "email": {
+        "type": "string",
+        "regex": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$ "
+    }
+}
+
+data = {"email": "john@example.com"}            # passes
+data = {"email": "john_at_example_dot_com"}     # fails
+```
+
+</td>
+</tr>
 </table>
 
 ## Custom Rules Defined for UDS
