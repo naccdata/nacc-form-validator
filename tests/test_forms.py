@@ -70,3 +70,40 @@ def test_enrollment_form():
     run_validation('enrollment_rules.json',
                    input_records,
                    expected_errors)
+
+def test_enrollment_form_all_fail():
+    """ Test enrollment form on everything (or as much as we can have) failing """
+    input_records = [
+        {
+            "adcid": -1,
+            "frmdate_enrl": "invalid date",
+            "enrltype": 3,
+            "enrlbirthmo": 15,
+            "enrlbirthyr": 1700,
+            "enrleduc": 80,
+            "guidavail": 3,
+            "guid": 5,
+            "prevenrl": 10,
+            "oldadcid": -1,
+            "ptidconf": "dummyptid2",
+            "should_pass": False
+        }
+    ]
+
+    expected_errors = [{
+        'adcid': ['unallowed value -1'],
+        'enrlbirthmo': ['max value is 12'],
+        'enrlbirthyr': ['min value is 1850'],
+        'enrleduc': ['no definitions validate',{'anyof definition 0': ['max value is 36'], 'anyof definition 1': ['unallowed value 80']}],
+        'enrlgenman': ['error in formula evaluation - value None does not satisfy the specified formula'],
+        'enrltype': ['unallowed value 3'],
+        'frmdate_enrl': ['min date/year comparison error - Unknown string format: invalid date', "value does not match regex '(^(0[1-9]|1[0-2])[-/](0[1-9]|[12][0-9]|3[01])[-/](\\d{4})$)|(^(\\d{4})[-/](0[1-9]|1[0-2])[-/](0[1-9]|[12][0-9]|3[01])$)'"],
+        'guidavail': ['unallowed value 3'],
+        'oldadcid': ['unallowed value -1', 'error in formula evaluation - value -1 does not satisfy the specified formula'],
+        'prevenrl': ['unallowed value 10'],
+        'ptid': ['required field'],
+        'ptidconf': ['error in formula evaluation - value dummyptid2 does not satisfy the specified formula']
+    }]
+    run_validation('enrollment_rules.json',
+                   input_records,
+                   expected_errors)
