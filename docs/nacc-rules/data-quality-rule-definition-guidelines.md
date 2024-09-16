@@ -12,17 +12,17 @@
 
 ## Introduction
 
-The form validator uses QC rules defined as JSON or YAML data objects to check data, based on [Cerberus](https://docs.python-cerberus.org/en/stable/index.html). In a nutshell:
+The form validator uses QC rules defined as JSON or YAML data objects to check data, based on [Cerberus](https://docs.python-cerberus.org/). In a nutshell:
 
 * Validation schemas are dictionaries of key-value pairs which can be specified using YAML or JSON formats (NACC rules use JSON)
 * Rule definitions are organized by forms. For each form, we have provided a JSON file listing the validation rules for the variables in that form in this directory (`docs/nacc-rules`)
-* Data records collected (converted to Python `dict`s) will be evaluated against the validation schema
+* Data records collected (converted to Python `dict`) will be evaluated against the validation schema
 
 **Example:**
 
 <table>
 <tr>
-<th> YAML Rule Definition </th> <th> JSON Rule Definition </th>
+<th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
 <tr>
 <td>
 
@@ -55,15 +55,15 @@ birthmo:
 }
 ```
 </td>
+<td>
+
+```python
+{"ptid": 101, "birthmo": 12}    # passes
+{"ptid": 102, "birthmo": 15}    # fails
+{"ptid": 103}                   # fails
+```
+</td>
 </table>
-
-When validating:
-
-```
-{"ptid": 101, "birthmo": 12}    # passes validation
-{"ptid": 102, "birthmo": 15}    # fails validation
-{"ptid": 103}                   # fails validation
-```
 
 ## Validation Rules
 
@@ -284,12 +284,12 @@ The rule definition for `compare_with` should follow the following format:
 
 ```json
 {
-    "<variable_name>": {
+    "variable_name": {
         "compare_with": {
             "comparator": "comparator, one of >, <, >=, <=, ==, !=",
             "base": "value to compare variable_name to",
             "adjustment": "(optional) the adjustment value",
-            "op": "operation, one of +, -, *, /"
+            "op": "(optional) operation, one of +, -, *, /"
         }
 }
 ```
@@ -300,7 +300,7 @@ The rule definition for `compare_with` should follow the following format:
 
 <table>
 <tr>
-<th> YAML Rule Definition </th> <th> JSON Rule Definition </th>
+<th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
 <tr>
 <td>
 
@@ -332,16 +332,23 @@ birthyr:
 }
 ```
 </td>
-</table>
 
+<td>
+
+```python
+{"birthyr": 1995}   # passes
+{"birthyr": 2030}   # fails until 2045
+```
+</td>
+</table>
 
 ### compatibility
 
 Used to specify the list of compatibility constraints for a given variable with other variables within the form or across multiple forms.
 
-Each constraint specifies `if` and `then` attributes to allow the application of a subschema based on the outcome of another schema (i.e. when the schema defiend under `if` evaluates to true for a given record, then the schema specified under `then` will be evaluated).
+Each constraint specifies `if` and `then` attributes to allow the application of a subschema based on the outcome of another schema (i.e. when the schema defined under `if` evaluates to true for a given record, then the schema specified under `then` will be evaluated).
 
-The rule definition for `compatibility` should follow the following format:
+The rule definition for `compatibility` follows the following format:
 
 ```json
 {
@@ -374,13 +381,17 @@ If variable `incntmod` (primary contact mode with participant) is 6, then variab
 
 <table>
 <tr>
-<th> YAML Rule Definition </th> <th> JSON Rule Definition </th>
+<th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
 <tr>
 <td>
 
 ```yaml
+incntmod:
+  type: integer
+  required: true
+
 incntmdx:
-  type: string
+  type: integer
   nullable: true
   compatibility:
     - if:
@@ -395,8 +406,12 @@ incntmdx:
 
 ```json
 {
+    "incntmod": {
+        "type": "integer",
+        "required": true
+    },
     "incntmdx": {
-        "type": "string",
+        "type": "integer",
         "nullable": true,
         "compatibility": [
             {
@@ -414,6 +429,14 @@ incntmdx:
 }
 ```
 </td>
+<td>
+
+```python
+{"incntmod": 1, "incntmdx": None}   # passes
+{"incntmod": 6, "incntmdx": 1}      # passes
+{"incntmod": 6, "incntmdx": None}   # fails
+```
+</td>
 </table>
 
 This rule can also be used to define the "if not, then" case. For this, we use `forbidden` instead of `allowed`.
@@ -422,11 +445,15 @@ So if variable `incntmod` (primary contact mode with participant) is NOT 6, then
 
  <table>
 <tr>
-<th> YAML Rule Definition </th> <th> JSON Rule Definition </th>
+<th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
 <tr>
 <td>
 
 ```yaml
+incntmod:
+  type: integer
+  required: true
+
 incntmdx:
   type: string
   nullable: true
@@ -444,6 +471,10 @@ incntmdx:
 
 ```json
 {
+    "incntmod": {
+        "type": "integer",
+        "required": true
+    },
     "incntmdx": {
         "type": "string",
         "nullable": true,
@@ -464,12 +495,21 @@ incntmdx:
 }
 ```
 </td>
+<td>
+
+```python
+{"incntmod": 1, "incntmdx": None}   # passes
+{"incntmod": 6, "incntmdx": 1}      # fails
+{"incntmod": 6, "incntmdx": None}   # passes
+{"incntmod": 1, "incntmdx": 1}      # fails
+```
+</td>
 </table>
 
 
 ### logic
 
-Used to specify a mathematicaal formula/expression to validate against, and utilizes [json-logic-py](https://github.com/nadirizr/json-logic-py) (saved as `json_logic.py`). This rule overlaps with `compare_with`, but allows for comparison between multiple variables, as opposed to just two (and does not account for special keywords).
+Used to specify a mathematical formula/expression to validate against, and utilizes [json-logic-py](https://github.com/nadirizr/json-logic-py) (saved as `json_logic.py`). This rule overlaps with `compare_with`, but allows for comparison between multiple variables, as opposed to just two (and does not account for special keywords).
 
 * `formula`: The mathematical formula/expression to apply; see the `operations` dict in `json_logic.py` to see the full list of available operators. Each operator expects differently formatted arguments
 * `errormsg`: A custom message to supply if validation fails. This key is optional; if not provided the error message will simply be `value {value} does not satisify the specified formula`
@@ -494,7 +534,7 @@ One of `var1`, `var2`, or `var3` must be `1`.
 
 <table>
 <tr>
-<th> YAML Rule Definition </th> <th> JSON Rule Definition </th>
+<th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
 <tr>
 <td>
 
@@ -558,6 +598,14 @@ var3:
 }
 ```
 </td>
+<td>
+
+```python
+{"var1": 1, "var2": 1, "var3": 1}            # passes
+{"var1": 1, "var2": None, "var3": None}      # passes
+{"var1": None, "var2": None, "var3": None}   # fails
+```
+</td>
 </table>
 
 ### temporalrules
@@ -602,7 +650,7 @@ If variable `taxes` (difficulty with taxes, business, and other papers) is 0 (no
 
 <table>
 <tr>
-<th> YAML Rule Definition </th> <th> JSON Rule Definition </th>
+<th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
 <tr>
 <td>
 
@@ -641,6 +689,16 @@ taxes:
         }
     }
 }
+```
+</td>
+<td>
+
+```python
+# assume this record already exists
+# {"visit_date": 1, "taxes": 0}
+
+{"visit_date": 2, "taxes": 1}   # passes
+{"visit_date": 2, "taxes": 8}   # fails
 ```
 </td>
 </table>
