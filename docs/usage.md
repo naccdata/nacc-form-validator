@@ -13,25 +13,25 @@ The JSON rules (validation schemas) for all NACC forms are stored under `docs/na
 
 ## Overview
 
-The main "entry point", or class to instantiate for validation, is `QualityCheck`, which in turn creates a `NACCValidator` to both validate the schema and return extra information from the validator. `NACCValidator` itself is an extension of [Cerberus' `Validator` class](https://docs.python-cerberus.org/api.html#cerberus.Validator). It can also use an optional `Datastore` object which you can implement to access records in your own database. See [Example Usage - Records and Datastores](#example-usage---records-and-datastores) for more information.
+The main "entry point", or class to instantiate for validation, is `QualityCheck`, which in turn creates a `NACCValidator`, which both validate the schema and returns error information from the validator. `NACCValidator` itself is an extension of [Cerberus' `Validator` class](https://docs.python-cerberus.org/api.html#cerberus.Validator). It can also use an optional `Datastore` object which you can implement to access records in your own database. See [Example Usage - Records and Datastores](#example-usage---records-and-datastores) for more information.
 
-The general workflow is to instantiate a `QualityCheck` object with the schema you want to validate against, and then pass the record to validate to `validate_record`. This method returns 4 variables:
+The general workflow is to instantiate a `QualityCheck` object with the schema you want to validate against, and then pass the record to validate to the `validate_record` method. This method returns 4 variables:
 
 | Variable | Type | Description |
 | -------- | ---- | ----------- |
 | `passed` | `bool` | Whether or not the record satisfied all validation rules |
 | `sys_failure` | `bool` | Whether or not a system error occured |
-| `errors` | `dict[str, list[str]]` | Dict of errors encountered keyed by the variable that failed. Empty if no errors encountered. |
-| `error_tree` | `DocumentErrorTree` | A dict-like object of `ValidationError` instances. See Cerberus' [Errors documentation](https://docs.python-cerberus.org/errors.html) for more information. |
+| `errors` | `dict[str, list[str]]` | Dict of errors encountered keyed by the variable that failed. Empty if no errors encountered for the record. |
+| `error_tree` | `DocumentErrorTree` | A dict-like object of `ValidationError` instances. See [Cerberus' Errors documentation](https://docs.python-cerberus.org/errors.html) for more information. |
 
-`QualityCheck` itself is fairly straightforward - the actual validation logic is handled by `NACCValidator`. There isn't really any reason to using `NACCValidator` directly, but if you decide to just keep in mind the following (e.g. duplicate what `QualityCheck` will handle for you):
+`QualityCheck` itself is fairly straightforward - the actual validation logic is handled by `NACCValidator`. There isn't really any reason to use `NACCValidator` directly, but if you decide to just keep in mind the following (e.g. duplicate what `QualityCheck` will handle for you):
 
 * If the records you're validating on have _missing_ fields (e.g. passing an empty `dict` as a "record" as opposed to a `dict` with all fields set to `None`), some of the more complicated rules like `logic` may not entirely behave as expected. The `cast_record` resolves this by setting any missing fields (based on the schema) to `None`, **so you need to call this method before validating**
 * Similarly, if using `primary_key` and `datastore`, those properties will need to be explicitly set on the `NACCValidator` object
 
 ## Example Usage - Hello World
 
-The following is a simple example of using this package.
+The following is a simple example of using this package. The schema is a single rule for the field `hello`, and the only value it can be assigned to is the string `world`.
 
 ```python
 from nacc_form_validator import QualityCheck
@@ -76,7 +76,7 @@ passed, sys_failure, errors, error_tree = qc.validate_record({"hello": "pluto"})
 
 ## Example Usage - Records and Datastores
 
-In the previous example, we validated a single record. But you may want to compare a record against previous records associated with the same key, particularly if your schema uses temporal rules (see [Data Quality Rule Definition Guidelines](./nacc-rules/data-quality-rule-definition-guidelines.md)), which are usually associated with plausibility checks. If you are validating against a schema that doesn't have temporal rules, it isn't really necessary to set up a datastore.
+In the previous example, we validated a single record. But you may want to compare a record against previous records, particularly if your schema uses temporal rules, which are usually associated with plausibility checks (see [Data Quality Rule Definition Guidelines](./nacc-rules/data-quality-rule-definition-guidelines.md) for more information on temporal rules). If you are validating against a schema that doesn't have temporal rules, it isn't really necessary to set up a datastore.
 
 This is where `pk_name` and `datastore` come in, in which `pk_name` is the "primary key" to index the datastore by. `datastore.py` provides a `Datastore` abstract class that you must implement, specifically the `get_previous_instance` method.
 
@@ -199,6 +199,15 @@ passed, sys_failure, errors, error_tree = qc.validate_record(record)
 
 ## Example Usage - Bulk Validation
 
-It is likely you will want to validate multiple records at once. This is easily achieved by instantiating a `QualityCheck` with the corresponding schema and pass the record(s) you want to validate as Python `dict` objects. What this data looks like outside of that is up to you - maybe you wish to read in forms from external files (JSONs, YAML, or CSVs), or directly from a database.
+It is likely you will want to validate multiple records at once. This is easily achieved by instantiating a `QualityCheck` with the corresponding schema and looping over the record(s) you want to validate as Python `dict` objects. What this data looks like outside of that is up to you - maybe you wish to read in forms from external files (JSONs, YAML, or CSVs), or directly from a database.
 
-`docs/validate_csv_records.py` sets up an example CLI script to read in multiple records from a CSV file and validate them against a schema similarly passed as a JSON file. It then summarizes the results and prints them to a CSV or JSON file (based on file extension, defaults to CSV if no extension is provided), or `stdout` (in JSON) if no output file is specified.
+`docs/validate_csv_records.py` sets up an example CLI script to read in multiple records from a CSV file (where each row is a record) and validate them against a schema passed as a JSON file. It then summarizes the results and prints them to a CSV or JSON file (based on file extension, defaults to CSV if no extension is provided), or `stdout` (in JSON) if no output file is specified.
+
+Example usage:
+
+```bash
+python3 validate_csv_records.py \
+    -r rules-schema.json \
+    -i input-records.csv \
+    -o output-errors.csv
+```
