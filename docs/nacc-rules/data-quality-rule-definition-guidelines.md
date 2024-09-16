@@ -141,7 +141,7 @@ data = {"length": 20.8}     # fails
 schema = {
     "country": {
         "type": "string",
-        "nullable": true
+        "nullable": True
     }
 }
 
@@ -168,11 +168,11 @@ data = {"country": ""}      # fails
 schema = {
     "name": {
         "type": "string",
-        "required": true
+        "required": True
     },
     "age": {
-        "type": integer,
-        "nullable": true
+        "type": "integer",
+        "nullable": True
     }
 }
 
