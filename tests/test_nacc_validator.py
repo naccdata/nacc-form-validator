@@ -9,7 +9,7 @@ from nacc_form_validator.nacc_validator import (NACCValidator,
                                                 ValidationException)
 
 def create_nacc_validator(schema: dict[str, object]) -> NACCValidator:
-    """ Create nacc validator """
+    """ Creates a NACCValidator with the provided schema (and no datastore) """
     return NACCValidator(schema,
                          allow_unknown=False,
                          error_handler=CustomErrorHandler(schema))
@@ -206,6 +206,7 @@ def test_anyof():
 
 @pytest.fixture
 def date_constraint():
+    """ MM/DD/YYYY or YYYY/MM/DD """
     return "(^(0[1-9]|1[0-2])[-\\/](0[1-9]|[12][0-9]|3[01])[-\\/](\\d{4})$)|(^(\\d{4})[-\\/](0[1-9]|1[0-2])[-\\/](0[1-9]|[12][0-9]|3[01])$)"
 
 def test_date_format(date_constraint):

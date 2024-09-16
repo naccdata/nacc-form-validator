@@ -1,7 +1,5 @@
 # Data Quality Rule Definition Guidelines
 
-Documentation adapted from [here](https://github.com/naccdata/uniform-data-set/blob/main/rules/Data%20Quality%20Rule%20Definition%20Guidelines.pdf)
-
 ## Table of Contents
 
 * [Introduction](#introduction)

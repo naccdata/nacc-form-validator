@@ -16,7 +16,7 @@ def run_validation(rules_json: str,
                    expected_errors: list[dict[str, object]],
                    pk_name: str = None,
                    datastore: object = None):
-
+    """ Run the validation on the provided schema, and checks that the expected result/errors are returned """
     with (ENROLLV1_FORMS / rules_json).open('r') as fh:
         schema = json.load(fh)
 
@@ -34,6 +34,7 @@ def run_validation(rules_json: str,
     assert all_errors == expected_errors
 
 def test_enrollment_form():
+    """ Test enrollment form on a simple case - enrlbirthyr is required so the second record fails """
     input_records = [
         {
             "adcid": 0,
@@ -55,7 +56,7 @@ def test_enrollment_form():
             "frmdate_enrl": "05-17-2024",
             "enrltype": 1,
             "enrlbirthmo": 1,
-            "enrlbirthyr": None,
+            "enrlbirthyr": None,  # required so will cause failure
             "enrleduc": 0,
             "enrlgenman": 1,
             "guidavail": 0,

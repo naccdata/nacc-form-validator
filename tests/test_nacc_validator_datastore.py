@@ -42,6 +42,7 @@ class CustomDatastore(Datastore):
 
 
 def create_nacc_validator_with_ds(schema: dict[str, object]) -> NACCValidator:
+    """ Creates a generic NACCValidtor with the above CustomDataStore """
     nv = NACCValidator(schema,
                        allow_unknown=False,
                        error_handler=CustomErrorHandler(schema))
