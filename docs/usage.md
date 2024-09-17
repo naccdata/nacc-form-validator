@@ -2,7 +2,7 @@
 
 The purpose of this package is to provide developers with ways to validate and run error checks on NACC-specific forms before submission, or for validating extra data your forms may have.
 
-The JSON rules (validation schemas) for all NACC forms are stored under `docs/nacc-rules`, and can be modified as needed. See [Data Quality Rule Definition Guidelines](./nacc-rules/data-quality-rule-definition-guidelines.md) for more information on how the quality rules themselves work.
+See [Data Quality Rule Definition Guidelines](./data-quality-rule-definition-guidelines.md) for more information on how the quality rules themselves work, which includes custom rules written specifically for NACC forms.
 
 ## Table of Contents
 
@@ -76,7 +76,7 @@ passed, sys_failure, errors, error_tree = qc.validate_record({"hello": "pluto"})
 
 ## Example Usage - Records and Datastores
 
-In the previous example, we validated a single record. But you may want to compare a record against previous records, particularly if your schema uses temporal rules, which are usually associated with plausibility checks (see [Data Quality Rule Definition Guidelines](./nacc-rules/data-quality-rule-definition-guidelines.md) for more information on temporal rules). If you are validating against a schema that doesn't have temporal rules, it isn't really necessary to set up a datastore.
+In the previous example, we validated a single record. But you may want to compare a record against previous records, particularly if your schema uses temporal rules, which are usually associated with plausibility checks (see [Data Quality Rule Definition Guidelines](./data-quality-rule-definition-guidelines.md) for more information on temporal rules). If you are validating against a schema that doesn't have temporal rules, it isn't really necessary to set up a datastore.
 
 This is where `pk_name` and `datastore` come in, in which `pk_name` is the "primary key" to index the datastore by. `datastore.py` provides a `Datastore` abstract class that you must implement, specifically the `get_previous_instance` method.
 

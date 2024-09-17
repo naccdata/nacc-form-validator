@@ -14,8 +14,8 @@
 
 The form validator uses QC rules defined as JSON or YAML data objects to check data, based on [Cerberus](https://docs.python-cerberus.org/). In a nutshell:
 
-* Validation schemas are dictionaries of key-value pairs which can be specified using YAML or JSON formats (NACC rules use JSON)
-* Rule definitions are organized by forms. For each form, we have provided a JSON file listing the validation rules for the variables in that form in this directory (`docs/nacc-rules`)
+* Validation schemas are dictionaries of key-value pairs which can be specified using YAML or JSON formats
+* Rule definitions are organized by forms. For each form, a YAML or JSON file lists the validation rules for the variables in that form (NACC uses JSON)
 * Data records collected (converted to Python `dict`) will be evaluated against the validation schema
 
 **Example:**
