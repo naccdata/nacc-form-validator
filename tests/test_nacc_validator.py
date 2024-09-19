@@ -560,7 +560,7 @@ def test_compatibility_multiple_variables_or():
     assert not nv.validate({"majordep": 1, "otherdep": 1, "deprtreat": None})
     assert nv.errors == {'deprtreat': ["('deprtreat', ['null value not allowed']) for {'majordep': {'allowed': [1]}, 'otherdep': {'allowed': [1]}} - compatibility rule no: 1"]}
 
-def test_compatibility_then_multiple_blank():
+def test_compatibility_then_multiple_blank_and():
     """ Test when the rule results in multiple things needing to be blank """
     schema = {
         "parentvar": {
@@ -587,7 +587,7 @@ def test_compatibility_then_multiple_blank():
                         }
                     },
                     "then": {
-                        "nullable": True,
+                        "nullable": True,  # this is specifically required in schema for the None case
                         "logic": {
                             "formula": {
                                 "and": [
@@ -616,6 +616,106 @@ def test_compatibility_then_multiple_blank():
     # it looks like this error message is misleading, it fails because of var3 not var1 but since this logic is on var1 its reported as a var1 failure
     assert not nv.validate({"parentvar": None, "var1": None, "var2": None, "var3": 1})
     assert nv.errors == {'var1': ["('var1', ['error in formula evaluation - value None does not satisfy the specified formula']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
+
+def test_compatibility_multiple_resulting_variables_or():
+    """ Tests a "If X is 1, than Y or Z should be 0" situation """
+    schema = {
+        "bevhall": {
+            "type": "integer",
+            "nullable": True
+        },
+        "beahall": {
+            "type": "integer",
+            "nullable": True
+        },
+        "hall": {
+            "type": "integer",
+            "nullable": True,
+            "compatibility": [
+                {
+                    "if": {
+                        "hall": {
+                            "allowed": [1]
+                        }
+                    },
+                    "then": {
+                        "logic": {
+                            "formula": {
+                                "or": [
+                                    {"==": [1, {"var": "bevhall"}]},
+                                    {"==": [1, {"var": "beahall"}]}
+                                ]
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+    nv = create_nacc_validator(schema)
+
+    assert nv.validate({"hall": 1, "bevhall": 1, "beahall": 0})
+    assert nv.validate({"hall": 1, "bevhall": 1, "beahall": 1})
+    assert nv.validate({"hall": 1, "bevhall": None, "beahall": 1})
+    assert nv.validate({"hall": 0, "bevhall": None, "beahall": None})
+    assert nv.validate({"hall": 5, "bevhall": 3, "beahall": 3})
+
+    assert not nv.validate({"hall": 1, "bevhall": None, "beahall": None})
+    assert nv.errors == {'hall': ["('hall', ['error in formula evaluation - value 1 does not satisfy the specified formula']) for {'hall': {'allowed': [1]}} - compatibility rule no: 1"]}
+    assert not nv.validate({"hall": 1, "bevhall": 2, "beahall": 2})
+    assert nv.errors == {'hall': ["('hall', ['error in formula evaluation - value 1 does not satisfy the specified formula']) for {'hall': {'allowed': [1]}} - compatibility rule no: 1"]}
+
+def test_compatibility_multiple_resulting_options_or():
+    """ Tests a "If X is 1, than Y should be 0 or 2" situation """
+    schema = {
+        "majdepdx": {
+            "type": "integer",
+            "nullable": True
+        },
+        "othdepdx": {
+            "type": "integer",
+            "nullable": True
+        },
+        "depd": {
+            "type": "integer",
+            "nullable": True,
+            "compatibility": [
+                {
+                    "if": {
+                        "depd": {
+                            "allowed": [0]
+                        }
+                    },
+                    "then": {
+                        "logic": {
+                            "formula": {
+                                "or": [
+                                    {"==": [0, {"var": "majdepdx"}]},
+                                    {"==": [2, {"var": "majdepdx"}]},
+                                    {"==": [0, {"var": "othdepdx"}]},
+                                    {"==": [2, {"var": "othdepdx"}]},
+                                ]
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+    nv = create_nacc_validator(schema)
+
+    assert nv.validate({"depd": 0, "majdepdx": 0, "othdepdx": None})
+    assert nv.validate({"depd": 0, "majdepdx": None, "othdepdx": 2})
+    assert nv.validate({"depd": 0, "majdepdx": 0, "othdepdx": 2})
+    assert nv.validate({"depd": 5, "majdepdx": 1, "othdepdx": 1})
+    assert nv.validate({"depd": None, "majdepdx": 1, "othdepdx": 1})
+
+    assert not nv.validate({"depd": 0, "majdepdx": None, "othdepdx": None})
+    assert nv.errors == {'depd': ["('depd', ['error in formula evaluation - value 0 does not satisfy the specified formula']) for {'depd': {'allowed': [0]}} - compatibility rule no: 1"]}
+    assert not nv.validate({"depd": 0, "majdepdx": 1, "othdepdx": 1})
+    assert nv.errors == {'depd': ["('depd', ['error in formula evaluation - value 0 does not satisfy the specified formula']) for {'depd': {'allowed': [0]}} - compatibility rule no: 1"]}
+    assert not nv.validate({"depd": 0, "majdepdx": 3, "othdepdx": None})
+    assert nv.errors == {'depd': ["('depd', ['error in formula evaluation - value 0 does not satisfy the specified formula']) for {'depd': {'allowed': [0]}} - compatibility rule no: 1"]}
 
 def test_compare_with_current_year():
     """ Test compare_with operator, both with an adjustment and without; and with special key current_year """
@@ -728,3 +828,4 @@ def test_lots_of_rules():
     # invalid cases, logic (adcid != oldadcid)
     assert not nv.validate({'adcid': 0, 'prevenrl': 1, 'oldadcid': 0})
     assert nv.errors == {'oldadcid': ['error in formula evaluation - value 0 does not satisfy the specified formula']}
+
