@@ -515,7 +515,6 @@ def test_compatibility_multiple_variables_and():
     assert not nv.validate({"majordep": 2, "otherdep": 9, "deprtreat": 0})
     assert nv.errors == {'deprtreat': ["('deprtreat', ['must be empty']) for {'majordep': {'allowed': [0, 2, 9]}, 'otherdep': {'allowed': [0, 2, 9]}} - compatibility rule no: 1"]}
 
-
 def test_compatibility_multiple_variables_or():
     """ Test when the compatibility relies on two variables on an "or" operator """
     schema = {
@@ -560,6 +559,63 @@ def test_compatibility_multiple_variables_or():
     assert nv.errors == {'deprtreat': ["('deprtreat', ['null value not allowed']) for {'majordep': {'allowed': [1]}, 'otherdep': {'allowed': [1]}} - compatibility rule no: 1"]}
     assert not nv.validate({"majordep": 1, "otherdep": 1, "deprtreat": None})
     assert nv.errors == {'deprtreat': ["('deprtreat', ['null value not allowed']) for {'majordep': {'allowed': [1]}, 'otherdep': {'allowed': [1]}} - compatibility rule no: 1"]}
+
+def test_compatibility_then_multiple_blank():
+    """ Test when the rule results in multiple things needing to be blank """
+    schema = {
+        "parentvar": {
+            "type": "integer",
+            "nullable": True
+        },
+        "var3": {
+            "type": "integer",
+            "nullable": True
+        },
+        "var2": {
+            "type": "integer",
+            "nullable": True
+        },
+        "var1": {
+            "type": "integer",
+            "nullable": True,
+            "compatibility": [
+                {
+                    "if": {
+                        "parentvar": {
+                            "nullable": True,
+                            "filled": False
+                        }
+                    },
+                    "then": {
+                        "nullable": True,
+                        "logic": {
+                            "formula": {
+                                "and": [
+                                    {"==": [None, {"var": "var1"}]},
+                                    {"==": [None, {"var": "var2"}]},
+                                    {"==": [None, {"var": "var3"}]}
+                                ]
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+    nv = create_nacc_validator(schema)
+
+    # if parentvar is None then the following must be None: var1, var2, var3
+    assert nv.validate({"parentvar": None, "var1": None, "var2": None, "var3": None})
+    assert nv.validate({"parentvar": 0, "var1": 1, "var2": 2, "var3": 3})
+
+    assert not nv.validate({"parentvar": None, "var1": 1, "var2": None, "var3": None})
+    assert nv.errors == {'var1': ["('var1', ['error in formula evaluation - value 1 does not satisfy the specified formula']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
+    assert not nv.validate({"parentvar": None, "var1": 1, "var2": 1, "var3": 1})
+    assert nv.errors == {'var1': ["('var1', ['error in formula evaluation - value 1 does not satisfy the specified formula']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
+    
+    # it looks like this error message is misleading, it fails because of var3 not var1 but since this logic is on var1 its reported as a var1 failure
+    assert not nv.validate({"parentvar": None, "var1": None, "var2": None, "var3": 1})
+    assert nv.errors == {'var1': ["('var1', ['error in formula evaluation - value None does not satisfy the specified formula']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
 
 def test_compare_with_current_year():
     """ Test compare_with operator, both with an adjustment and without; and with special key current_year """
