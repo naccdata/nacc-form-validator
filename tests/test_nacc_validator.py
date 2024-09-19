@@ -311,7 +311,7 @@ def test_logic_or():
                     "or": [
                         {"==": [1, {"var": "raceaian"}]},
                         {"==": [1, {"var": "raceasian"}]},
-                        {"==": [1, {"var": "raceblack"}]},
+                        {"==": [1, {"var": "raceblack"}]}
                     ]
                 }
             }
@@ -355,7 +355,7 @@ def test_logic_and():
                     "and": [
                         {"==": [1, {"var": "raceaian"}]},
                         {"==": [1, {"var": "raceasian"}]},
-                        {"==": [1, {"var": "raceblack"}]},
+                        {"==": [1, {"var": "raceblack"}]}
                     ]
                 }
             }
@@ -371,8 +371,8 @@ def test_logic_and():
     assert not nv.validate({'raceaian': 1, 'raceasian': None, 'raceblack': None})
     assert nv.errors == {'raceaian': ['error in formula evaluation - value 1 does not satisfy the specified formula']}
 
-def test_compatibility_with_nested_logic():
-    """ Test when the rule has a nested compatibility - logic """
+def test_compatibility_with_nested_logic_or():
+    """ Test when the rule has a nested compatibility - or logic """
     schema = {
         "raceasian": {
             "type": "integer",
@@ -472,6 +472,94 @@ def test_multiple_compatibility():
     assert nv.errors == {'enrlgenothx': ["('enrlgenothx', ['null value not allowed']) for {'enrlgenoth': {'allowed': [1]}} - compatibility rule no: 0"]}
     assert not nv.validate({'enrlgenoth': None, 'enrlgenothx': 'somevalue'})
     assert nv.errors == {'enrlgenothx': ["('enrlgenothx', ['must be empty']) for {'enrlgenoth': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
+
+def test_compatibility_multiple_variables_and():
+    """ Test when the compatibility relies on two variables on an "and" operator """
+    schema = {
+        "majordep": {
+            "type": "integer",
+            "required": True,
+            "allowed": [0, 1, 2, 9]
+        },
+        "otherdep": {
+            "type": "integer",
+            "required": True,
+            "allowed": [0, 1, 2, 9]
+        },
+        "deprtreat": {
+            "type": "integer",
+            "nullable": True,
+            "allowed": [0, 1],
+            "compatibility": [
+                {
+                    "if": {
+                        "majordep": {"allowed": [0, 2, 9]},
+                        "otherdep": {"allowed": [0, 2, 9]}
+                    },
+                    "then": {
+                        "nullable": True,
+                        "filled": False
+                    }
+                }
+            ]
+        }
+    }
+    nv = create_nacc_validator(schema)
+
+    # above schema is saying "If MAJORDEP and OTHERDEP in (0,2,9) then DEPRTREAT must be blank"
+    assert nv.validate({"majordep": 0, "otherdep": 2, "deprtreat": None})
+    assert nv.validate({"majordep": 1, "otherdep": 2, "deprtreat": 1})
+
+    assert not nv.validate({"majordep": 0, "otherdep": 2, "deprtreat": 1})
+    assert nv.errors == {'deprtreat': ["('deprtreat', ['must be empty']) for {'majordep': {'allowed': [0, 2, 9]}, 'otherdep': {'allowed': [0, 2, 9]}} - compatibility rule no: 1"]}
+    assert not nv.validate({"majordep": 2, "otherdep": 9, "deprtreat": 0})
+    assert nv.errors == {'deprtreat': ["('deprtreat', ['must be empty']) for {'majordep': {'allowed': [0, 2, 9]}, 'otherdep': {'allowed': [0, 2, 9]}} - compatibility rule no: 1"]}
+
+
+def test_compatibility_multiple_variables_or():
+    """ Test when the compatibility relies on two variables on an "or" operator """
+    schema = {
+        "majordep": {
+            "type": "integer",
+            "required": True,
+            "allowed": [0, 1, 2, 9]
+        },
+        "otherdep": {
+            "type": "integer",
+            "required": True,
+            "allowed": [0, 1, 2, 9]
+        },
+        "deprtreat": {
+            "type": "integer",
+            "nullable": True,
+            "allowed": [0, 1],
+            "compatibility": [
+                {
+                    "op": "OR",
+                    "if": {
+                        "majordep": {"allowed": [1]},
+                        "otherdep": {"allowed": [1]}
+                    },
+                    "then": {
+                        "nullable": False,
+                    }
+                }
+            ]
+        }
+    }
+    nv = create_nacc_validator(schema)
+
+    # above schema is saying "If MAJORDEP or OTHERDEP is 1 then DEPRTREAT must be present"
+    assert nv.validate({"majordep": 0, "otherdep": 2, "deprtreat": None})
+    assert nv.validate({"majordep": 1, "otherdep": 2, "deprtreat": 1})
+    assert nv.validate({"majordep": 9, "otherdep": 1, "deprtreat": 0})
+
+    assert not nv.validate({"majordep": 1, "otherdep": 2, "deprtreat": None})
+    assert nv.errors == {'deprtreat': ["('deprtreat', ['null value not allowed']) for {'majordep': {'allowed': [1]}, 'otherdep': {'allowed': [1]}} - compatibility rule no: 1"]}
+    assert not nv.validate({"majordep": 9, "otherdep": 1, "deprtreat": None})
+    assert nv.errors == {'deprtreat': ["('deprtreat', ['null value not allowed']) for {'majordep': {'allowed': [1]}, 'otherdep': {'allowed': [1]}} - compatibility rule no: 1"]}
+    assert not nv.validate({"majordep": 1, "otherdep": 1, "deprtreat": None})
+    assert nv.errors == {'deprtreat': ["('deprtreat', ['null value not allowed']) for {'majordep': {'allowed': [1]}, 'otherdep': {'allowed': [1]}} - compatibility rule no: 1"]}
 
 def test_compare_with_current_year():
     """ Test compare_with operator, both with an adjustment and without; and with special key current_year """
