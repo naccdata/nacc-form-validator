@@ -15,7 +15,7 @@
 The form validator uses QC rules defined as JSON or YAML data objects to check data, based on [Cerberus](https://docs.python-cerberus.org/). In a nutshell:
 
 * Validation schemas are dictionaries of key-value pairs which can be specified using YAML or JSON formats
-* Rule definitions are organized by forms. For each form, a YAML or JSON file lists the validation rules for the field in that form (NACC uses JSON)
+* Rule definitions are organized by forms. For each form, a YAML or JSON file lists the validation rules for the fields in that form (NACC uses JSON)
 * Data records collected (converted to Python `dict`) will be evaluated against the validation schema
 
 **Example:**
@@ -344,7 +344,7 @@ birthyr:
 
 ### compatibility
 
-Used to specify the list of compatibility (if-then) constraints for a given field with other field within the form or across multiple forms. A field will only pass validation if none of the compatibility constraints are violated.
+Used to specify the list of compatibility (if-then) constraints for a given field with other fields within the form or across multiple forms. A field will only pass validation if none of the compatibility constraints are violated.
 
 Each constraint specifies `if` and `then` attributes to allow the application of a subschema based on the outcome of another schema (i.e. when the schema defined under `if` evaluates to true for a given record, then the schema specified under `then` will be evaluated).
 
