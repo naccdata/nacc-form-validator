@@ -15,7 +15,7 @@
 The form validator uses QC rules defined as JSON or YAML data objects to check data, based on [Cerberus](https://docs.python-cerberus.org/). In a nutshell:
 
 * Validation schemas are dictionaries of key-value pairs which can be specified using YAML or JSON formats
-* Rule definitions are organized by forms. For each form, a YAML or JSON file lists the validation rules for the variables in that form (NACC uses JSON)
+* Rule definitions are organized by forms. For each form, a YAML or JSON file lists the validation rules for the field in that form (NACC uses JSON)
 * Data records collected (converted to Python `dict`) will be evaluated against the validation schema
 
 **Example:**
@@ -134,7 +134,7 @@ data = {"length": 20.8}     # fails
 </tr>
 <tr>
 <td valign="top"> <code>nullable</code> </td>
-<td valign="top"> If set to "true", the field value is allowed to be empty. This rule will be checked on every variable, regardless of if it's defined or not. The rule's constraints defaults it to "false". </td>
+<td valign="top"> If set to "true", the field value is allowed to be empty. This rule will be checked on every field, regardless of if it's defined or not. The rule's constraints defaults it to "false". In other words, if neither `nullable` nor `required` are set, the field is required. </td>
 <td valign="top">
 
 ```python
@@ -266,10 +266,10 @@ These are defined in the `NACCValidator` class.
 
 ### compare_with
 
-Used to validate the variable based on comparison with another variable, with optional adjustments.
+Used to validate the field based on comparison with another field, with optional adjustments.
 
 * `comparator`: The comparison expression; can be one of `[">", "<", ">=", "<=", "==", "!="]`
-* `base`: The value to compare to
+* `base`: The field or value to compare to
 * `adjustment`: The adjustment value to make to the base expression, if any. If specified `op` must also be provided 
 * `op`: The operation to make the adjustment for; can be one of `["+", "-", "*", "/"]`. If specified, `adjustment` must also be provided
 
@@ -284,10 +284,10 @@ The rule definition for `compare_with` should follow the following format:
 
 ```json
 {
-    "variable_name": {
+    "field_name": {
         "compare_with": {
             "comparator": "comparator, one of >, <, >=, <=, ==, !=",
-            "base": "value to compare variable_name to",
+            "base": "field or value to compare field_name to",
             "adjustment": "(optional) the adjustment value",
             "op": "(optional) operation, one of +, -, *, /"
         }
@@ -344,7 +344,7 @@ birthyr:
 
 ### compatibility
 
-Used to specify the list of compatibility (if-then) constraints for a given variable with other variables within the form or across multiple forms. A variable will only pass validation if none of the compatibility constraints are violated.
+Used to specify the list of compatibility (if-then) constraints for a given field with other field within the form or across multiple forms. A field will only pass validation if none of the compatibility constraints are violated.
 
 Each constraint specifies `if` and `then` attributes to allow the application of a subschema based on the outcome of another schema (i.e. when the schema defined under `if` evaluates to true for a given record, then the schema specified under `then` will be evaluated).
 
@@ -352,22 +352,22 @@ The rule definition for `compatibility` follows the following format:
 
 ```json
 {
-    "<variable_name>": {
+    "<field_name>": {
         "compatibility": [
             {
                 "if": {
-                    "subschema_attribute": "subschema to be satisifed for other variables"
+                    "subschema_attribute": "subschema to be satisifed for other fields"
                 },
                 "then": {
-                    "subschema_attribute": "conditions to be satisifed for the current variable"
+                    "subschema_attribute": "conditions to be satisifed for the current field"
                 }
             },
             {
                 "if": {
-                    "subschema_attribute": "subschema to be satisifed for other variables"
+                    "subschema_attribute": "subschema to be satisifed for other fields"
                 },
                 "then": {
-                    "subschema_attribute": "conditions to be satisifed for the current variable"
+                    "subschema_attribute": "conditions to be satisifed for the current field"
                 }
             }
         ]
@@ -377,7 +377,7 @@ The rule definition for `compatibility` follows the following format:
 
 **Examples:**
 
-If variable `incntmod` (primary contact mode with participant) is 6, then variable `incntmdx` (specify primary contact mode with participant) cannot be blank. 
+If field `incntmod` (primary contact mode with participant) is 6, then field `incntmdx` (specify primary contact mode with participant) cannot be blank. 
 
 <table>
 <tr>
@@ -441,7 +441,7 @@ incntmdx:
 
 This rule can also be used to define the "if not, then" case. For this, we use `forbidden` instead of `allowed`.
 
-So if variable `incntmod` (primary contact mode with participant) is NOT 6, then variable `incntmdx` (specify primary contact mode with participant) must be blank.
+So if field `incntmod` (primary contact mode with participant) is NOT 6, then field `incntmdx` (specify primary contact mode with participant) must be blank.
 
  <table>
 <tr>
@@ -509,7 +509,7 @@ incntmdx:
 
 ### logic
 
-Used to specify a mathematical formula/expression to validate against, and utilizes [json-logic-py](https://github.com/nadirizr/json-logic-py) (saved as `json_logic.py`). This rule overlaps with `compare_with`, but allows for comparison between multiple variables, as opposed to just two (and does not account for special keywords).
+Used to specify a mathematical formula/expression to validate against, and utilizes [json-logic-py](https://github.com/nadirizr/json-logic-py) (saved as `json_logic.py`). This rule overlaps with `compare_with`, but allows for comparison between multiple fields, as opposed to just two (and does not account for special keywords).
 
 * `formula`: The mathematical formula/expression to apply; see the `operations` dict in `json_logic.py` to see the full list of available operators. Each operator expects differently formatted arguments
 * `errormsg`: A custom message to supply if validation fails. This key is optional; if not provided the error message will simply be `value {value} does not satisify the specified formula`
@@ -518,7 +518,7 @@ The rule definition for `logic` should follow the following format:
 
 ```json
 {
-    "<variable_name>": {
+    "<field_name>": {
         "logic": {
             "formula": {
                 "operator": "list of arguments for the operator"
@@ -610,18 +610,18 @@ var3:
 
 ### temporalrules
 
-Used to specify the list of longitudinal checks for a given variable.
+Used to specify the list of longitudinal checks for a given field.
 
-* `orderby` specifies the variable name to order the longitudinal records.
+* `orderby` specifies the field name to order the longitudinal records by.
 * `constraints` specifies the list of checks to be performed on the previous records. Each constraint specifies `previous` and `current` attributes to allow the application of a subschema based on the outcome of another schema.
 
 The rule definition for `temporalrules` should follow the following format:
 
 ```json
 {
-    "<variable_name>": {
+    "<field_name>": {
         "temporalrules": {
-            "orderby": "<variable to order the records by>",
+            "orderby": "<field to order the records by>",
             "constraints": [
                 {
                     "previous": {
@@ -646,7 +646,7 @@ The rule definition for `temporalrules` should follow the following format:
 
 **Example:**
 
-If variable `taxes` (difficulty with taxes, business, and other papers) is 0 (normal) at a previous visit, then `taxes` cannot be 8 (not applicable/never did) at the follow-up visit.
+If field `taxes` (difficulty with taxes, business, and other papers) is 0 (normal) at a previous visit, then `taxes` cannot be 8 (not applicable/never did) at the follow-up visit.
 
 <table>
 <tr>
