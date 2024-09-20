@@ -396,13 +396,15 @@ def test_compatibility_with_nested_logic_or():
             "compatibility": [
                 {
                     "if": {
-                        "logic": {
-                            "formula": {
-                                "or": [
-                                    {"==": [1, {"var": "raceaian"}]},
-                                    {"==": [1, {"var": "raceasian"}]},
-                                    {"==": [1, {"var": "raceblack"}]}
-                                ]
+                        "raceunkn": {
+                            "logic": {
+                                "formula": {
+                                    "or": [
+                                        {"==": [1, {"var": "raceaian"}]},
+                                        {"==": [1, {"var": "raceasian"}]},
+                                        {"==": [1, {"var": "raceblack"}]}
+                                    ]
+                                }
                             }
                         }
                     },
@@ -428,7 +430,7 @@ def test_compatibility_with_nested_logic_or():
 
     # the compatibility if/then with logic inside means that raceunkn cannot be 1 if any of the others are set
     assert not nv.validate({'raceaian': 1, 'raceunkn': 1})
-    assert nv.errors == {'raceunkn': ["('raceunkn', ['must be empty']) for {'logic': {'formula': {'or': [{'==': [1, {'var': 'raceaian'}]}, {'==': [1, {'var': 'raceasian'}]}, {'==': [1, {'var': 'raceblack'}]}]}}} - compatibility rule no: 1"]}
+    assert nv.errors == {'raceunkn': ["('raceunkn', ['must be empty']) for {'raceunkn': {'logic': {'formula': {'or': [{'==': [1, {'var': 'raceaian'}]}, {'==': [1, {'var': 'raceasian'}]}, {'==': [1, {'var': 'raceblack'}]}]}}}} - compatibility rule no: 1"]}
 
 def test_multiple_compatibility():
     """ Test multiple compatibility rules """
@@ -613,7 +615,8 @@ def test_compatibility_then_multiple_blank_and():
     assert not nv.validate({"parentvar": None, "var1": 1, "var2": 1, "var3": 1})
     assert nv.errors == {'var1': ["('var1', ['error in formula evaluation - value 1 does not satisfy the specified formula']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
     
-    # it looks like this error message is misleading, it fails because of var3 not var1 but since this logic is on var1 its reported as a var1 failure
+    # TODO: it looks like this error message is misleading, it fails because of var3 not var1 but since this logic is on var1 its reported as a var1 failure
+    #       something to improve on
     assert not nv.validate({"parentvar": None, "var1": None, "var2": None, "var3": 1})
     assert nv.errors == {'var1': ["('var1', ['error in formula evaluation - value None does not satisfy the specified formula']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
 
