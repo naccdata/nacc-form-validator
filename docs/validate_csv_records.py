@@ -52,6 +52,7 @@ if __name__ == "__main__":
     with args.rules_json.open('r') as fh:
         rules = json.load(fh)
 
+    # using a dummy primary key
     qc = QualityCheck("primary_key", rules, strict=not args.disable_strict)
 
     """

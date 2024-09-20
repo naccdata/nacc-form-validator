@@ -13,32 +13,33 @@ See [Data Quality Rule Definition Guidelines](./data-quality-rule-definition-gui
 
 ## Overview
 
-The main "entry point", or class to instantiate for validation, is `QualityCheck`, which in turn creates a `NACCValidator`, which both validate the schema and returns error information from the validator. `NACCValidator` itself is an extension of [Cerberus' `Validator` class](https://docs.python-cerberus.org/api.html#cerberus.Validator). It can also use an optional `Datastore` object which you can implement to access records in your own database. See [Example Usage - Records and Datastores](#example-usage---records-and-datastores) for more information.
+The NACC Form Validator primarily consists of two classes: `QualityCheck`, which in turn creates a `NACCValidator`. Together they are used to validate a record against a validation schema. The `NACCValidator` itself is an extension of [Cerberus' `Validator` class](https://docs.python-cerberus.org/api.html#cerberus.Validator), and provides definitions for custom NACC rules. These custom rules are described in more detail in [Data Quality Rule Definition Guidelines](./data-quality-rule-definition-guidelines.md).
 
-The general workflow is to instantiate a `QualityCheck` object with the schema you want to validate against, and then pass the record to validate to the `validate_record` method. This method returns 4 variables:
+The `NACCValidator` can also use an an optional `Datastore` object which you can implement to access records in your own database. See [Example Usage - Records and Datastores](#example-usage---records-and-datastores) for more information.
+
+The usage workflow is to instantiate a `QualityCheck` object with the schema you want to validate against, and then pass the record to validate to the `validate_record` method. This method returns 4 variables:
 
 | Variable | Type | Description |
 | -------- | ---- | ----------- |
-| `passed` | `bool` | Whether or not the record satisfied all validation rules |
+| `passed` | `bool` | Whether or not the record satisfied all validation rules defined by the schema |
 | `sys_failure` | `bool` | Whether or not a system error occured |
 | `errors` | `dict[str, list[str]]` | Dict of errors encountered keyed by the variable that failed. Empty if no errors encountered for the record. |
 | `error_tree` | `DocumentErrorTree` | A dict-like object of `ValidationError` instances. See [Cerberus' Errors documentation](https://docs.python-cerberus.org/errors.html) for more information. |
 
-`QualityCheck` itself is fairly straightforward - the actual validation logic is handled by `NACCValidator`. There isn't really any reason to use `NACCValidator` directly, but if you decide to just keep in mind the following (e.g. duplicate what `QualityCheck` will handle for you):
-
-* If the records you're validating on have _missing_ fields (e.g. passing an empty `dict` as a "record" as opposed to a `dict` with all fields set to `None`), some of the more complicated rules like `logic` may not entirely behave as expected. The `cast_record` resolves this by setting any missing fields (based on the schema) to `None`, **so you need to call this method before validating**
-* Similarly, if using `primary_key` and `datastore`, those properties will need to be explicitly set on the `NACCValidator` object
-
 ## Example Usage - Hello World
 
-The following is a simple example of using this package. The schema is a single rule for the field `hello`, and the only value it can be assigned to is the string `world`.
+The following is a simple example of using this package. The schema contains rules for the field `hello`, which can only be assigned to the string `world`, and the primary key `example_primary_key`, which must be an integer. The primary key should always be a required field in the schema.
 
 ```python
 from nacc_form_validator import QualityCheck
 
-pk_name = "example_key"
+pk_name = "example_primary_key"
 
 schema = {
+    "example_primary_key": {
+        "type": "integer"
+        "required", True
+    },
     "hello": {
         "type": "string",
         "required": True,
@@ -50,13 +51,13 @@ schema = {
 
 qc = QualityCheck(pk_name, schema, strict=True, datastore=None)
 
-passed, sys_failure, errors, error_tree = qc.validate_record({"hello": "world"})
+passed, sys_failure, errors, error_tree = qc.validate_record({"example_primary_key": 1, "hello": "world"})
 # passed = True
 # sys_failure = False
 # errors = {}
 # error_tree = [],{}
 
-passed, sys_failure, errors, error_tree = qc.validate_record({"hello": "pluto"})
+passed, sys_failure, errors, error_tree = qc.validate_record({"example_primary_key": 2, "hello": "pluto"})
 # passed = False
 # sys_failure = False
 # errors = {'hello': ['unallowed value pluto']}
@@ -76,11 +77,11 @@ passed, sys_failure, errors, error_tree = qc.validate_record({"hello": "pluto"})
 
 ## Example Usage - Records and Datastores
 
-In the previous example, we validated a single record. But you may want to compare a record against previous records, particularly if your schema uses temporal rules, which are usually associated with plausibility checks (see [Data Quality Rule Definition Guidelines](./data-quality-rule-definition-guidelines.md) for more information on temporal rules). If you are validating against a schema that doesn't have temporal rules, it isn't really necessary to set up a datastore.
+You may want to compare a record against previous records, particularly if your schema uses temporal rules, which are usually associated with plausibility checks. This is where `pk_name` and `datastore` come in, in which `pk_name` must be the "primary key" to index the datastore by. The primary key must always be a required field. `datastore.py` then provides a `Datastore` abstract class that you must implement, specifically the `get_previous_instance` method. 
 
-This is where `pk_name` and `datastore` come in, in which `pk_name` is the "primary key" to index the datastore by. `datastore.py` provides a `Datastore` abstract class that you must implement, specifically the `get_previous_instance` method.
+For more information on temporal rules, see [Data Quality Rule Definition Guidelines](./data-quality-rule-definition-guidelines.md) for more information on temporal rules). If you are validating against a schema that doesn't have temporal rules, it isn't really necessary to set up a datastore.
 
-Say `pk_name` is the `patient_id`. For sake of simplicity, the "database" in this example will be a hard-coded Python dict, but yours will likely be much more complicated. Next our validation scheme checks to see if a patient filled out taxes in a previous visit (0); if so, the current record cannot indicate that they never did it (8).
+As an example, say `pk_name` is the `patient_id`. For sake of simplicity, the "database" in this example will be a hard-coded Python dict, but yours will likely be much more complicated. Next our validation scheme checks to see if a patient filled out taxes in a previous visit (0); if so, the current record cannot indicate that they never did it (8).
 
 ```python
 import copy
@@ -127,13 +128,16 @@ datastore = CustomDatastore()
 
 schema = {
     "patient_id": {
-        "type": "string"
+        "type": "string",
+        "required": True
     },
     "visit_num": {
-        "type": "integer"
+        "type": "integer",
+        "required": True
     },
     "taxes": {
         "type": "integer",
+        "required": True,
         "temporalrules": {
             "orderby": "visit_num",
             "constraints": [

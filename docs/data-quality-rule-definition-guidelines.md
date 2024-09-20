@@ -24,7 +24,7 @@ The form validator uses QC rules defined as JSON or YAML data objects to check d
 <tr>
 <th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
 <tr>
-<td>
+<td valign="top">
 
 ```yaml
 ptid:
@@ -38,7 +38,7 @@ birthmo:
   max: 12
 ```
 </td>
-<td>
+<td valign="top">
 
 ```json
 {
@@ -55,7 +55,7 @@ birthmo:
 }
 ```
 </td>
-<td>
+<td valign="top">
 
 ```python
 {"ptid": 101, "birthmo": 12}    # passes
@@ -75,9 +75,9 @@ Keywords frequently used in UDS rules are described in the table below:
 <tr>
 <th> Keyword </th> <th> Description </th> <th width="50%"> Example </th>
 <tr>
-<td> allowed </td>
-<td> Specify the list of allowed values. Validation will fail if any other value is given in the data record. </td>
-<td>
+<td valign="top"> <code>allowed</code> </td>
+<td valign="top"> Specify the list of allowed values. Validation will fail if any other value is given in the data record. </td>
+<td valign="top">
 
 ```python
 schema = {
@@ -94,9 +94,9 @@ data = {"limit": 20}    # fails
 </td>
 </tr>
 <tr>
-<td> forbidden </td>
-<td> Specify the list of forbidden values. Validation will fail if values in this list are included in the record. </td>
-<td>
+<td valign="top"> <code>forbidden</code> </td>
+<td valign="top"> Specify the list of forbidden values. Validation will fail if values in this list are included in the record. </td>
+<td valign="top">
 
 ```python
 schema = {
@@ -113,9 +113,9 @@ data = {"user": "viewer"}   # fails
 </td>
 </tr>
 <tr>
-<td> min, max </td>
-<td> Minimum and maximum value allowed (only applicable to object types which support comparison operations like integers or floats). Each keyword can be used independently. Use together to define a range. </td>
-<td>
+<td valign="top"> <code>min</code>, <code>max</code> </td>
+<td valign="top"> Minimum and maximum value allowed (only applicable to object types which support comparison operations like integers or floats). Each keyword can be used independently. Use together to define a range. </td>
+<td valign="top">
 
 ```python
 schema = {
@@ -133,9 +133,9 @@ data = {"length": 20.8}     # fails
 </td>
 </tr>
 <tr>
-<td> nullable </td>
-<td> If set to "true", the field value is allowed to be empty. This rule will be checked on every variable, regardless of if it's defined or not. The rule's constraints defaults it to "false". </td>
-<td>
+<td valign="top"> <code>nullable</code> </td>
+<td valign="top"> If set to "true", the field value is allowed to be empty. This rule will be checked on every variable, regardless of if it's defined or not. The rule's constraints defaults it to "false". </td>
+<td valign="top">
 
 ```python
 schema = {
@@ -160,9 +160,9 @@ data = {"country": ""}      # fails
 </td>
 </tr>
 <tr>
-<td> required </td>
-<td> If set to "true", the field is mandatory. Validation will fail when it is missing. </td>
-<td>
+<td valign="top"> <code>required</code> </td>
+<td valign="top"> If set to "true", the field is mandatory. Validation will fail when it is missing. </td>
+<td valign="top">
 
 ```python
 schema = {
@@ -184,9 +184,9 @@ data = {"age": 40}                      # fails
 </td>
 </tr>
 <tr>
-<td> type </td>
-<td> Data type allowed for the value. See the <a href="https://docs.python-cerberus.org/validation-rules.html">Cerberus documentation for the list of type names</a>. If multiple types are allowed, you can specify the types as a list. </td>
-<td>
+<td valign="top"> <code>type</code> </td>
+<td valign="top"> Data type allowed for the value. See the <a href="https://docs.python-cerberus.org/validation-rules.html">Cerberus documentation for the list of type names</a>. If multiple types are allowed, you can specify the types as a list. </td>
+<td valign="top">
 
 ```python
 schema = {
@@ -212,9 +212,9 @@ data = {"limit": "one"}     # fails
 </td>
 </tr>
 <tr>
-<td> anyof </td>
-<td> Allows to define different sets of rules to validate against, supplied in a list of dicts. Field will be considered valid if any of the provided constraints validates the field. </td>
-<td>
+<td valign="top"> <code>anyof</code> </td>
+<td valign="top"> Allows to define different sets of rules to validate against, supplied in a list of dicts. Field will be considered valid if any of the provided constraints validates the field. </td>
+<td valign="top">
 
 ```python
 schema = {
@@ -240,9 +240,9 @@ data = {"age": 200}     # fails
 </td>
 </tr>
 <tr>
-<td> regex </td>
-<td> Regex to validate against; only valid for string values. </td>
-<td>
+<td valign="top"> <code>regex</code> </td>
+<td valign="top"> Regex to validate against; only valid for string values. </td>
+<td valign="top">
 
 ```python
 schema = {
@@ -266,7 +266,7 @@ These are defined in the `NACCValidator` class.
 
 ### compare_with
 
-Used to constrain based on comparison with another value, with optional adjustments.
+Used to validate the variable based on comparison with another variable, with optional adjustments.
 
 * `comparator`: The comparison expression; can be one of `[">", "<", ">=", "<=", "==", "!="]`
 * `base`: The value to compare to
@@ -302,7 +302,7 @@ The rule definition for `compare_with` should follow the following format:
 <tr>
 <th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
 <tr>
-<td>
+<td valign="top">
 
 ```yaml
 birthyr:
@@ -315,7 +315,7 @@ birthyr:
     op: "-"
 ```
 </td>
-<td>
+<td valign="top">
 
 ```json
 {
@@ -333,7 +333,7 @@ birthyr:
 ```
 </td>
 
-<td>
+<td valign="top">
 
 ```python
 {"birthyr": 1995}   # passes
@@ -344,7 +344,7 @@ birthyr:
 
 ### compatibility
 
-Used to specify the list of compatibility constraints for a given variable with other variables within the form or across multiple forms.
+Used to specify the list of compatibility (if-then) constraints for a given variable with other variables within the form or across multiple forms. A variable will only pass validation if none of the compatibility constraints are violated.
 
 Each constraint specifies `if` and `then` attributes to allow the application of a subschema based on the outcome of another schema (i.e. when the schema defined under `if` evaluates to true for a given record, then the schema specified under `then` will be evaluated).
 
@@ -383,7 +383,7 @@ If variable `incntmod` (primary contact mode with participant) is 6, then variab
 <tr>
 <th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
 <tr>
-<td>
+<td valign="top">
 
 ```yaml
 incntmod:
@@ -402,7 +402,7 @@ incntmdx:
         nullable: false
 ```
 </td>
-<td>
+<td valign="top">
 
 ```json
 {
@@ -429,7 +429,7 @@ incntmdx:
 }
 ```
 </td>
-<td>
+<td valign="top">
 
 ```python
 {"incntmod": 1, "incntmdx": None}   # passes
@@ -447,7 +447,7 @@ So if variable `incntmod` (primary contact mode with participant) is NOT 6, then
 <tr>
 <th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
 <tr>
-<td>
+<td valign="top">
 
 ```yaml
 incntmod:
@@ -467,7 +467,7 @@ incntmdx:
         filled: false
 ```
 </td>
-<td>
+<td valign="top">
 
 ```json
 {
@@ -495,7 +495,7 @@ incntmdx:
 }
 ```
 </td>
-<td>
+<td valign="top">
 
 ```python
 {"incntmod": 1, "incntmdx": None}   # passes
@@ -536,7 +536,7 @@ One of `var1`, `var2`, or `var3` must be `1`.
 <tr>
 <th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
 <tr>
-<td>
+<td valign="top">
 
 ```yaml
 var1:
@@ -564,7 +564,7 @@ var3:
             - var: var3
 ```
 </td>
-<td>
+<td valign="top">
 
 ```json
 {
@@ -598,7 +598,7 @@ var3:
 }
 ```
 </td>
-<td>
+<td valign="top">
 
 ```python
 {"var1": 1, "var2": 1, "var3": 1}            # passes
@@ -652,7 +652,7 @@ If variable `taxes` (difficulty with taxes, business, and other papers) is 0 (no
 <tr>
 <th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
 <tr>
-<td>
+<td valign="top">
 
 ```yaml
 taxes:
@@ -668,7 +668,7 @@ taxes:
             - 8
 ```
 </td>
-<td>
+<td valign="top">
 
 ```json
 {
@@ -691,7 +691,7 @@ taxes:
 }
 ```
 </td>
-<td>
+<td valign="top">
 
 ```python
 # assume this record already exists
