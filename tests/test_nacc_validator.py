@@ -533,7 +533,7 @@ def test_compatibility_multiple_variables_or():
             "allowed": [0, 1],
             "compatibility": [
                 {
-                    "op": "OR",
+                    "if_op": "OR",
                     "if": {
                         "majordep": {"allowed": [1]},
                         "otherdep": {"allowed": [1]}
@@ -632,7 +632,7 @@ def test_compatibility_multiple_resulting_variables_or():
             "required": True,
             "compatibility": [
                 {
-                    "op": "or",
+                    "then_op": "or",
                     "if": {
                         "hall": {"allowed": [1]}
                     },
@@ -642,7 +642,7 @@ def test_compatibility_multiple_resulting_variables_or():
                     }
                 },
                 {
-                    "op": "and",
+                    "then_op": "and",
                     "if": {
                         "hall": {"allowed": [0]}
                     },
@@ -659,15 +659,16 @@ def test_compatibility_multiple_resulting_variables_or():
     assert nv.validate({"hall": 1, "bevhall": 1, "beahall": 0})
     assert nv.validate({"hall": 1, "bevhall": 0, "beahall": 1})
     assert nv.validate({"hall": 1, "bevhall": 1, "beahall": 1})
-    assert nv.validate({"hall": 0, "bevhall": None, "beahall": None})
     assert nv.validate({"hall": 5, "bevhall": 3, "beahall": 3})
-    assert nv.validate({"hall": 1, "bevhall": None, "beahall": None})
+    assert nv.validate({"hall": 1, "bevhall": 1, "beahall": None})
     assert nv.validate({"hall": 0, "bevhall": 0, "beahall": 0})
 
     assert not nv.validate({"hall": 1, "bevhall": 0, "beahall": 0})
-    assert nv.errors == {'hall': ["('hall', ['unallowed value 1']) for {'bevhall': {'allowed': [0]}, 'beahall': {'allowed': [0]}} - compatibility rule no: 2"]}
+    assert nv.errors == {'hall': ["('bevhall', ['unallowed value 0']) for {'hall': {'allowed': [1]}} - compatibility rule no: 1"]}
     assert not nv.validate({"hall": 0, "bevhall": 0, "beahall": 1})
-    assert nv.errors == {'hall': ["('hall', ['unallowed value 0']) for {'bevhall': {'allowed': [1]}, 'beahall': {'allowed': [1]}} - compatibility rule no: 1"]}
+    assert nv.errors == {'hall': ["('beahall', ['unallowed value 1']) for {'hall': {'allowed': [0]}} - compatibility rule no: 2"]}
+    assert not nv.validate({"hall": 0, "bevhall": None, "beahall": None})
+    assert nv.errors == {'hall': ["('bevhall', ['null value not allowed']) for {'hall': {'allowed': [0]}} - compatibility rule no: 2"]}
 
 def test_compatibility_multiple_resulting_options_or():
     """ Tests a "If X is 1, than Y and Z should be 0 or 2" situation """
@@ -685,13 +686,23 @@ def test_compatibility_multiple_resulting_options_or():
             "required": True,
             "compatibility": [
                 {
-                    "op": "and",
+                    "index": 0,
                     "if": {
                         "depd": {"allowed": [1]}
                     },
                     "then": {
                         "majdepdx": {"allowed": [0, 2]},
                         "othdepdx": {"allowed": [0, 2]}
+                    }
+                },
+                {
+                    "index": 2,
+                    "if": {
+                        "depd": {"allowed": [2]}
+                    },
+                    "then": {
+                        "majdepdx": {"allowed": [1]},
+                        "othdepdx": {"allowed": [1]}
                     }
                 }
             ]
@@ -708,9 +719,9 @@ def test_compatibility_multiple_resulting_options_or():
     assert nv.validate({"depd": 5, "majdepdx": 1, "othdepdx": 1})
 
     assert not nv.validate({"depd": 2, "majdepdx": 0, "othdepdx": 2})
-    assert nv.errors == {'depd': ["('depd', ['unallowed value 2']) for {'majdepdx': {'allowed': [0, 2]}, 'othdepdx': {'allowed': [0, 2]}} - compatibility rule no: 1"]}
+    assert nv.errors == {'depd': ["('majdepdx', ['unallowed value 0']) for {'depd': {'allowed': [2]}} - compatibility rule no: 2"]}
     assert not nv.validate({"depd": None, "majdepdx": 0, "othdepdx": 2})
-    assert nv.errors == {'depd': ["('depd', ['null value not allowed']) for {'majdepdx': {'allowed': [0, 2]}, 'othdepdx': {'allowed': [0, 2]}} - compatibility rule no: 1", 'null value not allowed']}
+    assert nv.errors == {'depd': ['null value not allowed']}
 
 def test_compatibility_nested_anyof():
     """ Tests when anyof is nested inside compatibility. """

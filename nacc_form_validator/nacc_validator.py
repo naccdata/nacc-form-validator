@@ -415,11 +415,11 @@ class NACCValidator(Validator):
         elif filled and value is None:
             self._error(field, ErrorDefs.FILLED_TRUE)
 
-    def _check_subschema_valid(self, all_conditions: Dict[str, object], operator: str) -> Tuple[bool, Dict[str, object]]:
+    def _check_subschema_valid(self, all_conditions: Dict[str, object], operator: str) -> Tuple[bool, object]:
         """ Helper method for _validate_compatibility, creates a temporary validator and
             checks a subschema against it """
         valid = operator != "OR"
-        errors = {}
+        errors = None
 
         for field, conds in all_conditions.items():
             subschema = {field: conds}
@@ -436,13 +436,13 @@ class NACCValidator(Validator):
                 if valid:
                     break
                 elif not errors:  # just keep track of first one that failed
-                    errors.update(temp_validator.errors.items())
+                    errors = temp_validator.errors.items()
 
             # Evaluate as logical AND operation
             elif not temp_validator.validate(self.document,
                                              normalize=False):
                 valid = False
-                errors.update(temp_validator.errors.items())
+                errors = temp_validator.errors.items()
                 break
 
         if valid:  # in the OR case, if something passed we can ignore other errors
@@ -522,7 +522,6 @@ class NACCValidator(Validator):
             # If there are errors, something in the then/else clause failed - report them
             if errors:
                 for error in errors:
-                    raise ValueError(str(errors))
                     self._error(field, error_def, rule_no, str(error),
                                 if_conds)
 
