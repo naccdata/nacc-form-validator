@@ -8,10 +8,10 @@ from typing import Any, Dict, List, Mapping, Optional
 from cerberus.validator import Validator
 from dateutil import parser
 
-from validator import utils
-from validator.datastore import Datastore
-from validator.errors import CustomErrorHandler, ErrorDefs, SchemaDefs
-from validator.json_logic import jsonLogic
+from nacc_form_validator import utils
+from nacc_form_validator.datastore import Datastore
+from nacc_form_validator.errors import CustomErrorHandler, ErrorDefs, SchemaDefs
+from nacc_form_validator.json_logic import jsonLogic
 
 log = logging.getLogger(__name__)
 
@@ -205,6 +205,10 @@ class NACCValidator(Validator):
                         error,
                     )
                     record[key] = value
+
+        for key in self.schema:
+            if key not in record:
+                record[key] = None
 
         return record
 
@@ -431,7 +435,7 @@ class NACCValidator(Validator):
                     'type': 'dict',
                     'schema': {
                         'index': {'type': 'integer', 'required': False},
-                        'op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR']},
+                        'op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR', 'and', 'or']},
                         'if': {'type': 'dict', 'required': True, 'empty': False},
                         'then': {'type': 'dict', 'required': True, 'empty': False},
                         'else': {'type': 'dict', 'required': False, 'empty': False}
@@ -445,7 +449,7 @@ class NACCValidator(Validator):
         rule_no = 0
         for constraint in constraints:
             # Extract operator if specified, default is AND
-            operator = constraint.get(SchemaDefs.OP, "AND")
+            operator = constraint.get(SchemaDefs.OP, "AND").upper()
 
             # Extract constraint index if specified, or increment by 1
             rule_no = constraint.get(SchemaDefs.INDEX, rule_no + 1)
@@ -463,6 +467,7 @@ class NACCValidator(Validator):
             # Check whether the dependency conditions satisfied
             for dep_field, conds in if_conds.items():
                 subschema = {dep_field: conds}
+
                 temp_validator = NACCValidator(
                     subschema,
                     allow_unknown=True,
@@ -714,7 +719,7 @@ class NACCValidator(Validator):
 
     def _validate_compare_with(self, comparison: Dict[str, Any], field: str,
                                value: object):
-        """Apply the speified comparison.
+        """Apply the specified comparison.
 
         Args:
             comparison: Comparison specified in the rule definition
@@ -785,24 +790,27 @@ class NACCValidator(Validator):
             elif operator == "/":
                 adjusted_value = base_val / adjustment
 
-        valid = True
-        if comparator == ">=" and value < adjusted_value:
-            valid = False
+        try:
+            valid = True
+            if comparator == ">=" and value < adjusted_value:
+                valid = False
 
-        if comparator == ">" and value <= adjusted_value:
-            valid = False
+            if comparator == ">" and value <= adjusted_value:
+                valid = False
 
-        if comparator == "<=" and value > adjusted_value:
-            valid = False
+            if comparator == "<=" and value > adjusted_value:
+                valid = False
 
-        if comparator == "<" and value >= adjusted_value:
-            valid = False
+            if comparator == "<" and value >= adjusted_value:
+                valid = False
 
-        if comparator == "==" and value != adjusted_value:
-            valid = False
+            if comparator == "==" and value != adjusted_value:
+                valid = False
 
-        if comparator == "!=" and value == adjusted_value:
-            valid = False
+            if comparator == "!=" and value == adjusted_value:
+                valid = False
 
-        if not valid:
+            if not valid:
+                self._error(field, ErrorDefs.COMPARE_WITH, comparison_str)
+        except TypeError:
             self._error(field, ErrorDefs.COMPARE_WITH, comparison_str)

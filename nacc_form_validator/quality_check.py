@@ -5,9 +5,9 @@ from typing import Dict, List, Mapping, Tuple
 from cerberus.errors import DocumentErrorTree
 from cerberus.schema import SchemaError
 
-from validator.datastore import Datastore
-from validator.nacc_validator import (CustomErrorHandler, NACCValidator,
-                                      ValidationException)
+from nacc_form_validator.datastore import Datastore
+from nacc_form_validator.nacc_validator import (CustomErrorHandler, NACCValidator,
+                                                ValidationException)
 
 
 class QualityCheckException(Exception):
@@ -99,7 +99,7 @@ class QualityCheck:
         Returns:
             bool: True if the record satisfied all rules
             bool: True if system error occurred
-            Dict[str, List[str]: List of formatted error messages by variable
+            Dict[str, List[str]: Dict of formatted error messages by variable
             DocumentErrorTree: A dict like object of ValidationError instances
             (check https://docs.python-cerberus.org/errors.html)
         """

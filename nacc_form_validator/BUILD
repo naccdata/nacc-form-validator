@@ -7,7 +7,7 @@ python_distribution(
     sdist=True,
     provides=python_artifact(
         name="nacc-form-validator",
-        version="0.1.1",
+        version="0.2.0",
         description="The NACC form validator package",
         author="NACC",
         author_email="nacchelp@uw.edu",

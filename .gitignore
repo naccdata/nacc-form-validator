@@ -1,6 +1,7 @@
 # Python
 *.py[cod]
 __pycache__/
+*.pytest*
 
 # System
 .DS_Store
@@ -16,4 +17,4 @@ __pycache__/
 .env
 
 #
-venv
+*venv
