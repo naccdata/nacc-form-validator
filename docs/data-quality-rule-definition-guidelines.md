@@ -346,7 +346,9 @@ birthyr:
 
 Used to specify the list of compatibility (if-then-else) constraints for a given field with other fields within the form or across multiple forms. A field will only pass validation if none of the compatibility constraints are violated.
 
-Each constraint specifies `if`, `then`, and (optionally) `else` attributes to allow the validation of a set of fields/subschemas based on the outcome of other fields/subschemas (i.e. when the schema(s) defined under `if` evaluates to true for a given record, then the schema(s) specified under `then` will be evaluated). Each `if/then/else` attribute can have several fields which need to be satisifed, with the `*_op` attribute specifying the boolean operation in which to compare the different fields. For example, if `if_op = or`, then as long as _any_ of the fields satsify their schema, the `then` attribute will be evaluated. The default `*_op` is `and`.
+Each constraint specifies `if`, `then`, and (optionally) `else` attributes to allow the validation of a set of fields/subschemas based on the outcome of other fields/subschemas (i.e. when the schema(s) defined under `if` evaluates to true for a given record, then the schema(s) specified under `then` will be evaluated).
+
+Each `if/then/else` attribute can have several fields which need to be satisifed, with the `*_op` attribute specifying the boolean operation in which to compare the different fields. For example, if `if_op = or`, then as long as _any_ of the fields satsify their schema, the `then` attribute will be evaluated. The default `*_op` is `and`.
 
 The rule definition for `compatibility` follows the following format:
 
@@ -381,6 +383,53 @@ The rule definition for `compatibility` follows the following format:
                 }
             }
         ]
+    }
+}
+```
+
+One additional nuance is the evaluation against `None`/null values. Because Cerberus always evaluates `"nullable": False` by default, the application of a subschema in this case must explicitly set `"nullable": True` if the attributes evaluate or result in null values. For example
+
+```
+# if case: If PARENTVAR is blank or 88, then VAR1 must be blank
+"if": {
+    "parentvar": {
+        "nullable": True,  # <--- external nullable flag for the if clause
+        "anyof": [
+            {
+                "nullable": True,
+                "filled": False
+            },
+            {
+                "allowed": [88]
+            }
+        ]
+    }
+},
+"then": {
+    "var1": {
+        "nullable": True,
+        "filled": False}
+}
+
+# then case: if PARENTVAR is blank, then the following must be blank: var1, var2, var3
+"if": {
+    "parentvar": {
+        "nullable": True,
+        "filled": False
+    }
+},
+"then": {
+    "var1": {
+        "nullable": True,  # <--- nullable flag for the then clause
+        "logic": {
+            "formula": {
+                "and": [
+                    {"==": [None, {"var": "var1"}]},
+                    {"==": [None, {"var": "var2"}]},
+                    {"==": [None, {"var": "var3"}]}
+                ]
+            }
+        }
     }
 }
 ```
