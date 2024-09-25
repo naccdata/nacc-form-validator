@@ -419,7 +419,7 @@ class NACCValidator(Validator):
         """ Helper method for _validate_compatibility, creates a temporary validator and
             checks a subschema against it """
         valid = operator != "OR"
-        errors = None
+        errors = {}
 
         for field, conds in all_conditions.items():
             subschema = {field: conds}
@@ -432,21 +432,19 @@ class NACCValidator(Validator):
             if operator == "OR":
                 valid = valid or temp_validator.validate(self.document,
                                                          normalize=False)
-                # if something passed, don't need to evaluate rest
+                # if something passed, don't need to evaluate rest, and ignore any errors found
                 if valid:
+                    errors = None
                     break
-                elif not errors:  # just keep track of first one that failed
-                    errors = temp_validator.errors.items()
+                else:  # otherwise keep track of all errors
+                    errors.update(temp_validator.errors)
 
             # Evaluate as logical AND operation
             elif not temp_validator.validate(self.document,
                                              normalize=False):
                 valid = False
-                errors = temp_validator.errors.items()
+                errors = temp_validator.errors
                 break
-
-        if valid:  # in the OR case, if something passed we can ignore other errors
-            errors = None
 
         return valid, errors
 
@@ -521,7 +519,7 @@ class NACCValidator(Validator):
 
             # If there are errors, something in the then/else clause failed - report them
             if errors:
-                for error in errors:
+                for error in errors.items():
                     self._error(field, error_def, rule_no, str(error),
                                 if_conds)
 

@@ -664,7 +664,7 @@ def test_compatibility_multiple_resulting_variables_or():
     assert nv.validate({"hall": 0, "bevhall": 0, "beahall": 0})
 
     assert not nv.validate({"hall": 1, "bevhall": 0, "beahall": 0})
-    assert nv.errors == {'hall': ["('bevhall', ['unallowed value 0']) for {'hall': {'allowed': [1]}} - compatibility rule no: 1"]}
+    assert nv.errors == {'hall': ["('beahall', ['unallowed value 0']) for {'hall': {'allowed': [1]}} - compatibility rule no: 1", "('bevhall', ['unallowed value 0']) for {'hall': {'allowed': [1]}} - compatibility rule no: 1"]}
     assert not nv.validate({"hall": 0, "bevhall": 0, "beahall": 1})
     assert nv.errors == {'hall': ["('beahall', ['unallowed value 1']) for {'hall': {'allowed': [0]}} - compatibility rule no: 2"]}
     assert not nv.validate({"hall": 0, "bevhall": None, "beahall": None})
@@ -722,6 +722,94 @@ def test_compatibility_multiple_resulting_options_or():
     assert nv.errors == {'depd': ["('majdepdx', ['unallowed value 0']) for {'depd': {'allowed': [2]}} - compatibility rule no: 2"]}
     assert not nv.validate({"depd": None, "majdepdx": 0, "othdepdx": 2})
     assert nv.errors == {'depd': ['null value not allowed']}
+
+def test_compatibility_multiple_else():
+    """ Tests the else clause. If VAR1 is 1 then VAR2 is 2, else VAR2 3-5 """
+    schema = {
+        "var2": {
+            "type": "integer",
+            "required": True
+        },
+        "var1": {
+            "type": "integer",
+            "required": True,
+            "compatibility": [
+                {
+                    "index": 0,
+                    "if": {
+                        "var1": {"allowed": [1]}
+                    },
+                    "then": {
+                        "var2": {"allowed": [2]}
+                    },
+                    "else": {
+                        "var2": {"allowed": [3, 4, 5]}
+                    }
+                }
+            ]
+        }
+    }
+    nv = create_nacc_validator(schema)
+
+    for i in range (3, 6):
+        assert nv.validate({"var1": 0, "var2": i})
+    assert nv.validate({"var1": 1, "var2": 2})
+
+    assert not nv.validate({"var1": 0, "var2": 8})
+    assert nv.errors == {'var1': ["('var2', ['unallowed value 8']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0"]}
+    assert not nv.validate({"var1": 1, "var2": 3})
+    assert nv.errors == {'var1': ["('var2', ['unallowed value 3']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0"]}
+
+def test_compatibility_multiple_else_and_multiple_conditions():
+    """ Tests the else clause with multiple conditions. If VAR1 is 1 then VAR2 is 2, else VAR2 3-5 OR VAR3 is 9 """
+    schema = {
+        "var2": {
+            "type": "integer",
+            "nullable": True
+        },
+        "var3": {
+            "type": "integer",
+            "nullable": True
+        },
+        "var1": {
+            "type": "integer",
+            "required": True,
+            "compatibility": [
+                {
+                    "index": 0,
+                    "else_op": "or",
+                    "if": {
+                        "var1": {"allowed": [1]}
+                    },
+                    "then": {
+                        "var2": {"allowed": [2]}
+                    },
+                    "else": {
+                        "var2": {"allowed": [3, 4, 5]},
+                        "var3": {"allowed": [9]}
+                    }
+                }
+            ]
+        }
+    }
+    nv = create_nacc_validator(schema)
+
+    for i in range (3, 6):
+        assert nv.validate({"var1": 0, "var2": i, "var3": None})
+    assert nv.validate({"var1": 0, "var2": None, "var3": 9})
+    assert nv.validate({"var1": 1, "var2": 2, "var3": None})
+
+    assert not nv.validate({"var1": 1, "var2": 3, "var3": None})
+    assert nv.errors == {'var1': ["('var2', ['unallowed value 3']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0"]}
+    assert not nv.validate({"var1": 1, "var2": None, "var3": 6})
+    assert nv.errors == {'var1': ["('var2', ['null value not allowed']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0"]}
+
+    assert not nv.validate({"var1": 0, "var2": 8, "var3": None})
+    assert nv.errors == {'var1': ["('var3', ['null value not allowed']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0", "('var2', ['unallowed value 8']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0"]}
+    assert not nv.validate({"var1": 0, "var2": None, "var3": None})
+    assert nv.errors == {'var1': ["('var3', ['null value not allowed']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0", "('var2', ['null value not allowed']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0"]}
+    assert not nv.validate({"var1": 0, "var2": None, "var3": 16})
+    assert nv.errors == {'var1': ["('var3', ['unallowed value 16']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0", "('var2', ['null value not allowed']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0"]}
 
 def test_compatibility_nested_anyof():
     """ Tests when anyof is nested inside compatibility. """
