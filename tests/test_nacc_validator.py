@@ -497,7 +497,7 @@ def test_compatibility_multiple_variables_and():
                         "otherdep": {"allowed": [0, 2, 9]}
                     },
                     "then": {
-                        "deprtreat": {"nullable": True,"filled": False}
+                        "deprtreat": {"nullable": True, "filled": False}
                     }
                 }
             ]
