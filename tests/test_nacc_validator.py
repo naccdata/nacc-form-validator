@@ -181,18 +181,18 @@ def test_anyof():
     """ Test anyof case """
     schema = {
         "dummy_var": {
-                "type": "integer",
-                "required": True,
-                "anyof": [
-                    {
-                        "min": 0,
-                        "max": 10
-                    },
-                    {
-                        "allowed": [99]
-                    }
-                ]
-            }
+            "type": "integer",
+            "required": True,
+            "anyof": [
+                {
+                    "min": 0,
+                    "max": 10
+                },
+                {
+                    "allowed": [99]
+                }
+            ]
+        }
     }
     nv = create_nacc_validator(schema)
 
@@ -243,23 +243,18 @@ def test_compatibility_if_then(nv):
             "compatibility": [
                 {
                     "if": {
-                        "mode": {
-                            "allowed": [2]
-                        }
+                        "mode": {"allowed": [2]}
                     },
                     "then": {
-                        "nullable": False
+                        "rmreason": {"nullable": False}
                     }
                 },
                 {
                     "if": {
-                        "mode": {
-                            "allowed": [1, 3]
-                        }
+                        "mode": {"allowed": [1, 3]}
                     },
                     "then": {
-                        "nullable": True,
-                        "filled": False
+                        "rmreason": {"nullable": True, "filled": False}
                     }
                 }
             ],
@@ -409,8 +404,7 @@ def test_compatibility_with_nested_logic_or():
                         }
                     },
                     "then": {
-                        "nullable": True,
-                        "filled": False
+                        "raceunkn": {"nullable": True, "filled": False}
                     }
                 }
             ]
@@ -449,14 +443,18 @@ def test_multiple_compatibility():
                     "if": {
                         "enrlgenoth": {"allowed": [1]}
                     },
-                    "then": {"nullable": False}
+                    "then": {
+                        "enrlgenothx": {"nullable": False}
+                    }
                 },
                 {
                     "index": 1,
                     "if": {
                         "enrlgenoth": {"nullable": True, "filled": False}
                     },
-                    "then": {"nullable": True, "filled": False}
+                    "then": {
+                        "enrlgenothx": {"nullable": True, "filled": False}
+                    }
                 }
             ]
         }
@@ -499,8 +497,7 @@ def test_compatibility_multiple_variables_and():
                         "otherdep": {"allowed": [0, 2, 9]}
                     },
                     "then": {
-                        "nullable": True,
-                        "filled": False
+                        "deprtreat": {"nullable": True,"filled": False}
                     }
                 }
             ]
@@ -542,7 +539,7 @@ def test_compatibility_multiple_variables_or():
                         "otherdep": {"allowed": [1]}
                     },
                     "then": {
-                        "nullable": False,
+                        "deprtreat": {"nullable": False}
                     }
                 }
             ]
@@ -583,20 +580,19 @@ def test_compatibility_then_multiple_blank_and():
             "compatibility": [
                 {
                     "if": {
-                        "parentvar": {
-                            "nullable": True,
-                            "filled": False
-                        }
+                        "parentvar": {"nullable": True,"filled": False}
                     },
                     "then": {
-                        "nullable": True,  # this is specifically required in schema for the None case
-                        "logic": {
-                            "formula": {
-                                "and": [
-                                    {"==": [None, {"var": "var1"}]},
-                                    {"==": [None, {"var": "var2"}]},
-                                    {"==": [None, {"var": "var3"}]}
-                                ]
+                        "var1": {
+                            "nullable": True,  # this is specifically required in schema for the None case
+                            "logic": {
+                                "formula": {
+                                    "and": [
+                                        {"==": [None, {"var": "var1"}]},
+                                        {"==": [None, {"var": "var2"}]},
+                                        {"==": [None, {"var": "var3"}]}
+                                    ]
+                                }
                             }
                         }
                     }
@@ -638,21 +634,21 @@ def test_compatibility_multiple_resulting_variables_or():
                 {
                     "op": "or",
                     "if": {
-                        "bevhall": {"allowed": [1]},
-                        "beahall": {"allowed": [1]}
+                        "hall": {"allowed": [1]}
                     },
                     "then": {
-                        "allowed": [1]
+                        "bevhall": {"allowed": [1]},
+                        "beahall": {"allowed": [1]}
                     }
                 },
                 {
                     "op": "and",
                     "if": {
-                        "bevhall": {"allowed": [0]},
-                        "beahall": {"allowed": [0]}
+                        "hall": {"allowed": [0]}
                     },
                     "then": {
-                        "allowed": [0]
+                        "bevhall": {"allowed": [0]},
+                        "beahall": {"allowed": [0]}
                     }
                 }                
             ]
@@ -691,11 +687,11 @@ def test_compatibility_multiple_resulting_options_or():
                 {
                     "op": "and",
                     "if": {
-                        "majdepdx": {"allowed": [0, 2]},
-                        "othdepdx": {"allowed": [0, 2]},
+                        "depd": {"allowed": [1]}
                     },
                     "then": {
-                        "allowed": [1]
+                        "majdepdx": {"allowed": [0, 2]},
+                        "othdepdx": {"allowed": [0, 2]}
                     }
                 }
             ]
@@ -715,6 +711,76 @@ def test_compatibility_multiple_resulting_options_or():
     assert nv.errors == {'depd': ["('depd', ['unallowed value 2']) for {'majdepdx': {'allowed': [0, 2]}, 'othdepdx': {'allowed': [0, 2]}} - compatibility rule no: 1"]}
     assert not nv.validate({"depd": None, "majdepdx": 0, "othdepdx": 2})
     assert nv.errors == {'depd': ["('depd', ['null value not allowed']) for {'majdepdx': {'allowed': [0, 2]}, 'othdepdx': {'allowed': [0, 2]}} - compatibility rule no: 1", 'null value not allowed']}
+
+def test_compatibility_nested_anyof():
+    """ Tests when anyof is nested inside compatibility. """
+    schema = {
+        "menarche": {
+            "nullable": True,
+            "type": "integer",
+            "anyof": [
+                {"min": 5, "max": 25},
+                {"allowed": [88,99]}
+            ]
+        },
+        "nomensage": {
+            "nullable": True,
+            "type": "integer",
+            "compatibility": [
+                {
+                    "index": 0,
+                    "if": {
+                        "menarche": {
+                            "anyof": [
+                                {"min": 5, "max": 25},
+                                {"allowed": [99]}
+                            ]
+                        }
+                    },
+                    "then": {
+                        "nomensage": {"nullable": False}
+                    }
+                },
+                {
+                    "index": 1,
+                    "if": {
+                        "menarche": {
+                            "nullable": True,
+                            "anyof": [
+                                {"nullable": True, "filled": False},
+                                {"allowed": [88]}
+                            ]
+                        }
+                    },
+                    "then": {
+                        "nomensage": {"nullable": True, "filled": False}
+                    }
+                }
+            ],
+            "anyof": [
+                {"min": 10,"max": 70},
+                {"allowed": [88,99]}
+            ]
+        }
+    }
+    nv = create_nacc_validator(schema)
+
+    for i in range (5, 26):
+        assert nv.validate({"menarche": i, "nomensage": 20})
+    assert nv.validate({"menarche": 99, "nomensage": 99})
+    assert nv.validate({"menarche": None, "nomensage": None})
+    assert nv.validate({"menarche": 88, "nomensage": None})
+
+    for i in range (5, 26):
+        assert not nv.validate({"menarche": 5, "nomensage": None})
+    assert nv.errors == {'nomensage': ["('nomensage', ['null value not allowed']) for {'menarche': {'anyof': [{'min': 5, 'max': 25}, {'allowed': [99]}]}} - compatibility rule no: 0"]}
+    assert not nv.validate({"menarche": 99, "nomensage": None})
+    assert nv.errors == {'nomensage': ["('nomensage', ['null value not allowed']) for {'menarche': {'anyof': [{'min': 5, 'max': 25}, {'allowed': [99]}]}} - compatibility rule no: 0"]}
+    assert not nv.validate({"menarche": 88, "nomensage": 10})
+    assert nv.errors == {'nomensage': ["('nomensage', ['must be empty']) for {'menarche': {'nullable': True, 'anyof': [{'nullable': True, 'filled': False}, {'allowed': [88]}]}} - compatibility rule no: 1"]}
+    assert not nv.validate({"menarche": None, "nomensage": 10})
+    assert nv.errors == {'nomensage': ["('nomensage', ['must be empty']) for {'menarche': {'nullable': True, 'anyof': [{'nullable': True, 'filled': False}, {'allowed': [88]}]}} - compatibility rule no: 1"]}
+
 
 def test_compare_with_current_year():
     """ Test compare_with operator, both with an adjustment and without; and with special key current_year """
@@ -783,20 +849,20 @@ def test_lots_of_rules():
                 {
                     "index": 0,
                     "if": {
-                        "prevenrl": {
-                            "allowed": [1]
-                        }
+                        "prevenrl": {"allowed": [1]}
                     },
-                    "then": {"nullable": False}
+                    "then": {
+                        "oldadcid": {"nullable": False}
+                    }
                 },
                 {
                     "index": 1,
                     "if": {
-                        "prevenrl": {
-                            "allowed": [0, 9]
-                        }
+                        "prevenrl": {"allowed": [0, 9]}
                     },
-                    "then": {"nullable": True, "filled": False}
+                    "then": {
+                        "oldadcid": {"nullable": True, "filled": False}
+                    }
                 }
             ],
             "logic": {
