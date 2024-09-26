@@ -391,13 +391,13 @@ def test_compatibility_with_nested_logic_or():
             "compatibility": [
                 {
                     "if": {
-                        "raceunkn": {
+                        "raceaian": {
                             "logic": {
                                 "formula": {
                                     "or": [
                                         {"==": [1, {"var": "raceaian"}]},
                                         {"==": [1, {"var": "raceasian"}]},
-                                        {"==": [1, {"var": "raceblack"}]}
+                                        {"==": [1, {"var": "raceblack"}]},
                                     ]
                                 }
                             }
@@ -418,13 +418,16 @@ def test_compatibility_with_nested_logic_or():
     assert nv.validate({'raceaian': 1})
     assert nv.validate({'raceasian': 1})
     assert nv.validate({'raceblack': 1})
-    assert nv.validate({'raceunkn': 1})
     assert nv.validate({'raceunkn': 1, 'raceaian': None, 'raceasian': None, 'raceblack': None})
     assert nv.validate({'raceaian': 1, 'raceasian': 1, 'raceblack': 1})
 
     # the compatibility if/then with logic inside means that raceunkn cannot be 1 if any of the others are set
     assert not nv.validate({'raceaian': 1, 'raceunkn': 1})
-    assert nv.errors == {'raceunkn': ["('raceunkn', ['must be empty']) for {'raceunkn': {'logic': {'formula': {'or': [{'==': [1, {'var': 'raceaian'}]}, {'==': [1, {'var': 'raceasian'}]}, {'==': [1, {'var': 'raceblack'}]}]}}}} - compatibility rule no: 1"]}
+    assert nv.errors == {'raceunkn': ["('raceunkn', ['must be empty']) for {'raceaian': {'logic': {'formula': {'or': [{'==': [1, {'var': 'raceaian'}]}, {'==': [1, {'var': 'raceasian'}]}, {'==': [1, {'var': 'raceblack'}]}]}}}} - compatibility rule no: 1"]}
+    assert not nv.validate({'raceasian': 1, 'raceunkn': 1})
+    assert nv.errors == {'raceunkn': ["('raceunkn', ['must be empty']) for {'raceaian': {'logic': {'formula': {'or': [{'==': [1, {'var': 'raceaian'}]}, {'==': [1, {'var': 'raceasian'}]}, {'==': [1, {'var': 'raceblack'}]}]}}}} - compatibility rule no: 1"]}
+    assert not nv.validate({'raceblack': 1, 'raceunkn': 1})
+    assert nv.errors == {'raceunkn': ["('raceunkn', ['must be empty']) for {'raceaian': {'logic': {'formula': {'or': [{'==': [1, {'var': 'raceaian'}]}, {'==': [1, {'var': 'raceasian'}]}, {'==': [1, {'var': 'raceblack'}]}]}}}} - compatibility rule no: 1"]}
 
 def test_multiple_compatibility():
     """ Test multiple compatibility rules """
