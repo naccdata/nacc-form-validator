@@ -397,7 +397,7 @@ def test_compatibility_with_nested_logic_or():
                                     "or": [
                                         {"==": [1, {"var": "raceaian"}]},
                                         {"==": [1, {"var": "raceasian"}]},
-                                        {"==": [1, {"var": "raceblack"}]},
+                                        {"==": [1, {"var": "raceblack"}]}
                                     ]
                                 }
                             }
