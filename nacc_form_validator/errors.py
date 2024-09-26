@@ -112,6 +112,9 @@ class SchemaDefs:
 
     TYPE = "type"
     OP = "op"
+    IF_OP = 'if_op'
+    THEN_OP = 'then_op'
+    ELSE_OP = 'else_op'
     IF = "if"
     THEN = "then"
     ELSE = "else"

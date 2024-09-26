@@ -3,7 +3,7 @@ library)."""
 
 import logging
 from datetime import datetime as dt
-from typing import Any, Dict, List, Mapping, Optional
+from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 from cerberus.validator import Validator
 from dateutil import parser
@@ -415,6 +415,39 @@ class NACCValidator(Validator):
         elif filled and value is None:
             self._error(field, ErrorDefs.FILLED_TRUE)
 
+    def _check_subschema_valid(self, all_conditions: Dict[str, object], operator: str) -> Tuple[bool, object]:
+        """ Helper method for _validate_compatibility, creates a temporary validator and
+            checks a subschema against it """
+        valid = operator != "OR"
+        errors = {}
+
+        for field, conds in all_conditions.items():
+            subschema = {field: conds}
+
+            temp_validator = NACCValidator(
+                subschema,
+                allow_unknown=True,
+                error_handler=CustomErrorHandler(subschema),
+            )
+            if operator == "OR":
+                valid = valid or temp_validator.validate(self.document,
+                                                         normalize=False)
+                # if something passed, don't need to evaluate rest, and ignore any errors found
+                if valid:
+                    errors = None
+                    break
+                else:  # otherwise keep track of all errors
+                    errors.update(temp_validator.errors)
+
+            # Evaluate as logical AND operation
+            elif not temp_validator.validate(self.document,
+                                             normalize=False):
+                valid = False
+                errors = temp_validator.errors
+                break
+
+        return valid, errors
+
     # pylint: disable=(too-many-locals, unused-argument)
     def _validate_compatibility(self, constraints: List[Mapping], field: str,
                                 value: object):
@@ -435,7 +468,9 @@ class NACCValidator(Validator):
                     'type': 'dict',
                     'schema': {
                         'index': {'type': 'integer', 'required': False},
-                        'op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR', 'and', 'or']},
+                        'if_op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR', 'and', 'or']},
+                        'then_op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR', 'and', 'or']},
+                        'else_op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR', 'and', 'or']},
                         'if': {'type': 'dict', 'required': True, 'empty': False},
                         'then': {'type': 'dict', 'required': True, 'empty': False},
                         'else': {'type': 'dict', 'required': False, 'empty': False}
@@ -448,8 +483,10 @@ class NACCValidator(Validator):
         # validation fails if any of the constraints fails.
         rule_no = 0
         for constraint in constraints:
-            # Extract operator if specified, default is AND
-            operator = constraint.get(SchemaDefs.OP, "AND").upper()
+            # Extract operators if specified, default is AND
+            if_operator = constraint.get(SchemaDefs.IF_OP, "AND").upper()
+            then_operator = constraint.get(SchemaDefs.THEN_OP, "AND").upper()
+            else_operator = constraint.get(SchemaDefs.ELSE_OP, "AND").upper()
 
             # Extract constraint index if specified, or increment by 1
             rule_no = constraint.get(SchemaDefs.INDEX, rule_no + 1)
@@ -463,46 +500,28 @@ class NACCValidator(Validator):
             # Extract conditions for else clause, this is optional
             else_conds = constraint.get(SchemaDefs.ELSE, None)
 
-            valid = operator != "OR"
-            # Check whether the dependency conditions satisfied
-            for dep_field, conds in if_conds.items():
-                subschema = {dep_field: conds}
+            # Check if dependencies satisfied the If clause
+            error_def = ErrorDefs.COMPATIBILITY_FALSE
+            errors = None
+            valid, _ = self._check_subschema_valid(if_conds, if_operator)
 
-                temp_validator = NACCValidator(
-                    subschema,
-                    allow_unknown=True,
-                    error_handler=CustomErrorHandler(subschema),
-                )
-                if operator == "OR":
-                    valid = valid or temp_validator.validate(self.document,
-                                                             normalize=False)
-                # Evaluate as logical AND operation
-                elif not temp_validator.validate(self.document,
-                                                 normalize=False):
-                    valid = False
-                    break
-
-            subschema = None
-            # If dependencies satisfied validate Then clause
+            # If the If clause valid, validate the Then clause
             if valid:
-                subschema = {field: then_conds}
+                valid, errors = self._check_subschema_valid(then_conds, then_operator)
                 error_def = ErrorDefs.COMPATIBILITY_TRUE
-            # If dependencies not satisfied validate Else clause
-            elif else_conds:
-                subschema = {field: else_conds}
-                error_def = ErrorDefs.COMPATIBILITY_FALSE
 
-            if subschema:
-                temp_validator = NACCValidator(
-                    subschema,
-                    allow_unknown=True,
-                    error_handler=CustomErrorHandler(subschema),
-                )
-                if not temp_validator.validate(self.document, normalize=False):
-                    errors = temp_validator.errors.items()
-                    for error in errors:
-                        self._error(field, error_def, rule_no, str(error),
-                                    if_conds)
+            # Otherwise validate the else clause, if they exist
+            elif else_conds:
+                valid, errors = self._check_subschema_valid(else_conds, else_operator)
+                error_def = ErrorDefs.COMPATIBILITY_FALSE
+            else:  # if the If condition is not satisfied, do nothing
+                pass
+
+            # If there are errors, something in the then/else clause failed - report them
+            if errors:
+                for error in errors.items():
+                    self._error(field, error_def, rule_no, str(error),
+                                if_conds)
 
     # pylint: disable=(too-many-locals)
     def _validate_temporalrules(self, temporalrules: Dict[str, Any],
