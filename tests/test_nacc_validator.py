@@ -994,6 +994,37 @@ def test_compare_with_base_is_hardcoded():
     assert not nv.validate({'test_var': 0})
     assert nv.errors ==  {'test_var': ["input value doesn't satisfy the condition test_var >"]}
 
+def test_compare_with_adjustment_is_another_field():
+    """ Test compare_with when the adjustment is another field """
+    schema = {
+        "base_value": {
+            "type": "integer",
+            "required": True,
+        },
+        "adjustment_value": {
+            "type": "integer",
+            "required": True,
+        },
+        "test_var": {
+            "type": "integer",
+            "required": True,
+            "compare_with": {
+                "comparator": "==",
+                "base": "base_value",
+                "adjustment": "adjustment_value",
+                "op": "+"
+            }
+        }
+    }
+    nv = create_nacc_validator(schema)
+    assert nv.validate({'test_var': 5, "base_value": 3, "adjustment_value": 2})
+    assert nv.validate({'test_var': 5, "base_value": 4, "adjustment_value": 1})
+    assert nv.validate({'test_var': 5, "base_value": 5, "adjustment_value": 0})
+    assert nv.validate({'test_var': 5, "base_value": 8, "adjustment_value": -3})
+
+    assert not nv.validate({'test_var': 5, "base_value": 5, "adjustment_value": 2})
+    assert nv.errors == {'test_var': ["input value doesn't satisfy the condition test_var == base_value + adjustment_value"]}
+
 def test_lots_of_rules():
     """ Test when a specific field has a lot of rules associated with it (in this case oldadcid) """
     schema = {
