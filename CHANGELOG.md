@@ -2,6 +2,11 @@
 
 Documentation of release versions of `nacc-form-validator`
 
+## 0.3.0
+
+* Updates `_validate_compare_with` to allow adjustments to be another field, and for base values to be hardcoded values
+* Adds additional tests
+
 ## 0.2.0
 
 * Updates `_validate_compatibility` to iterate on multiple fields for `then` and `else` clauses, similar to how the `if` clause was handling it
