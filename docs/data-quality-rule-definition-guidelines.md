@@ -568,7 +568,7 @@ incntmdx:
 
 ### logic
 
-Used to specify a mathematical formula/expression to validate against, and utilizes [json-logic-py](https://github.com/nadirizr/json-logic-py) (saved as `json_logic.py`). This rule overlaps with `compare_with`, but allows for comparison between multiple fields, as opposed to just two (and does not account for special keywords).
+Used to specify a mathematical formula/expression to validate against, and utilizes [json-logic-py](https://github.com/nadirizr/json-logic-py) (saved as `json_logic.py`). This rule overlaps with `compare_with`, but allows for comparison between multiple fields as well as more complex, nested mathematical expressions. That being said, it does not account for the same special keywords like `current_year`.
 
 * `formula`: The mathematical formula/expression to apply; see the `operations` dict in `json_logic.py` to see the full list of available operators. Each operator expects differently formatted arguments
 * `errormsg`: A custom message to supply if validation fails. This key is optional; if not provided the error message will simply be `value {value} does not satisify the specified formula`
