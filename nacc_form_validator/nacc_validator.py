@@ -212,7 +212,7 @@ class NACCValidator(Validator):
 
         return record
 
-    def __get_base_val(self, key: str) -> Optional[Any]:
+    def __get_value_for_key(self, key: str) -> Optional[Any]:
         """Find the value for the specified key.
 
         Args:
@@ -235,6 +235,13 @@ class NACCValidator(Validator):
 
         if self.document and key in self.document:
             return self.document[key]
+
+        # doesn't particularly matter if its an int or float in this case, so just try cast to float
+        try:
+            key = float(key)
+            return key
+        except ValueError:
+            pass
 
         return None
 
@@ -759,11 +766,12 @@ class NACCValidator(Validator):
                         'allowed': [">", "<", ">=", "<=", "==", "!="]
                     },
                     'base': {
-                        'type': 'string',
+                        'type': ['string', 'number'],
                         'required': True,
                         'empty': False
                     },
                     'adjustment': {
+                        'type': ['string', 'number'],
                         'required': False,
                         'empty': False,
                         'dependencies': 'op'
@@ -793,13 +801,15 @@ class NACCValidator(Validator):
             comparison_str += " " + base + " " + operator + " " + str(
                 adjustment)
 
-        base_val = self.__get_base_val(base)
-        if not base_val:
+        base_val = self.__get_value_for_key(base) if isinstance(base, str) else base
+
+        if base_val is None:
             self._error(field, ErrorDefs.COMPARE_WITH, comparison_str)
             return
 
         adjusted_value = base_val
         if adjustment and operator:
+            adjustment = self.__get_value_for_key(adjustment) if isinstance(adjustment, str) else adjustment
             if operator == "+":
                 adjusted_value = base_val + adjustment
             elif operator == "-":

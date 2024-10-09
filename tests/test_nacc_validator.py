@@ -586,6 +586,53 @@ def test_compatibility_then_multiple_blank_and():
                         "parentvar": {"nullable": True,"filled": False}
                     },
                     "then": {
+                        "var1": {"nullable": True,"filled": False},
+                        "var2": {"nullable": True,"filled": False},
+                        "var3": {"nullable": True,"filled": False}
+                    }
+                }
+            ]
+        }
+    }
+    nv = create_nacc_validator(schema)
+
+    # if parentvar is None then the following must be None: var1, var2, var3
+    assert nv.validate({"parentvar": None, "var1": None, "var2": None, "var3": None})
+    assert nv.validate({"parentvar": 0, "var1": 1, "var2": 2, "var3": 3})
+    assert nv.validate({"parentvar": 0, "var1": None, "var2": 2, "var3": None})
+
+    assert not nv.validate({"parentvar": None, "var1": 1, "var2": None, "var3": None})
+    assert nv.errors == {'var1': ["('var1', ['must be empty']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
+    assert not nv.validate({"parentvar": None, "var1": 1, "var2": 1, "var3": 1})
+    assert nv.errors == {'var1': ["('var1', ['must be empty']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
+    
+    assert not nv.validate({"parentvar": None, "var1": None, "var2": None, "var3": 1})
+    assert nv.errors == {'var1': ["('var3', ['must be empty']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
+
+def test_compatibility_then_multiple_blank_logic_and():
+    """ Test when the rule results in multiple things needing to be blank - logic """
+    schema = {
+        "parentvar": {
+            "type": "integer",
+            "nullable": True
+        },
+        "var3": {
+            "type": "integer",
+            "nullable": True
+        },
+        "var2": {
+            "type": "integer",
+            "nullable": True
+        },
+        "var1": {
+            "type": "integer",
+            "nullable": True,
+            "compatibility": [
+                {
+                    "if": {
+                        "parentvar": {"nullable": True,"filled": False}
+                    },
+                    "then": {
                         "var1": {
                             "nullable": True,  # this is specifically required in schema for the None case
                             "logic": {
@@ -608,6 +655,7 @@ def test_compatibility_then_multiple_blank_and():
     # if parentvar is None then the following must be None: var1, var2, var3
     assert nv.validate({"parentvar": None, "var1": None, "var2": None, "var3": None})
     assert nv.validate({"parentvar": 0, "var1": 1, "var2": 2, "var3": 3})
+    assert nv.validate({"parentvar": 0, "var1": None, "var2": 2, "var3": None})
 
     assert not nv.validate({"parentvar": None, "var1": 1, "var2": None, "var3": None})
     assert nv.errors == {'var1': ["('var1', ['error in formula evaluation - value 1 does not satisfy the specified formula']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
@@ -615,7 +663,7 @@ def test_compatibility_then_multiple_blank_and():
     assert nv.errors == {'var1': ["('var1', ['error in formula evaluation - value 1 does not satisfy the specified formula']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
     
     # TODO: it looks like this error message is misleading, it fails because of var3 not var1 but since this logic is on var1 its reported as a var1 failure
-    #       something to improve on
+    #       something to improve on. But also because of this you should avoid using logic and instead do it as shown in test_compatibility_then_multiple_blank_and
     assert not nv.validate({"parentvar": None, "var1": None, "var2": None, "var3": 1})
     assert nv.errors == {'var1': ["('var1', ['error in formula evaluation - value None does not satisfy the specified formula']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
 
@@ -926,6 +974,57 @@ def test_compare_with_current_year():
     assert not nv.validate({'birthyr': 2038, 'birthyradj': 2038})
     assert nv.errors == {'birthyr': ["input value doesn't satisfy the condition birthyr <="], 'birthyradj': ["input value doesn't satisfy the condition birthyradj <= current_year - 15"]}
 
+def test_compare_with_base_is_hardcoded():
+    """ Test compare_with when the base is a hardcoded 0 """
+    schema = {
+        "test_var": {
+            "type": "integer",
+            "required": True,
+            "compare_with": {
+                "comparator": ">",
+                "base": 0
+            }
+        }
+    }
+    nv = create_nacc_validator(schema)
+    assert nv.validate({'test_var': 5})
+
+    assert not nv.validate({'test_var': -1})
+    assert nv.errors ==  {'test_var': ["input value doesn't satisfy the condition test_var >"]}
+    assert not nv.validate({'test_var': 0})
+    assert nv.errors ==  {'test_var': ["input value doesn't satisfy the condition test_var >"]}
+
+def test_compare_with_adjustment_is_another_field():
+    """ Test compare_with when the adjustment is another field """
+    schema = {
+        "base_value": {
+            "type": "integer",
+            "required": True,
+        },
+        "adjustment_value": {
+            "type": "integer",
+            "required": True,
+        },
+        "test_var": {
+            "type": "integer",
+            "required": True,
+            "compare_with": {
+                "comparator": "==",
+                "base": "base_value",
+                "adjustment": "adjustment_value",
+                "op": "+"
+            }
+        }
+    }
+    nv = create_nacc_validator(schema)
+    assert nv.validate({'test_var': 5, "base_value": 3, "adjustment_value": 2})
+    assert nv.validate({'test_var': 5, "base_value": 4, "adjustment_value": 1})
+    assert nv.validate({'test_var': 5, "base_value": 5, "adjustment_value": 0})
+    assert nv.validate({'test_var': 5, "base_value": 8, "adjustment_value": -3})
+
+    assert not nv.validate({'test_var': 5, "base_value": 5, "adjustment_value": 2})
+    assert nv.errors == {'test_var': ["input value doesn't satisfy the condition test_var == base_value + adjustment_value"]}
+
 def test_lots_of_rules():
     """ Test when a specific field has a lot of rules associated with it (in this case oldadcid) """
     schema = {
@@ -995,4 +1094,3 @@ def test_lots_of_rules():
     # invalid cases, logic (adcid != oldadcid)
     assert not nv.validate({'adcid': 0, 'prevenrl': 1, 'oldadcid': 0})
     assert nv.errors == {'oldadcid': ['error in formula evaluation - value 0 does not satisfy the specified formula']}
-
