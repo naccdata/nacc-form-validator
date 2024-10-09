@@ -53,7 +53,7 @@ def create_nacc_validator_with_ds(schema: dict[str, object]) -> NACCValidator:
 
 
 def test_temporal_check():
-    """ Temporal test check - this is basically a more involved version of the example provided in usage.md, namely tests when 
+    """ Temporal test check - this is basically a more involved version of the example provided in docs/index.md, namely tests when 
     validating a record that sits inbetween or before existing records in the DS """
     schema = {
         "patient_id": {"type": "string"},
