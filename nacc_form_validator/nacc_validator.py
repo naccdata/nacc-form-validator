@@ -488,7 +488,7 @@ class NACCValidator(Validator):
 
         # Evaluate each constraint in the List individually,
         # validation fails if any of the constraints fails.
-        rule_no = 0
+        rule_no = -1
         for constraint in constraints:
             # Extract operators if specified, default is AND
             if_operator = constraint.get(SchemaDefs.IF_OP, "AND").upper()

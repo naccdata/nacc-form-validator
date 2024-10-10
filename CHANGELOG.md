@@ -6,6 +6,7 @@ Documentation of release versions of `nacc-form-validator`
 
 * Updates `_validate_compare_with` to allow adjustments to be another field, and for base values to be hardcoded values
 * Adds additional tests
+* Update json_logic `less` function to handle None
 
 ## 0.2.0
 
