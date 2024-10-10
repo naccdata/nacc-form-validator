@@ -60,6 +60,16 @@ def hard_equals(a, b):
 
 def less(a, b, *args):
     """Implements the '<' operator with JS-style type coertion."""
+    # Handling empty values
+    if a is None and b is None:
+        return False
+    
+    if a is None:
+        return True
+    
+    if b is None:
+        return False
+    
     types = {type(a), type(b)}
     if float in types or int in types:
         try:
