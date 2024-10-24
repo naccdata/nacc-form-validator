@@ -10,7 +10,8 @@ from dateutil import parser
 
 from nacc_form_validator import utils
 from nacc_form_validator.datastore import Datastore
-from nacc_form_validator.errors import CustomErrorHandler, ErrorDefs, SchemaDefs
+from nacc_form_validator.errors import (CustomErrorHandler, ErrorDefs,
+                                        SchemaDefs)
 from nacc_form_validator.json_logic import jsonLogic
 
 log = logging.getLogger(__name__)
@@ -309,8 +310,7 @@ class NACCValidator(Validator):
 
             if max_value == SchemaDefs.CRR_DATE and input_date > curr_date:
                 self._error(field, ErrorDefs.CURR_DATE_MAX, str(curr_date))
-            elif max_value == (SchemaDefs.CRR_YEAR
-                               and input_date.year > curr_date.year):
+            elif max_value == SchemaDefs.CRR_YEAR and input_date.year > curr_date.year:
                 self._error(field, ErrorDefs.CURR_YEAR_MAX, curr_date.year)
         else:
             if SchemaDefs.FORMATTING in self.schema[field]:
@@ -374,8 +374,7 @@ class NACCValidator(Validator):
 
             if min_value == SchemaDefs.CRR_DATE and input_date < curr_date:
                 self._error(field, ErrorDefs.CURR_DATE_MIN, str(curr_date))
-            elif min_value == (SchemaDefs.CRR_YEAR
-                               and input_date.year < curr_date.year):
+            elif min_value == SchemaDefs.CRR_YEAR and input_date.year < curr_date.year:
                 self._error(field, ErrorDefs.CURR_YEAR_MIN, curr_date.year)
         else:
             if SchemaDefs.FORMATTING in self.schema[field]:
@@ -422,9 +421,10 @@ class NACCValidator(Validator):
         elif filled and value is None:
             self._error(field, ErrorDefs.FILLED_TRUE)
 
-    def _check_subschema_valid(self, all_conditions: Dict[str, object], operator: str) -> Tuple[bool, object]:
-        """ Helper method for _validate_compatibility, creates a temporary validator and
-            checks a subschema against it """
+    def _check_subschema_valid(self, all_conditions: Dict[str, object],
+                               operator: str) -> Tuple[bool, object]:
+        """Helper method for _validate_compatibility, creates a temporary
+        validator and checks a subschema against it."""
         valid = operator != "OR"
         errors = {}
 
@@ -443,12 +443,11 @@ class NACCValidator(Validator):
                 if valid:
                     errors = None
                     break
-                else:  # otherwise keep track of all errors
-                    errors.update(temp_validator.errors)
+                # otherwise keep track of all errors
+                errors.update(temp_validator.errors)
 
             # Evaluate as logical AND operation
-            elif not temp_validator.validate(self.document,
-                                             normalize=False):
+            elif not temp_validator.validate(self.document, normalize=False):
                 valid = False
                 errors = temp_validator.errors
                 break
@@ -514,12 +513,14 @@ class NACCValidator(Validator):
 
             # If the If clause valid, validate the Then clause
             if valid:
-                valid, errors = self._check_subschema_valid(then_conds, then_operator)
+                valid, errors = self._check_subschema_valid(
+                    then_conds, then_operator)
                 error_def = ErrorDefs.COMPATIBILITY_TRUE
 
             # Otherwise validate the else clause, if they exist
             elif else_conds:
-                valid, errors = self._check_subschema_valid(else_conds, else_operator)
+                valid, errors = self._check_subschema_valid(
+                    else_conds, else_operator)
                 error_def = ErrorDefs.COMPATIBILITY_FALSE
             else:  # if the If condition is not satisfied, do nothing
                 pass
@@ -801,7 +802,8 @@ class NACCValidator(Validator):
             comparison_str += " " + base + " " + operator + " " + str(
                 adjustment)
 
-        base_val = self.__get_value_for_key(base) if isinstance(base, str) else base
+        base_val = self.__get_value_for_key(base) if isinstance(base,
+                                                                str) else base
 
         if base_val is None:
             self._error(field, ErrorDefs.COMPARE_WITH, comparison_str)
@@ -809,7 +811,8 @@ class NACCValidator(Validator):
 
         adjusted_value = base_val
         if adjustment and operator:
-            adjustment = self.__get_value_for_key(adjustment) if isinstance(adjustment, str) else adjustment
+            adjustment = (self.__get_value_for_key(adjustment) if isinstance(
+                adjustment, str) else adjustment)
             if operator == "+":
                 adjusted_value = base_val + adjustment
             elif operator == "-":
