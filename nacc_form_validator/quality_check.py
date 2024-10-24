@@ -6,7 +6,8 @@ from cerberus.errors import DocumentErrorTree
 from cerberus.schema import SchemaError
 
 from nacc_form_validator.datastore import Datastore
-from nacc_form_validator.nacc_validator import (CustomErrorHandler, NACCValidator,
+from nacc_form_validator.nacc_validator import (CustomErrorHandler,
+                                                NACCValidator,
                                                 ValidationException)
 
 

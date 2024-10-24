@@ -443,8 +443,8 @@ class NACCValidator(Validator):
                 if valid:
                     errors = None
                     break
-                else:  # otherwise keep track of all errors
-                    errors.update(temp_validator.errors)
+                # otherwise keep track of all errors
+                errors.update(temp_validator.errors)
 
             # Evaluate as logical AND operation
             elif not temp_validator.validate(self.document, normalize=False):
