@@ -6,10 +6,12 @@ See [Data Quality Rule Definition Guidelines](./data-quality-rule-definition-gui
 
 ## Table of Contents
 
-* [Overview](#overview)
-* [Example Usage - Hello World](#example-usage---hello-world)
-* [Example Usage - Records and Datastores](#example-usage---records-and-datastores)
-* [Example Usage - Bulk Validation](#example-usage---bulk-validation)
+- [Using the NACC Form Validator](#using-the-nacc-form-validator)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Example Usage - Hello World](#example-usage---hello-world)
+  - [Example Usage - Records and Datastores](#example-usage---records-and-datastores)
+  - [Example Usage - Bulk Validation](#example-usage---bulk-validation)
 
 ## Overview
 
@@ -19,12 +21,12 @@ The `NACCValidator` can also use an an optional `Datastore` object which you can
 
 The usage workflow is to instantiate a `QualityCheck` object with the schema you want to validate against, and then pass the record to validate to the `validate_record` method. This method returns 4 variables:
 
-| Variable | Type | Description |
-| -------- | ---- | ----------- |
-| `passed` | `bool` | Whether or not the record satisfied all validation rules defined by the schema |
-| `sys_failure` | `bool` | Whether or not a system error occured |
-| `errors` | `dict[str, list[str]]` | Dict of errors encountered keyed by the variable that failed. Empty if no errors encountered for the record. |
-| `error_tree` | `DocumentErrorTree` | A dict-like object of `ValidationError` instances. See [Cerberus' Errors documentation](https://docs.python-cerberus.org/errors.html) for more information. |
+| Variable      | Type                   | Description                                                                                                                                                 |
+| ------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `passed`      | `bool`                 | Whether or not the record satisfied all validation rules defined by the schema                                                                              |
+| `sys_failure` | `bool`                 | Whether or not a system error occured                                                                                                                       |
+| `errors`      | `dict[str, list[str]]` | Dict of errors encountered keyed by the variable that failed. Empty if no errors encountered for the record.                                                |
+| `error_tree`  | `DocumentErrorTree`    | A dict-like object of `ValidationError` instances. See [Cerberus' Errors documentation](https://docs.python-cerberus.org/errors.html) for more information. |
 
 ## Example Usage - Hello World
 
@@ -77,7 +79,7 @@ passed, sys_failure, errors, error_tree = qc.validate_record({"example_primary_k
 
 ## Example Usage - Records and Datastores
 
-You may want to compare a record against previous records, particularly if your schema uses temporal rules, which are usually associated with plausibility checks. This is where `pk_name` and `datastore` come in, in which `pk_name` must be the "primary key" to index the datastore by. The primary key must always be a required field. `datastore.py` then provides a `Datastore` abstract class that you must implement, specifically the `get_previous_instance` method. 
+You may want to compare a record against previous records, particularly if your schema uses temporal rules, which are usually associated with plausibility checks. This is where `pk_name` and `datastore` come in, in which `pk_name` must be the "primary key" to index the datastore by. The primary key must always be a required field. `datastore.py` then provides a `Datastore` abstract class that you must implement, specifically the `get_previous_record` method. 
 
 For more information on temporal rules, see [Data Quality Rule Definition Guidelines](./data-quality-rule-definition-guidelines.md) for more information on temporal rules). If you are validating against a schema that doesn't have temporal rules, it isn't really necessary to set up a datastore.
 
@@ -92,7 +94,7 @@ from nacc_form_validator.datastore import Datastore
 
 class CustomDatastore(Datastore):
 
-    def __init__(self) -> None:
+    def __init__(self, pk_field: str, orderby: str) -> None:
         self.__db = {
             'PatientID1': [
                 {
@@ -105,26 +107,29 @@ class CustomDatastore(Datastore):
                 }
             ]
         }
+        self.__orderby = orderby
+        super.__init__(pk_field)
 
-    def get_previous_instance(self, orderby: str, pk_field: str, current_ins: dict[str, str]) -> dict[str, str] | None:
+    def get_previous_record(self, current_record: dict[str, str]) -> dict[str, str] | None:
         """
-        See where this record would fit in the sorted record and return the previous instance
+        See where current record would fit in the sorted record and return the previous record
         Making a deep copy since we don't actually want to modify the record in this method
         """
-        key = current_ins[pk_field]
+        key = current_record[self.pk_field]
         if key not in self.__db:
             return None
-        
-        sorted_record = copy.deepcopy(self.__db[key])
-        sorted_record.append(current_ins)
-        sorted_record.sort(key=lambda record: record[orderby])
 
-        index = sorted_record.index(current_ins)
+        sorted_record = copy.deepcopy(self.__db[key])
+        sorted_record.append(current_record)
+        sorted_record.sort(key=lambda record: record[self.__orderby])
+
+        index = sorted_record.index(current_record)
         return sorted_record[index - 1] if index != 0 else None
 
 
 pk_name = "patient_id"
-datastore = CustomDatastore()
+orderby = "visit_num"
+datastore = CustomDatastore(pk_name, orderby)
 
 schema = {
     "patient_id": {
@@ -135,22 +140,22 @@ schema = {
         "type": "integer",
         "required": True
     },
-    "taxes": {
+     "taxes": {
         "type": "integer",
-        "required": True,
-        "temporalrules": {
-            "orderby": "visit_num",
-            "constraints": [
-                {
-                    "previous": {
+        "temporalrules": [            
+            {
+                "previous": {
+                    "taxes": {
                         "allowed": [0]
-                    },
-                    "current": {
+                    }
+                },
+                "current": {
+                    "taxes": {
                         "forbidden": [8]
                     }
                 }
-            ]
-        }
+            }
+        ]
     }
 }
 
@@ -188,12 +193,17 @@ passed, sys_failure, errors, error_tree = qc.validate_record(record)
 #                                         schema_path=('taxes', 'temporalrules'),
 #                                         code=0x2000,
 #                                         constraint={
-#                                             'orderby': 'visit_num',
-#                                             'constraints': [{
-#                                                 'previous': {'allowed': [0]},
-#                                                 'current': {'forbidden': [8]}
-#                                             }]
-#                                         },
+#                                                "previous": {
+#                                                    "taxes": {
+#                                                        "allowed": [0]
+#                                                    }
+#                                                },
+#                                                "current": {
+#                                                    "taxes": {
+#                                                        "forbidden": [8]
+#                                                    }
+#                                                }
+#                                          },
 #                                         value=8,
 #                                         info=(1, "('taxes', ['unallowed value 8'])",{'allowed': [0]})
 #                                         )

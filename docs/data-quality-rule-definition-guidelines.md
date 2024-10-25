@@ -2,13 +2,15 @@
 
 ## Table of Contents
 
-* [Introduction](#introduction)
-* [Validation Rules](#validation-rules)
-* [Custom Rules Defined for UDS](#custom-rules-defined-for-uds)
-    * [compare_with](#compare_with)
-    * [compatibility](#compatibility)
-    * [logic](#logic)
-    * [temporalrules](#temporalrules)
+- [Data Quality Rule Definition Guidelines](#data-quality-rule-definition-guidelines)
+  - [Table of Contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [Validation Rules](#validation-rules)
+  - [Custom Rules Defined for UDS](#custom-rules-defined-for-uds)
+    - [compare\_with](#compare_with)
+    - [compatibility](#compatibility)
+    - [logic](#logic)
+    - [temporalrules](#temporalrules)
 
 ## Introduction
 
@@ -669,37 +671,37 @@ var3:
 
 ### temporalrules
 
-Used to specify the list of longitudinal checks for a given field.
+Used to specify the list of checks to be performed against the previous visit for the same participant.
 
-* `orderby` specifies the field name to order the longitudinal records by.
-* `constraints` specifies the list of checks to be performed on the previous records. Each constraint specifies `previous` and `current` attributes to allow the application of a subschema based on the outcome of another schema.
+* Each constraint specifies `previous` and `current` attributes. If conditions specified under `previous` subschema satisfied by the previous visit record, then the current visit record must satisfy the conditions specified under `current` subschema.
+* Each `previous/current` attribute can have several fields which need to be satisifed, with the `*_op` attribute specifying the boolean operation in which to compare the different fields. For example, if `prev_op = or`, then as long as _any_ of the fields satsify their schema, the `current` attribute will be evaluated. The default `*_op` is `and`.
 
 The rule definition for `temporalrules` should follow the following format:
 
 ```json
 {
     "<field_name>": {
-        "temporalrules": {
-            "orderby": "<field to order the records by>",
-            "constraints": [
+        "temporalrules": [
                 {
                     "previous": {
-                        "subschema_attribute": "subschema to be satisfied for the previous record"
+                        "<field_name>": "subschema to be satisfied for the previous record"
                     },
                     "current": {
-                        "subschema_attribute": "subschema to be satisfied for the current record"
+                        "<field_name>": "subschema to be satisfied for the current record"
                     }
                 },
                 {
+                    "prev_op": "or",
                     "previous": {
-                        "subschema_attribute": "subschema to be satisfied for the previous record"
+                        "<field_name>": "subschema to be satisfied for the previous record",
+                        "<field_name1>": "subschema to be satisfied for the previous record"
                     },
                     "current": {
-                        "subschema_attribute": "subschema to be satisfied for the current record"
+                        "<field_name>": "subschema to be satisfied for the current record"
                     }
                 }
-            ]
-        }
+        ]
+    }
 }
 ```
 
@@ -717,13 +719,13 @@ If field `taxes` (difficulty with taxes, business, and other papers) is 0 (norma
 taxes:
   type: integer
   temporalrules:
-    orderby: visit_date
-    constraints:
-      - previous:
-          allowed:
+    - previous:
+        taxes:
+            allowed:
             - 0
-        current:
-          forbidden:
+      current:
+        taxes:
+            forbidden:
             - 8
 ```
 </td>
@@ -733,19 +735,20 @@ taxes:
 {
     "taxes": {
         "type": "integer",
-        "temporalrules": {
-            "orderby": "visit_date",
-            "constraints": [
-                {
-                    "previous": {
+        "temporalrules": [            
+            {
+                "previous": {
+                    "taxes": {
                         "allowed": [0]
-                    },
-                    "current": {
+                    }
+                },
+                "current": {
+                    "taxes": {
                         "forbidden": [8]
                     }
                 }
-            ]
-        }
+            }
+        ]
     }
 }
 ```

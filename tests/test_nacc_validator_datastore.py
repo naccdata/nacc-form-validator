@@ -46,14 +46,14 @@ class CustomDatastore(Datastore):
         return sorted_record[index - 1] if index != 0 else None
 
 
-def create_nacc_validator_with_ds(schema: dict[str, object]) -> NACCValidator:
+def create_nacc_validator_with_ds(schema: dict[str, object], pk_field: str, orderby: str) -> NACCValidator:
     """ Creates a generic NACCValidtor with the above CustomDataStore """
     nv = NACCValidator(schema,
                        allow_unknown=False,
                        error_handler=CustomErrorHandler(schema))
 
-    nv.primary_key = 'patient_id'
-    nv.datastore = CustomDatastore()
+    nv.primary_key = pk_field
+    nv.datastore = CustomDatastore(pk_field, orderby)
     return nv
 
 
@@ -65,19 +65,21 @@ def test_temporal_check():
         "visit_num": {"type": "integer"},
         "taxes": {
             "type": "integer",
-            "temporalrules": {
-                "orderby": "visit_num",
-                "constraints": [
+            "temporalrules": [
                     {
-                        "previous": {"allowed": [0]},
-                        "current": {"forbidden": [8]}
+                        "index": 0,
+                        "previous": {
+                            "taxes": {"allowed": [0]}
+                        },
+                        "current": {
+                            "taxes": {"forbidden": [8]}
+                        }
                     }
-                ]
-            }
+            ]
         }
     }
 
-    nv = create_nacc_validator_with_ds(schema)
+    nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
 
     assert nv.validate({'patient_id': 'PatientID1',
                        'visit_num': 4, 'taxes': 1})
