@@ -84,10 +84,15 @@ class QualityCheck:
                 allow_unknown=not self.__strict,
                 error_handler=CustomErrorHandler(self.schema),
             )
-            self.validator.primary_key = self.pk_field
-            self.validator.datastore = datastore
         except (SchemaError, RuntimeError) as error:
             raise QualityCheckException(f"Schema Error - {error}") from error
+
+        if datastore and self.pk_field != datastore.pk_field:
+            raise QualityCheckException(
+                f"Mismatched primary key fields - {self.pk_field}, {datastore.pk_field}")
+
+        self.validator.primary_key = self.pk_field
+        self.validator.datastore = datastore
 
     def validate_record(
         self, record: Dict[str, str]

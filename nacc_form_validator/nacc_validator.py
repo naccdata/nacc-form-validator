@@ -592,8 +592,7 @@ class NACCValidator(Validator):
             prev_ins = self.__prev_records[record_id]
         else:
             orderby = temporalrules[SchemaDefs.ORDERBY]
-            prev_ins = self.__datastore.get_previous_instance(
-                orderby, self.primary_key, self.document)
+            prev_ins = self.__datastore.get_previous_record(self.document)
 
             if prev_ins:
                 prev_ins = self.cast_record(prev_ins)
