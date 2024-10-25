@@ -536,7 +536,7 @@ class NACCValidator(Validator):
                                 if_conds)
 
     # pylint: disable=(too-many-locals)
-    def _validate_temporalrules(self, temporalrules: Dict[str, Any],
+    def _validate_temporalrules(self, temporalrules: List[Mapping],
                                 field: str, value: object):
         """Validate the List of longitudial checks specified for a field.
 
@@ -553,34 +553,27 @@ class NACCValidator(Validator):
 
         The rule's arguments are validated against this schema:
             {
-                'type': 'dict',
+                'type': 'list',
                 'schema': {
-                    'orderby': {'type': 'string', 'required': True, 'empty': False},
-                    'constraints': {
-                        'type': 'list',
-                        'schema': {
-                            'type': 'dict',
-                            'schema': {
-                                'index': {'type': 'integer', 'required': False},
-                                'previous': {'type': 'dict', 'required': True, 'empty': False},
-                                'current': {'type': 'dict', 'required': True, 'empty': False}
-                            }
-                        }
+                    'type': 'dict',
+                    'schema': {
+                        'index': {'type': 'integer', 'required': False},
+                        'prev_op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR', 'and', 'or']},
+                        'curr_op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR', 'and', 'or']},
+                        'previous': {'type': 'dict', 'required': True, 'empty': False},
+                        'current': {'type': 'dict', 'required': True, 'empty': False}
                     }
                 }
             }
         """
 
-        if not self.__datastore:
-            err_msg = ("Datastore not set for validating temporal rules, "
-                       "use set_datastore() method.")
+        if not self.datastore:
+            err_msg = "Datastore not set, cannot validate temporal rules"
             self.__add_system_error(field, err_msg)
             raise ValidationException(err_msg)
 
         if not self.primary_key:
-            err_msg = (
-                "Primary key field not set for validating temporal rules, "
-                "use set_primary_key_field() method.")
+            err_msg = "Primary key field not set, cannot validate temporal rules"
             self.__add_system_error(field, err_msg)
             raise ValidationException(err_msg)
 
@@ -595,7 +588,6 @@ class NACCValidator(Validator):
         if record_id in self.__prev_records:
             prev_ins = self.__prev_records[record_id]
         else:
-            orderby = temporalrules[SchemaDefs.ORDERBY]
             prev_ins = self.__datastore.get_previous_record(self.document)
 
             if prev_ins:
@@ -603,36 +595,38 @@ class NACCValidator(Validator):
 
             self.__prev_records[record_id] = prev_ins
 
+        # If temporal rules are defined, a previous vist must exist
         if prev_ins is None:
             self._error(field, ErrorDefs.NO_PREV_VISIT)
             return
 
-        constraints = temporalrules[SchemaDefs.CONSTRAINTS]
-        rule_no = 0
-        for constraint in constraints:
-            rule_no = constraint.get(SchemaDefs.INDEX, rule_no + 1)
-            prev_conds = constraint[SchemaDefs.PREVIOUS]
-            prev_schema = {field: prev_conds}
-            curr_conds = constraint[SchemaDefs.CURRENT]
-            curr_schema = {field: curr_conds}
+        rule_no = -1
+        for temoralrule in temporalrules:
+            # Extract operators if specified, default is AND
+            prev_operator = temoralrule.get(SchemaDefs.PREV_OP, "AND").upper()
+            curr_operator = temoralrule.get(SchemaDefs.CURR_OP, "AND").upper()
 
-            prev_validator = NACCValidator(
-                prev_schema,
-                allow_unknown=True,
-                error_handler=CustomErrorHandler(prev_schema),
-            )
-            if prev_validator.validate(prev_ins, normalize=False):
-                temp_validator = NACCValidator(
-                    curr_schema,
-                    allow_unknown=True,
-                    error_handler=CustomErrorHandler(curr_schema),
-                )
-                if not temp_validator.validate({field: value},
-                                               normalize=False):
-                    errors = temp_validator.errors.items()
-                    for error in errors:
-                        self._error(field, ErrorDefs.TEMPORAL, rule_no,
-                                    str(error), prev_conds)
+            rule_no = temoralrule.get(SchemaDefs.INDEX, rule_no + 1)
+            prev_conds = temoralrule[SchemaDefs.PREVIOUS]
+            curr_conds = temoralrule[SchemaDefs.CURRENT]
+
+            errors = None
+            # Check if conditions for the previous visit is satisfied
+            valid, _ = self._check_subschema_valid(prev_conds, prev_operator)
+
+            # If not satisfied, continue to next rule
+            if not valid:
+                continue
+
+            # If satisfied, validate the current visit
+            valid, errors = self._check_subschema_valid(
+                curr_conds, curr_operator)
+
+            # Cross visit validation failed - report errors
+            if not valid and errors:
+                for error in errors.items():
+                    self._error(field, ErrorDefs.TEMPORAL, rule_no, str(error),
+                                prev_conds)
 
     def _validate_logic(self, logic: Dict[str, Any], field: str,
                         value: object):

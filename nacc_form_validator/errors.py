@@ -126,6 +126,8 @@ class SchemaDefs:
     ERRMSG = "errmsg"
     ORDERBY = "orderby"
     CONSTRAINTS = "constraints"
+    PREV_OP = "prev_op"
+    CURR_OP = "curr_op"
     CURRENT = "current"
     PREVIOUS = "previous"
     CRR_DATE = "current_date"
