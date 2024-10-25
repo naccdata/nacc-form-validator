@@ -11,13 +11,13 @@ class Datastore(ABC):
     records stored."""
 
     @abstractmethod
-    def __init__(self, pk_field: str):
+    def __init__(self, pk_field: str, orderby: str):
         """
         Args:
             pk_field: Primary key field to uniquely identify a participant
         """
-        self.__pk_field: str = pk_field
-        super().__init__()
+        self.__pk_field = pk_field
+        self.__orderby = orderby
 
     @property
     def pk_field(self) -> str:
@@ -27,6 +27,15 @@ class Datastore(ABC):
             str: primary key field to uniquely identify a participant
         """
         return self.__pk_field
+
+    @property
+    def orderby(self) -> str:
+        """order by field.
+
+        Returns:
+            str: field to sort the records by
+        """
+        return self.__orderby
 
     @abstractmethod
     def get_previous_record(

@@ -26,8 +26,7 @@ class CustomDatastore(Datastore):
                 }
             ]
         }
-        self.__orderby = orderby
-        super.__init__(pk_field)
+        super.__init__(pk_field, orderby)
 
     def get_previous_record(self, current_record: dict[str, str]) -> dict[str, str] | None:
         """
