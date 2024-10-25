@@ -10,8 +10,11 @@ from dateutil import parser
 
 from nacc_form_validator import utils
 from nacc_form_validator.datastore import Datastore
-from nacc_form_validator.errors import (CustomErrorHandler, ErrorDefs,
-                                        SchemaDefs)
+from nacc_form_validator.errors import (
+    CustomErrorHandler,
+    ErrorDefs,
+    SchemaDefs,
+)
 from nacc_form_validator.json_logic import jsonLogic
 
 log = logging.getLogger(__name__)
@@ -30,7 +33,7 @@ class NACCValidator(Validator):
             schema: Validation schema as Dict[variable, rule objects]
         """
 
-        super().__init__(schema, *args, **kwargs)
+        super().__init__(schema=schema, *args, **kwargs)
 
         # Data type map for each field
         self.__dtypes: Dict[str, str] = self.__populate_data_types()
@@ -53,13 +56,12 @@ class NACCValidator(Validator):
         validation schema."""
         return self.__dtypes
 
-    def __populate_data_types(self) -> Dict[str, str] | None:
+    def __populate_data_types(self) -> Optional[Dict[str, str]]:
         """Convert cerberus data types to python data types. Populates a
         field->data type mapping for each field in the schema.
 
         Returns:
-            Dict[str, str] : Dict of [field, data_type]
-            None: If no validation schema available
+            Dict[str, str]: Dict of [field, data_type] or None
         """
 
         if not self.schema:
@@ -114,7 +116,7 @@ class NACCValidator(Validator):
         """Set the pk_field attribute.
 
         Args:
-            pk_field (str): Primary key field of the project
+            pk_field: Primary key field of the project
         """
 
         self.__pk_field = pk_field
@@ -133,8 +135,8 @@ class NACCValidator(Validator):
         """Add system error message.
 
         Args:
-            field (str): Variable name
-            err_msg (str): Error message
+            field: Variable name
+            err_msg: Error message
         """
         if field in self.__sys_errors:
             self.__sys_errors[field].append(err_msg)
@@ -165,7 +167,7 @@ class NACCValidator(Validator):
         """Cast the fields in the record to appropriate data types.
 
         Args:
-            record (Dict[str, str]): Input record Dict[field, value]
+            record: Input record Dict[field, value]
 
         Returns:
             Dict[str, object]: Casted record Dict[field, value]
@@ -217,7 +219,7 @@ class NACCValidator(Validator):
         """Find the value for the specified key.
 
         Args:
-            key (str): key (field name or special key such as current_year)
+            key: key (field name or special key such as current_year)
 
         Returns:
             Any: Value of the specified key or None
@@ -237,7 +239,8 @@ class NACCValidator(Validator):
         if self.document and key in self.document:
             return self.document[key]
 
-        # doesn't particularly matter if its an int or float in this case, so just try cast to float
+        # doesn't particularly matter if its an int or float in this case,
+        # so just try cast to float
         try:
             key = float(key)
             return key
@@ -252,9 +255,9 @@ class NACCValidator(Validator):
         is not an actual validation, just a placeholder method.
 
         Args:
-            formatting (str): format specified in the schema def
-            field (str): Variable name
-            value (object): Variable value
+            formatting: format specified in the schema def
+            field: Variable name
+            value: Variable value
 
         Note: Don't remove below docstring,
         Cerberus uses it to validate the schema definition.
@@ -276,9 +279,9 @@ class NACCValidator(Validator):
         """Override max rule to support validations wrt current date/year.
 
         Args:
-            max_value (object): Maximum value specified in the schema def
-            field (str): Variable name
-            value (object): Variable value
+            max_value: Maximum value specified in the schema def
+            field: Variable name
+            value: Variable value
 
         Note: Don't remove below docstring,
         Cerberus uses it to validate the schema definition.
@@ -340,9 +343,9 @@ class NACCValidator(Validator):
         """Override min rule to support validations wrt current date/year.
 
         Args:
-            min_value (object): Minimum value specified in the schema def
-            field (str): Variable name
-            value (object): Variable value
+            min_value: Minimum value specified in the schema def
+            field: Variable name
+            value: Variable value
 
         Note: Don't remove below docstring,
         Cerberus uses it to validate the schema definition.
@@ -405,9 +408,9 @@ class NACCValidator(Validator):
         different from 'nullable' rule.
 
         Args:
-            filled (bool): Constraint value specified in the schema def
-            field (str): Variable name
-            value (object): Variable value
+            filled: Constraint value specified in the schema def
+            field: Variable name
+            value: Variable value
 
         Note: Don't remove below docstring,
         Cerberus uses it to validate the schema definition.
@@ -439,7 +442,8 @@ class NACCValidator(Validator):
             if operator == "OR":
                 valid = valid or temp_validator.validate(self.document,
                                                          normalize=False)
-                # if something passed, don't need to evaluate rest, and ignore any errors found
+                # if something passed, don't need to evaluate rest,
+                # and ignore any errors found
                 if valid:
                     errors = None
                     break
@@ -460,9 +464,9 @@ class NACCValidator(Validator):
         """Validate the List of compatibility checks specified for a field.
 
         Args:
-            constraints (List[Mapping]): List of constraints specified for the variable
-            field (str): Variable name
-            value (object): Variable value
+            constraints: List of constraints specified for the variable
+            field: Variable name
+            value: Variable value
 
         Note: Don't remove below docstring,
         Cerberus uses it to validate the schema definition.
@@ -525,7 +529,7 @@ class NACCValidator(Validator):
             else:  # if the If condition is not satisfied, do nothing
                 pass
 
-            # If there are errors, something in the then/else clause failed - report them
+            # Something in the then/else clause failed - report errors
             if errors:
                 for error in errors.items():
                     self._error(field, error_def, rule_no, str(error),
@@ -599,7 +603,6 @@ class NACCValidator(Validator):
 
             self.__prev_records[record_id] = prev_ins
 
-        # TODO - should we skip validation and pass the record if there's no previous visit?
         if prev_ins is None:
             self._error(field, ErrorDefs.NO_PREV_VISIT)
             return
@@ -667,9 +670,9 @@ class NACCValidator(Validator):
         """Validate using a custom defined function.
 
         Args:
-            function (str): Function name
-            field (str): Variable name
-            value (object): Variable value
+            function: Function name
+            field: Variable name
+            value: Variable value
 
         Note: Don't remove below docstring,
         Cerberus uses it to validate the schema definition.
@@ -690,8 +693,8 @@ class NACCValidator(Validator):
         """Validate Geriatric Depression Scale (GDS) calculation.
 
         Args:
-            field (str): Variable name
-            value (object): Variable value
+            field: Variable name
+            value: Variable value
         """
 
         nogds = 0

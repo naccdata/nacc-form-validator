@@ -2,8 +2,12 @@
 
 from typing import Mapping
 
-from cerberus.errors import (BasicErrorHandler, ErrorDefinition, ErrorTree,
-                             ValidationError)
+from cerberus.errors import (
+    BasicErrorHandler,
+    ErrorDefinition,
+    ErrorTree,
+    ValidationError,
+)
 
 
 # pylint: disable=(too-few-public-methods)

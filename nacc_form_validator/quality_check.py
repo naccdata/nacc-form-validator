@@ -6,9 +6,11 @@ from cerberus.errors import DocumentErrorTree
 from cerberus.schema import SchemaError
 
 from nacc_form_validator.datastore import Datastore
-from nacc_form_validator.nacc_validator import (CustomErrorHandler,
-                                                NACCValidator,
-                                                ValidationException)
+from nacc_form_validator.nacc_validator import (
+    CustomErrorHandler,
+    NACCValidator,
+    ValidationException,
+)
 
 
 class QualityCheckException(Exception):
@@ -89,7 +91,8 @@ class QualityCheck:
 
         if datastore and self.pk_field != datastore.pk_field:
             raise QualityCheckException(
-                f"Mismatched primary key fields - {self.pk_field}, {datastore.pk_field}")
+                f"Mismatched primary key fields - {self.pk_field}, {datastore.pk_field}"
+            )
 
         self.validator.primary_key = self.pk_field
         self.validator.datastore = datastore

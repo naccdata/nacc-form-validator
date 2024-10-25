@@ -31,9 +31,9 @@ class Datastore(ABC):
     @abstractmethod
     def get_previous_record(
             self, current_record: Dict[str, str]) -> Optional[Dict[str, str]]:
-        """Abstract method to return the previous visit record for the specified participant.
-        Override this method to retrieve the records from the desired
-        datastore/warehouse.
+        """Abstract method to return the previous visit record for the
+        specified participant. Override this method to retrieve the records
+        from the desired datastore/warehouse.
 
         Args:
             current_record: Record currently being validated
