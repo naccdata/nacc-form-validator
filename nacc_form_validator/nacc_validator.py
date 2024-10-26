@@ -426,8 +426,15 @@ class NACCValidator(Validator):
 
     def _check_subschema_valid(self, all_conditions: Dict[str, object],
                                operator: str) -> Tuple[bool, object]:
-        """Helper method for _validate_compatibility, creates a temporary
-        validator and checks a subschema against it."""
+        """Creates a temporary validator to check a set of conditions.
+
+        Args:
+            all_conditions: Set of conditions to be validated
+            operator: Logical operation (AND | OR) to merge the conditions
+
+        Returns:
+            Tuple[bool, object]: Validation result, errors
+        """
         valid = operator != "OR"
         errors = {}
 
@@ -601,14 +608,14 @@ class NACCValidator(Validator):
             return
 
         rule_no = -1
-        for temoralrule in temporalrules:
+        for temporalrule in temporalrules:
             # Extract operators if specified, default is AND
-            prev_operator = temoralrule.get(SchemaDefs.PREV_OP, "AND").upper()
-            curr_operator = temoralrule.get(SchemaDefs.CURR_OP, "AND").upper()
+            prev_operator = temporalrule.get(SchemaDefs.PREV_OP, "AND").upper()
+            curr_operator = temporalrule.get(SchemaDefs.CURR_OP, "AND").upper()
 
-            rule_no = temoralrule.get(SchemaDefs.INDEX, rule_no + 1)
-            prev_conds = temoralrule[SchemaDefs.PREVIOUS]
-            curr_conds = temoralrule[SchemaDefs.CURRENT]
+            rule_no = temporalrule.get(SchemaDefs.INDEX, rule_no + 1)
+            prev_conds = temporalrule[SchemaDefs.PREVIOUS]
+            curr_conds = temporalrule[SchemaDefs.CURRENT]
 
             errors = None
             # Check if conditions for the previous visit is satisfied
