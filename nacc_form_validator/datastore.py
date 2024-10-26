@@ -1,6 +1,7 @@
 """Datastore module."""
 
 from abc import ABC, abstractmethod
+from typing import Dict, Optional
 
 # pylint: disable=(too-few-public-methods, no-self-use, unused-argument)
 
@@ -10,19 +11,43 @@ class Datastore(ABC):
     records stored."""
 
     @abstractmethod
-    def get_previous_instance(
-            self, orderby: str, pk_field: str,
-            current_ins: dict[str, str]) -> dict[str, str] | None:
-        """Abstract method to return the previous instance of the specified
-        record Override this method to retrieve the records from the desired
-        datastore/warehouse.
-
+    def __init__(self, pk_field: str, orderby: str):
+        """
         Args:
-            orderby (str): Variable name that instances are sorted by
-            pk_field (str): Primary key field of the project
-            current_ins (dict[str, str]): Instance currently being validated
+            pk_field: Primary key field to uniquely identify a participant
+        """
+        self.__pk_field = pk_field
+        self.__orderby = orderby
+
+    @property
+    def pk_field(self) -> str:
+        """primary key field.
 
         Returns:
-            dict[str, str]: Previous instance or None if no instance found
+            str: primary key field to uniquely identify a participant
+        """
+        return self.__pk_field
+
+    @property
+    def orderby(self) -> str:
+        """order by field.
+
+        Returns:
+            str: field to sort the records by
+        """
+        return self.__orderby
+
+    @abstractmethod
+    def get_previous_record(
+            self, current_record: Dict[str, str]) -> Optional[Dict[str, str]]:
+        """Abstract method to return the previous visit record for the
+        specified participant. Override this method to retrieve the records
+        from the desired datastore/warehouse.
+
+        Args:
+            current_record: Record currently being validated
+
+        Returns:
+            Dict[str, str]: Previous record or None if no previous record found
         """
         return None

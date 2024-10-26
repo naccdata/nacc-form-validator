@@ -2,15 +2,19 @@
 
 Data quality rules validation module for NACC form data.
 
-The validator is based on the [Cerberus](https://docs.python-cerberus.org/en/stable/index.html) python library, which allows validating data using quality rules defined as data. 
-See the [Cerberus usage examples](https://docs.python-cerberus.org/en/stable/usage.html) for more detail.
+The validator is based on the [Cerberus](https://docs.python-cerberus.org/) python library, which allows validating data using quality rules defined as data. 
+See the [Cerberus usage examples](https://docs.python-cerberus.org/usage.html) for more detail.
 
 ## Table of Contents
 
-* [Setup](#setup)
-    * [Installing Pants](#installing-pants)
-    * [Building a Distribution](#building-a-distribution)
-    * [Common Build Issues](#common-build-issues)
+- [NACC Form Validator](#nacc-form-validator)
+  - [Table of Contents](#table-of-contents)
+  - [Setup](#setup)
+    - [Installing Pants](#installing-pants)
+    - [Building a Distribution](#building-a-distribution)
+    - [Common Build Issues](#common-build-issues)
+      - [Incompatible Python Interpreter](#incompatible-python-interpreter)
+      - [macOS Incompatible Architecture](#macos-incompatible-architecture)
 
 See the [Usage doc](./docs/index.md) for a quick-start usage guide with examples. In general, all documentation outside this README lives under `docs`.
 

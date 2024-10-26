@@ -23,7 +23,7 @@ def convert_to_date(value) -> Any:
             f'"convert to date" not supported for non string value {value}')
 
     yearfirst = False
-    if re.match(r"(\d{4}-\d{2}-\d{2}|\d{4}\/\d{2}\/\d{2})", value):
+    if re.match(r"^\d{4}[-/]\d{2}[-/]\d{2}$", value):
         yearfirst = True
 
     try:
@@ -48,7 +48,7 @@ def convert_to_datetime(value) -> Any:
         )
 
     yearfirst = False
-    if re.match(r"(\d{4}-\d{2}-\d{2}|\d{4}\/\d{2}\/\d{2})", value):
+    if re.match(r"^\d{4}[-/]\d{2}[-/]\d{2}$", value):
         yearfirst = True
 
     try:

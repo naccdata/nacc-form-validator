@@ -2,8 +2,12 @@
 
 from typing import Mapping
 
-from cerberus.errors import (BasicErrorHandler, ErrorDefinition, ErrorTree,
-                             ValidationError)
+from cerberus.errors import (
+    BasicErrorHandler,
+    ErrorDefinition,
+    ErrorTree,
+    ValidationError,
+)
 
 
 # pylint: disable=(too-few-public-methods)
@@ -122,6 +126,8 @@ class SchemaDefs:
     ERRMSG = "errmsg"
     ORDERBY = "orderby"
     CONSTRAINTS = "constraints"
+    PREV_OP = "prev_op"
+    CURR_OP = "curr_op"
     CURRENT = "current"
     PREVIOUS = "previous"
     CRR_DATE = "current_date"
