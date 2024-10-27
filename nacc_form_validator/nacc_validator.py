@@ -690,39 +690,24 @@ class NACCValidator(Validator):
             self.__add_system_error(field, err_msg)
             raise ValidationException(err_msg)
 
-    def _check_with_gds(self, field: str, value: object):
+    def _validate_compute_gds(self, keys: List[str], field: str, value: object):
         """Validate Geriatric Depression Scale (GDS) calculation.
 
         Args:
+            keys: GDS computation fields specified in the rule definition
             field: Variable name
             value: Variable value
+
+        Note: Don't remove below docstring,
+        Cerberus uses it to validate the schema definition.
+
+        The rule's arguments are validated against this schema:
+            {'type': 'list', 'minlength': 15}
         """
 
         nogds = 0
         if "nogds" in self.document:
             nogds = self.document["nogds"]
-
-        if nogds == 1 and value != 88:
-            self._error(field, ErrorDefs.CHECK_GDS_1)
-            return
-
-        keys = [
-            "satis",
-            "dropact",
-            "empty",
-            "bored",
-            "spirits",
-            "afraid",
-            "happy",
-            "helpless",
-            "stayhome",
-            "memprob",
-            "wondrful",
-            "wrthless",
-            "energy",
-            "hopeless",
-            "better",
-        ]
 
         num_valid = 0
         gds = 0
@@ -731,21 +716,28 @@ class NACCValidator(Validator):
                 num_valid += 1
                 gds += self.document[key]
 
-        if nogds == 1 and num_valid >= 12:
-            self._error(field, ErrorDefs.CHECK_GDS_2)
+        if nogds == 1:
+            if num_valid >= 12:
+                self._error(field, ErrorDefs.CHECK_GDS_1, 0)
+
+            if value != 88:
+                self._error(field, ErrorDefs.CHECK_GDS_2, 1)
+
             return
 
-        if nogds == 0 and num_valid < 12:
-            self._error(field, ErrorDefs.CHECK_GDS_3)
+        if not nogds and num_valid < 12:
+            self._error(field, ErrorDefs.CHECK_GDS_3, 2)
             return
 
         error_def = ErrorDefs.CHECK_GDS_4
+        rule_no = 3
         if 0 < num_valid < 15:
             gds = round(gds + (gds / num_valid) * (15 - num_valid))
+            rule_no = 4
             error_def = ErrorDefs.CHECK_GDS_5
 
         if gds != value:
-            self._error(field, error_def, value, gds)
+            self._error(field, error_def, rule_no, value, gds)
 
     def _validate_compare_with(self, comparison: Dict[str, Any], field: str,
                                value: object):
