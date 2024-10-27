@@ -11,6 +11,7 @@
     - [compatibility](#compatibility)
     - [logic](#logic)
     - [temporalrules](#temporalrules)
+    - [compute\_gds](#compute_gds)
 
 ## Introduction
 
@@ -764,3 +765,17 @@ taxes:
 ```
 </td>
 </table>
+
+### compute_gds
+
+Custom rule defined to validate the Geriatric Depression Scale (GDS) score computation. Only be used for validating the `gds` field in UDS Form B6.
+
+The rule definition for `compute_gds` should follow the following format:
+
+```json
+{
+    "gds": {
+        "compute_gds": [list of fields used in GDS score computation]
+    }
+}
+```

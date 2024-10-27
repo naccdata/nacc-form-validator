@@ -702,7 +702,11 @@ class NACCValidator(Validator):
         Cerberus uses it to validate the schema definition.
 
         The rule's arguments are validated against this schema:
-            {'type': 'list', 'minlength': 15}
+            {
+                'type': 'list', 
+                'minlength': 15,
+                'schema': {'type': 'string'}
+            }
         """
 
         nogds = 0
