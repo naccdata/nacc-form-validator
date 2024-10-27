@@ -38,6 +38,7 @@ class ErrorDefs:
     CHECK_GDS_4 = ErrorDefinition(0x2007, "check_with")
     CHECK_GDS_5 = ErrorDefinition(0x2008, "check_with")
     COMPARE_WITH = ErrorDefinition(0x2009, "compare_with")
+    RXNORM = ErrorDefinition(0x3000, "check_with")
 
 
 class CustomErrorHandler(BasicErrorHandler):
@@ -88,6 +89,7 @@ class CustomErrorHandler(BasicErrorHandler):
             0x2007: "incorrect total GDS score {0}, expected value {1}",
             0x2008: "incorrect partial GDS score {0}, expected value {1}",
             0x2009: "input value doesn't satisfy the condition {0}",
+            0x3000: "Drug ID {0} is not a valid RXCUI"
         }
 
         self.messages.update(custom_errors)

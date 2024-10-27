@@ -14,7 +14,8 @@ class Datastore(ABC):
     def __init__(self, pk_field: str, orderby: str):
         """
         Args:
-            pk_field: Primary key field to uniquely identify a participant
+            pk_field: primary key field to uniquely identify a participant
+            orderby: field to sort the records by
         """
         self.__pk_field = pk_field
         self.__orderby = orderby
@@ -51,3 +52,18 @@ class Datastore(ABC):
             Dict[str, str]: Previous record or None if no previous record found
         """
         return None
+
+    @abstractmethod
+    def is_valid_rxcui(self, drugid: int) -> bool:
+        """Abstract method to check whether a given drug ID is valid RXCUI.
+        Override this method to implement drug ID validation. Check
+        https://www.nlm.nih.gov/research/umls/rxnorm/overview.html,
+        https://mor.nlm.nih.gov/RxNav/
+
+        Args:
+            drugid: provided drug ID
+
+        Returns:
+            bool: True if provided drug ID is valid, else False
+        """
+        return False

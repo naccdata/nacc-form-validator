@@ -543,8 +543,8 @@ class NACCValidator(Validator):
                                 if_conds)
 
     # pylint: disable=(too-many-locals)
-    def _validate_temporalrules(self, temporalrules: List[Mapping],
-                                field: str, value: object):
+    def _validate_temporalrules(self, temporalrules: List[Mapping], field: str,
+                                value: object):
         """Validate the List of longitudial checks specified for a field.
 
         Args:
@@ -849,3 +849,25 @@ class NACCValidator(Validator):
                 self._error(field, ErrorDefs.COMPARE_WITH, comparison_str)
         except TypeError:
             self._error(field, ErrorDefs.COMPARE_WITH, comparison_str)
+
+    def _check_with_rxnorm(self, field: str, value: Optional[int]):
+        """Check whether the specified value is a valid RXCUI
+        https://www.nlm.nih.gov/research/umls/rxnorm/overview.html
+        https://mor.nlm.nih.gov/RxNav/
+
+        Args:
+            field: Variable name
+            value: Variable value
+        """
+
+        # No need to validate if blank or 0 (No RXCUI code available)
+        if not value or value == 0:
+            return
+
+        if not self.datastore:
+            err_msg = "Datastore not set, cannot validate RXNORM codes"
+            self.__add_system_error(field, err_msg)
+            raise ValidationException(err_msg)
+
+        if not self.datastore.is_valid_rxcui(value):
+            self._error(field, ErrorDefs.RXNORM, value)
