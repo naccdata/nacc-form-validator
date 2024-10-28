@@ -80,13 +80,15 @@ class CustomErrorHandler(BasicErrorHandler):
             "failed to retrieve the previous visit, cannot proceed with validation",
             0x2003: "error in formula evaluation - {0}",
             0x2004:
-            "If GDS not attempted (nogds=1), there cannot be >=12 questions with valid scores - GDS rule no: {0}",
-            0x2005:
             "If GDS not attempted (nogds=1), total GDS score should be 88 - GDS rule no: {0}",
+            0x2005:
+            "If GDS not attempted (nogds=1), there cannot be >=12 questions with valid scores - GDS rule no: {0}",
             0x2006:
+            "incorrect total GDS score {1}, expected value {2} - GDS rule no: {0}",
+            0x2007:
+            "incorrect partial GDS score {1}, expected value {2} - GDS rule no: {0}",
+            0x2008:
             "If GDS attempted (nogds=blank), at least 12 questions need to have valid scores - GDS rule no: {0}",
-            0x2007: "incorrect total GDS score {1}, expected value {2} - GDS rule no: {0}",
-            0x2008: "incorrect partial GDS score {1}, expected value {2} - GDS rule no: {0}",
             0x2009: "input value doesn't satisfy the condition {0}",
         }
 

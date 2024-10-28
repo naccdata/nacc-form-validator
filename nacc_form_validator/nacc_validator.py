@@ -543,8 +543,8 @@ class NACCValidator(Validator):
                                 if_conds)
 
     # pylint: disable=(too-many-locals)
-    def _validate_temporalrules(self, temporalrules: List[Mapping],
-                                field: str, value: object):
+    def _validate_temporalrules(self, temporalrules: List[Mapping], field: str,
+                                value: object):
         """Validate the List of longitudial checks specified for a field.
 
         Args:
@@ -690,7 +690,8 @@ class NACCValidator(Validator):
             self.__add_system_error(field, err_msg)
             raise ValidationException(err_msg)
 
-    def _validate_compute_gds(self, keys: List[str], field: str, value: object):
+    def _validate_compute_gds(self, keys: List[str], field: str,
+                              value: object):
         """Validate Geriatric Depression Scale (GDS) calculation.
 
         Args:
@@ -703,7 +704,7 @@ class NACCValidator(Validator):
 
         The rule's arguments are validated against this schema:
             {
-                'type': 'list', 
+                'type': 'list',
                 'minlength': 15,
                 'schema': {'type': 'string'}
             }
@@ -721,27 +722,26 @@ class NACCValidator(Validator):
                 gds += self.document[key]
 
         if nogds == 1:
-            if num_valid >= 12:
+            if value != 88:
                 self._error(field, ErrorDefs.CHECK_GDS_1, 0)
 
-            if value != 88:
+            if num_valid >= 12:
                 self._error(field, ErrorDefs.CHECK_GDS_2, 1)
 
             return
 
-        if not nogds and num_valid < 12:
-            self._error(field, ErrorDefs.CHECK_GDS_3, 2)
+        if num_valid == 15 and gds != value:
+            self._error(field, ErrorDefs.CHECK_GDS_3, 2, value, gds)
             return
 
-        error_def = ErrorDefs.CHECK_GDS_4
-        rule_no = 3
-        if 0 < num_valid < 15:
+        if (15 - num_valid) <= 3:
             gds = round(gds + (gds / num_valid) * (15 - num_valid))
-            rule_no = 4
-            error_def = ErrorDefs.CHECK_GDS_5
+            if gds != value:
+                self._error(field, ErrorDefs.CHECK_GDS_4, 3, value, gds)
 
-        if gds != value:
-            self._error(field, error_def, rule_no, value, gds)
+        if not nogds and num_valid < 12:
+            self._error(field, ErrorDefs.CHECK_GDS_5, 4)
+            return
 
     def _validate_compare_with(self, comparison: Dict[str, Any], field: str,
                                value: object):
