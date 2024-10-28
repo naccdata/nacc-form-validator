@@ -10,6 +10,7 @@ Documentation of release versions of `nacc-form-validator`
 * Fixed a bug in min/max validation wrt current_year
 * Updates `_validate_temporalrules` to iterate on multiple fields for `previous` and `current` clauses, remove `orderby` attribute
 * Change `_check_with_gds` function to `_validate_compute_gds` and update GDS score validation
+* Add `_check_with_rxnorm` function to check whether a given Drug ID is valid RXCUI code.
 
 ## 0.2.0
 

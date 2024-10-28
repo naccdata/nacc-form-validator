@@ -12,6 +12,7 @@
     - [logic](#logic)
     - [temporalrules](#temporalrules)
     - [compute\_gds](#compute_gds)
+    - [rxnorm](#rxnorm)
 
 ## Introduction
 
@@ -673,9 +674,10 @@ var3:
 ### temporalrules
 
 Used to specify the list of checks to be performed against the previous visit for the same participant.
-
 * Each constraint specifies `previous` and `current` attributes. If conditions specified under `previous` subschema satisfied by the previous visit record, then the current visit record must satisfy the conditions specified under `current` subschema.
 * Each `previous/current` attribute can have several fields which need to be satisifed, with the `*_op` attribute specifying the boolean operation in which to compare the different fields. For example, if `prev_op = or`, then as long as _any_ of the fields satsify their schema, the `current` attribute will be evaluated. The default `*_op` is `and`.
+
+*To validate `temporalrules`, validator should have a `Datastore` instance which will be used to retrieve the previous visit record(s) for the participant.*
 
 The rule definition for `temporalrules` should follow the following format:
 
@@ -779,3 +781,18 @@ The rule definition for `compute_gds` should follow the following format:
     }
 }
 ```
+
+### rxnorm
+
+Custom rule defined to check whether a given Drug ID is valid RXCUI code.
+
+This function uses `check_with` rule from Cerberus. Rule definition should be in the following format:
+
+```json
+{
+    "<rxnormid variable>": {
+        "check_with": "rxnorm"
+    }
+}
+```
+*To validate `rxnorm`, validator should have a `Datastore` instance which implements `is_valid_rxcui` function which will check whether the given rxnormid value is valid RXCUI code*
