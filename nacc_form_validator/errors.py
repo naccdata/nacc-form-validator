@@ -32,11 +32,11 @@ class ErrorDefs:
     NO_PRIMARY_KEY = ErrorDefinition(0x2001, "temporalrules")
     NO_PREV_VISIT = ErrorDefinition(0x2002, "temporalrules")
     FORMULA = ErrorDefinition(0x2003, "logic")
-    CHECK_GDS_1 = ErrorDefinition(0x2004, "check_with")
-    CHECK_GDS_2 = ErrorDefinition(0x2005, "check_with")
-    CHECK_GDS_3 = ErrorDefinition(0x2006, "check_with")
-    CHECK_GDS_4 = ErrorDefinition(0x2007, "check_with")
-    CHECK_GDS_5 = ErrorDefinition(0x2008, "check_with")
+    CHECK_GDS_1 = ErrorDefinition(0x2004, "compute_gds")
+    CHECK_GDS_2 = ErrorDefinition(0x2005, "compute_gds")
+    CHECK_GDS_3 = ErrorDefinition(0x2006, "compute_gds")
+    CHECK_GDS_4 = ErrorDefinition(0x2007, "compute_gds")
+    CHECK_GDS_5 = ErrorDefinition(0x2008, "compute_gds")
     COMPARE_WITH = ErrorDefinition(0x2009, "compare_with")
     RXNORM = ErrorDefinition(0x3000, "check_with")
 
@@ -81,13 +81,15 @@ class CustomErrorHandler(BasicErrorHandler):
             "failed to retrieve the previous visit, cannot proceed with validation",
             0x2003: "error in formula evaluation - {0}",
             0x2004:
-            "GDS not attempted (nogds=1), total GDS score should be 88",
+            "If GDS not attempted (nogds=1), total GDS score should be 88 - GDS rule no: {0}",
             0x2005:
-            "there are >=12 questions with valid scores, GDS should be computed",
+            "If GDS not attempted (nogds=1), there cannot be >=12 questions with valid scores - GDS rule no: {0}",
             0x2006:
-            "less than 12 questions has valid scores, GDS cannot be computed",
-            0x2007: "incorrect total GDS score {0}, expected value {1}",
-            0x2008: "incorrect partial GDS score {0}, expected value {1}",
+            "incorrect total GDS score {1}, expected value {2} - GDS rule no: {0}",
+            0x2007:
+            "incorrect partial GDS score {1}, expected value {2} - GDS rule no: {0}",
+            0x2008:
+            "If GDS attempted (nogds=blank), at least 12 questions need to have valid scores - GDS rule no: {0}",
             0x2009: "input value doesn't satisfy the condition {0}",
             0x3000: "Drug ID {0} is not a valid RXCUI"
         }
