@@ -9,6 +9,7 @@ Documentation of release versions of `nacc-form-validator`
 * Update json_logic `less` function to handle None
 * Fixed a bug in min/max validation wrt current_year
 * Updates `_validate_temporalrules` to iterate on multiple fields for `previous` and `current` clauses, remove `orderby` attribute
+* Change `_check_with_gds` function to `_validate_compute_gds` and update GDS score validation
 
 ## 0.2.0
 
