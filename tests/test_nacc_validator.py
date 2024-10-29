@@ -1033,9 +1033,9 @@ def test_compare_with_absolute_value():
             "required": True,
             "compare_with": {
                 "comparator": "<=",
-                "base": 0.5,
+                "base": "waist2",
                 "op": "abs",
-                "adjustment": "waist2"
+                "adjustment": 0.5
             }
         },
         "waist2": {

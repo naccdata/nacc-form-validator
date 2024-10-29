@@ -92,7 +92,7 @@ class CustomErrorHandler(BasicErrorHandler):
             0x2008:
             "If GDS attempted (nogds=blank), at least 12 questions need to have valid scores - GDS rule no: {0}",
             0x2009: "input value doesn't satisfy the condition {0}",
-            0x3000: "failed to retrieve record for previous visit, cannot proceed with validation",
+            0x3000: "failed to retrieve record for previous visit, cannot proceed with validation {0}",
             0x3001: "Drug ID {0} is not a valid RXCUI",
         }
 

@@ -164,4 +164,4 @@ def test_compare_with_previous_nonempty_record():
 
     nv.reset_record_cache()
     assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
-    assert nv.errors == {'birthmo': ["failed to retrieve record for previous visit, cannot proceed with validation"]}
+    assert nv.errors == {'birthmo': ['failed to retrieve record for previous visit, cannot proceed with validation birthmo ==']}

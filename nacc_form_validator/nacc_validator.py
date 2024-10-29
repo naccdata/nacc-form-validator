@@ -215,9 +215,17 @@ class NACCValidator(Validator):
 
         return record
 
-    def get_previous_record(self, field: str = None, ignore_empty: bool = False) -> Dict[str, Mapping]:
+    def get_previous_record(self, field: str = None, ignore_empty: bool = False) -> Optional[Dict[str, Mapping]]:
         """
-        Get the previous record from the Datastore
+        Get the previous record from the Datastore; if not skipping empty records, stores it in the prev_records cache.
+
+        Args:
+            field: If provided and ignore_empty is True, will only grab the first previous record where this field is not empty.
+            ignore_empty: Whether or not to only grab the last record where field is non-empty
+
+        Returns:
+            Dict[str, object]: Casted record Dict[field, value]
+
         """
         if not self.datastore:
             err_msg = "Datastore not set, cannot validate temporal rules"
@@ -232,13 +240,13 @@ class NACCValidator(Validator):
         if self.primary_key not in self.document or not self.document[
                 self.primary_key]:
             self._error(field, ErrorDefs.NO_PRIMARY_KEY, self.primary_key)
-            return
+            return None
 
         record_id = self.document[self.primary_key]
 
-        # If the previous record was already retrieved, use it
+        # If the previous record was already retrieved and not ignore_empty, use it
         # NOTE: need to be careful to reset cache if have different needs for empty vs nonempty
-        if record_id in self.__prev_records:
+        if not ignore_empty and record_id in self.__prev_records:
             prev_ins = self.__prev_records[record_id]
         else:
             prev_ins = (self.__datastore.get_previous_nonempty_record(self.document, field) if ignore_empty
@@ -247,17 +255,16 @@ class NACCValidator(Validator):
             if prev_ins:
                 prev_ins = self.cast_record(prev_ins)
 
-            self.__prev_records[record_id] = prev_ins
+            if not ignore_empty:
+                self.__prev_records[record_id] = prev_ins
 
         return prev_ins
 
-    def __get_value_for_key(self, key: str, field: str = None, ignore_empty: bool = False) -> Optional[Any]:
+    def __get_value_for_key(self, key: str) -> Optional[Any]:
         """Find the value for the specified key.
 
         Args:
             key: key (field name or special key such as current_year)
-            field: The field the rule is being done on; used for PREV_RECORD
-            ignore_empty: Whether or not to ignore empty records; used for PREV_RECORD
 
         Returns:
             Any: Value of the specified key or None
@@ -274,22 +281,8 @@ class NACCValidator(Validator):
         if key == SchemaDefs.CRR_DAY:
             return dt.now().date().day
 
-        if key == SchemaDefs.PREV_RECORD:
-            record = self.get_previous_record(field=field, ignore_empty=ignore_empty)
-            key = field
-        else:
-            record = self.document
-
-        if record and key in record:
-            return record[key]
-
-        # doesn't particularly matter if its an int or float in this case,
-        # so just try cast to float
-        try:
-            key = float(key)
-            return key
-        except ValueError:
-            pass
+        if self.document and key in self.document:
+            return self.document[key]
 
         return None
 
@@ -469,7 +462,7 @@ class NACCValidator(Validator):
             self._error(field, ErrorDefs.FILLED_TRUE)
 
     def _check_subschema_valid(self, all_conditions: Dict[str, object],
-                               operator: str, record: Dict[str, Mapping] = None) -> Tuple[bool, object]:
+                               operator: str, record: Dict[str, Any] = None) -> Tuple[bool, object]:
         """Creates a temporary validator to check a set of conditions.
 
         Args:
@@ -821,12 +814,15 @@ class NACCValidator(Validator):
         comparison_str = f'{field} {comparator}'
         if adjustment and operator:
             if operator == 'abs':
-                comparison_str = f'abs({field} - {adjustment}) {comparator} {base}'
+                comparison_str = f'abs({field} - {base}) {comparator} {adjustment}'
             else:
                 comparison_str += f' {base} {operator} {adjustment}'
 
-        base_val = (self.__get_value_for_key(base, field=field, ignore_empty=ignore_empty) if isinstance(
-                    base, str) else base)
+        if base == SchemaDefs.PREV_RECORD:
+            record = self.get_previous_record(field=field, ignore_empty=ignore_empty)
+            base_val = record[field]
+        else:
+            base_val = self.__get_value_for_key(base) if isinstance(base, str) else base
 
         if base_val is None:
             error = ErrorDefs.COMPARE_WITH_PREV if base == SchemaDefs.PREV_RECORD else ErrorDefs.COMPARE_WITH
@@ -835,8 +831,7 @@ class NACCValidator(Validator):
 
         adjusted_value = base_val
         if adjustment and operator:
-            adjustment = (self.__get_value_for_key(adjustment, field=field, ignore_empty=ignore_empty) if isinstance(
-                adjustment, str) else adjustment)
+            adjustment = (self.__get_value_for_key(adjustment) if isinstance(adjustment, str) else adjustment)
             if operator == "+":
                 adjusted_value = base_val + adjustment
             elif operator == "-":
@@ -846,8 +841,8 @@ class NACCValidator(Validator):
             elif operator == "/":
                 adjusted_value = base_val / adjustment
             elif operator == "abs":
-                value = abs(value - adjustment)
-                adjusted_value = base_val
+                value = abs(value - base_val)
+                adjusted_value = adjustment
 
         try:
             valid = True
