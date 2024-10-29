@@ -276,7 +276,9 @@ Used to validate the field based on comparison with another field, with optional
 * `base`: The field or value to compare to
 * `adjustment`: The adjustment to make to the base expression, if any. If specified, `op` must also be provided 
 * `op`: The operation to make the adjustment for; can be one of `["+", "-", "*", "/", "abs"]`. If specified, `adjustment` must also be provided
-    * For `abs`, the base is instead subtracted from `base` and compared to the `adjustment`; see example below for more details
+    * Follows the formula `field {comparator} base {op} adjustment`, e.g. `field <= base + adjustment`
+    * For `abs`, it instead follows the formula `abs(field - base) {comparator} adjustment`, e.g. `abs(field - base) <= adjustment`
+    * See examples below for more details
 * `ignore_empty`: If comparing to previous record(s), set this to True to ignore records where this field is empty
 
 The value to compare to (`base`) can be another field in the schema OR a special keywords either related to the current date (i.e. the exact time/date at time of validation) or a previous record
