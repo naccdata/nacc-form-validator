@@ -827,7 +827,8 @@ class NACCValidator(Validator):
                     base, str) else base)
 
         if base_val is None:
-            self._error(field, ErrorDefs.COMPARE_WITH, comparison_str)
+            error = ErrorDefs.COMPARE_WITH_PREV if base == SchemaDefs.PREV_RECORD else ErrorDefs.COMPARE_WITH
+            self._error(field, error, comparison_str)
             return
 
         adjusted_value = base_val
