@@ -1025,6 +1025,36 @@ def test_compare_with_adjustment_is_another_field():
     assert not nv.validate({'test_var': 5, "base_value": 5, "adjustment_value": 2})
     assert nv.errors == {'test_var': ["input value doesn't satisfy the condition test_var == base_value + adjustment_value"]}
 
+def test_compare_with_absolute_value():
+    """ Test compare_with absolute value operator """
+    schema = {
+        "waist1": {
+            "type": "float",
+            "required": True,
+            "compare_with": {
+                "comparator": "<=",
+                "base": 0.5,
+                "op": "abs",
+                "adjustment": "waist2"
+            }
+        },
+        "waist2": {
+            "type": "float",
+            "required": True
+        }
+    }
+    nv = create_nacc_validator(schema)
+    assert nv.validate({'waist1': 5, 'waist2': 5})
+    assert nv.validate({'waist1': 5, 'waist2': 5.5})
+    assert nv.validate({'waist1': 5, 'waist2': 5.25})
+    assert nv.validate({'waist1': 5, 'waist2': 4.5})
+    assert nv.validate({'waist1': 5, 'waist2': 4.75})
+
+    assert not nv.validate({'waist1': 5, 'waist2': 4.4})
+    assert nv.errors ==  {'waist1': ["input value doesn't satisfy the condition abs(waist1 - waist2) <= 0.5"]}
+    assert not nv.validate({'waist1': 5, 'waist2': 5.55})
+    assert nv.errors ==  {'waist1': ["input value doesn't satisfy the condition abs(waist1 - waist2) <= 0.5"]}
+
 def test_lots_of_rules():
     """ Test when a specific field has a lot of rules associated with it (in this case oldadcid) """
     schema = {

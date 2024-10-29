@@ -801,7 +801,7 @@ class NACCValidator(Validator):
                         'type': 'string',
                         'required': False,
                         'empty': False,
-                        'allowed': ["+", "-", "*", "/"],
+                        'allowed': ["+", "-", "*", "/", "abs"],
                         'dependencies': 'adjustment'
                     },
                     'ignore_empty': {
@@ -818,10 +818,12 @@ class NACCValidator(Validator):
         operator = comparison.get(SchemaDefs.OP, None)
         ignore_empty = comparison.get(SchemaDefs.IGNORE_EMPTY, False)
 
-        comparison_str = field + " " + comparator
+        comparison_str = f'{field} {comparator}'
         if adjustment and operator:
-            comparison_str += " " + base + " " + operator + " " + str(
-                adjustment)
+            if operator == 'abs':
+                comparison_str = f'abs({field} - {adjustment}) {comparator} {base}'
+            else:
+                comparison_str += f' {base} {operator} {adjustment}'
 
         base_val = (self.__get_value_for_key(base, field=field, ignore_empty=ignore_empty) if isinstance(
                     base, str) else base)
@@ -843,6 +845,9 @@ class NACCValidator(Validator):
                 adjusted_value = base_val * adjustment
             elif operator == "/":
                 adjusted_value = base_val / adjustment
+            elif operator == "abs":
+                value = abs(value - adjustment)
+                adjusted_value = base_val
 
         try:
             valid = True

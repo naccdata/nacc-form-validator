@@ -9,8 +9,9 @@ Documentation of release versions of `nacc-form-validator`
 * Updates `_validate_temporalrules` to iterate on multiple fields for `previous` and `current` clauses, remove `orderby` attribute
 * Updates `_check_with_gds` function to `_validate_compute_gds` and update GDS score validation
 * Updates `_check_subschema_valid` to accept an optional record parameter, defaults to the document - used for rules that require the previous record
+* Updates `compare_with` to support the `abs` operator
 * Adds `_check_with_rxnorm` function to check whether a given Drug ID is valid RXCUI code.
-* Adds `previous_record` as a special keyword for `__get_value_for_key`
+* Adds `previous_record` as a special keyword for `__get_value_for_key`, which is used by `compare_with`
 * Adds `get_previous_record` method to grab previous record from Datastore, which can grab the previous record or the previous record where a specific field is non-empty
 * Adds additional tests
 * Fixed a bug in min/max validation wrt current_year
