@@ -835,7 +835,7 @@ class NACCValidator(Validator):
 
         adjusted_value = base_val
         if adjustment and operator:
-            adjustment = (self.__get_value_for_key(adjustment) if isinstance(
+            adjustment = (self.__get_value_for_key(adjustment, field=field, ignore_empty=ignore_empty) if isinstance(
                 adjustment, str) else adjustment)
             if operator == "+":
                 adjusted_value = base_val + adjustment
