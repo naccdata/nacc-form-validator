@@ -1025,32 +1025,6 @@ def test_compare_with_adjustment_is_another_field():
     assert not nv.validate({'test_var': 5, "base_value": 5, "adjustment_value": 2})
     assert nv.errors == {'test_var': ["input value doesn't satisfy the condition test_var == base_value + adjustment_value"]}
 
-def test_compare_with_ignore_blank():
-    """ Test compare with where blank base values are okay/ignored """
-    schema = {
-        "base_value": {
-            "type": "integer",
-            "nullable": True,
-        },
-        "test_var": {
-            "type": "integer",
-            "required": True,
-            "compare_with": {
-                "comparator": ">",
-                "base": "base_value",
-                "ignore_blank": True
-            }
-        }
-    }
-    nv = create_nacc_validator(schema)
-    assert nv.validate({'test_var': 5, "base_value": None})
-    assert nv.validate({'test_var': 5, "base_value": 2})
-
-    schema['test_var']['compare_with'].pop('ignore_blank')
-    nv = create_nacc_validator(schema)
-    assert not nv.validate({'test_var': 5, "base_value": None})
-    assert {'test_var': ["input value doesn't satisfy the condition test_var >"]}
-
 def test_lots_of_rules():
     """ Test when a specific field has a lot of rules associated with it (in this case oldadcid) """
     schema = {

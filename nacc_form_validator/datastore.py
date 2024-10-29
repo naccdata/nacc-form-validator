@@ -51,3 +51,19 @@ class Datastore(ABC):
             Dict[str, str]: Previous record or None if no previous record found
         """
         return None
+
+    @abstractmethod
+    def get_previous_nonempty_record(
+            self, current_record: Dict[str, str], field: str) -> Optional[Dict[str, str]]:
+        """Abstract method to return the previous record where field is NOT empty for the
+        specified participant. Override this method to retrieve the records
+        from the desired datastore/warehouse.
+
+        Args:
+            current_record: Record currently being validated
+            field: Field to check for
+
+        Returns:
+            Dict[str, str]: Previous nonempty record or None if none found
+        """
+        return None

@@ -5,15 +5,13 @@ Documentation of release versions of `nacc-form-validator`
 ## 0.3.0
 
 * Updates `_validate_compare_with` to allow adjustments to be another field, and for base values to be hardcoded values
-* Update json_logic `less` function to handle None
-* Updates `_validate_temporalrules` to iterate on multiple fields for `previous` and `current` clauses, remove `orderby` attribute
-* Updates `_check_subschema_valid` to accept an optional record parameter, defaults to the document - used for rules that require the previous record
-* Updates `compare_with` to add `ignore_blank` option - if True, does not return a validation error if the base is None. Defaults to False
-* Updates `_check_with_gds` function to `_validate_compute_gds` and update GDS score validation
-* Adds `previous_record` as a special keyword for `__get_value_for_key`
-* Adds `get_previous_record` method to grab previous record from Datastore
 * Adds additional tests
+* Update json_logic `less` function to handle None
 * Fixed a bug in min/max validation wrt current_year
+* Updates `_validate_temporalrules` to iterate on multiple fields for `previous` and `current` clauses, remove `orderby` attribute
+* Adds `previous_record` as a special keyword for `__get_value_for_key`
+* Adds `get_previous_record` method to grab previous record from Datastore, which can grab the previous record or the previous record where a specific field is non-empty
+* Updates `_check_subschema_valid` to accept an optional record parameter, defaults to the document - used for rules that require the previous record
 
 ## 0.2.0
 

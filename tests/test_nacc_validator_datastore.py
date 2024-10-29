@@ -20,12 +20,14 @@ class CustomDatastore(Datastore):
                 {
                     "visit_num": 1,
                     "taxes": 8,
-                    "birthyr": 1950
+                    "birthyr": 1950,
+                    "birthmo": None
                 },
                 {
                     "visit_num": 3,
                     "taxes": 0,
-                    "birthyr": 1950
+                    "birthyr": 1950,
+                    "birthmo": 6
                 }
             ]
         }
@@ -42,6 +44,21 @@ class CustomDatastore(Datastore):
             return None
 
         sorted_record = copy.deepcopy(self.__db[key])
+        sorted_record.append(current_record)
+        sorted_record.sort(key=lambda record: record[self.orderby])
+
+        index = sorted_record.index(current_record)
+        return sorted_record[index - 1] if index != 0 else None
+
+    def get_previous_nonempty_record(self, current_record: dict[str, str], field: str) -> dict[str, str] | None:
+        """
+        Grabs the previous record where field is not empty
+        """
+        key = current_record[self.pk_field]
+        if key not in self.__db:
+            return None
+
+        sorted_record = [x for x in copy.deepcopy(self.__db[key]) if x.get(field, None)]
         sorted_record.append(current_record)
         sorted_record.sort(key=lambda record: record[self.orderby])
 
@@ -119,3 +136,28 @@ def test_compare_with_previous_record():
 
     assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyr': 2000})
     assert nv.errors == {'birthyr': ["input value doesn't satisfy the condition birthyr =="]}
+
+    nv.reset_record_cache()
+    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthyr': 1950})
+
+def test_compare_with_previous_nonempty_record():
+    """ Test compare_with previous nonempty record """
+    schema = {
+        "patient_id": {"type": "string"},
+        "visit_num": {"type": "integer"},
+        "birthmo": {
+            "type": "integer",
+            "compare_with": {
+                "comparator": "==",
+                "base": "previous_record",
+                "ignore_empty": True
+            }
+        }
+    }
+
+    nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
+    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthmo': 6})
+
+    nv.reset_record_cache()
+    assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
+    assert nv.errors == {'birthmo': ["input value doesn't satisfy the condition birthmo =="]}

@@ -143,4 +143,4 @@ class SchemaDefs:
     COMPARATOR = "comparator"
     BASE = "base"
     ADJUST = "adjustment"
-    IGNORE_BLANK = "ignore_blank"
+    IGNORE_EMPTY = "ignore_empty"
