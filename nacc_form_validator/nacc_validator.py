@@ -823,7 +823,7 @@ class NACCValidator(Validator):
             comparison_str += " " + base + " " + operator + " " + str(
                 adjustment)
 
-        base_val = (self.__get_value_for_key(base, field, ignore_empty=ignore_empty) if isinstance(
+        base_val = (self.__get_value_for_key(base, field=field, ignore_empty=ignore_empty) if isinstance(
                     base, str) else base)
 
         if base_val is None:
@@ -832,7 +832,7 @@ class NACCValidator(Validator):
 
         adjusted_value = base_val
         if adjustment and operator:
-            adjustment = (self.__get_value_for_key(adjustment, field, ignore_empty=ignore_empty) if isinstance(
+            adjustment = (self.__get_value_for_key(adjustment) if isinstance(
                 adjustment, str) else adjustment)
             if operator == "+":
                 adjusted_value = base_val + adjustment
