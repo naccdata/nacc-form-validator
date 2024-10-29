@@ -38,7 +38,8 @@ class ErrorDefs:
     CHECK_GDS_4 = ErrorDefinition(0x2007, "compute_gds")
     CHECK_GDS_5 = ErrorDefinition(0x2008, "compute_gds")
     COMPARE_WITH = ErrorDefinition(0x2009, "compare_with")
-    COMPARE_WITH_PREV = ErrorDefinition(0x3001, "compare_with")
+    COMPARE_WITH_PREV = ErrorDefinition(0x3000, "compare_with")
+    RXNORM = ErrorDefinition(0x3001, "check_with")
 
 
 class CustomErrorHandler(BasicErrorHandler):
@@ -91,7 +92,8 @@ class CustomErrorHandler(BasicErrorHandler):
             0x2008:
             "If GDS attempted (nogds=blank), at least 12 questions need to have valid scores - GDS rule no: {0}",
             0x2009: "input value doesn't satisfy the condition {0}",
-            0x3001: "failed to retrieve record for previous visit, cannot proceed with validation"
+            0x3000: "failed to retrieve record for previous visit, cannot proceed with validation",
+            0x3001: "Drug ID {0} is not a valid RXCUI",
         }
 
         self.messages.update(custom_errors)

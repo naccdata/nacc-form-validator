@@ -65,6 +65,10 @@ class CustomDatastore(Datastore):
         index = sorted_record.index(current_record)
         return sorted_record[index - 1] if index != 0 else None
 
+    def is_valid_rxcui(self, drugid: int) -> bool:
+        """ Ignore for this testing """
+        return False
+
 
 def create_nacc_validator_with_ds(schema: dict[str, object], pk_field: str, orderby: str) -> NACCValidator:
     """ Creates a generic NACCValidtor with the above CustomDataStore """
