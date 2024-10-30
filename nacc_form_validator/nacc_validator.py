@@ -967,13 +967,13 @@ class NACCValidator(Validator):
                         'required': False,
                         'empty': False,
                         'schema': {
-                            'birth_month': {
-                                'type': ['string', 'integer'],
-                                'required': True
-                            },
                             'birth_year': {
                                 'type': ['string', 'integer'],
                                 'required': True
+                            },
+                            'birth_month': {
+                                'type': ['string', 'integer'],
+                                'required': False
                             },
                             'birth_day': {
                                 'type': ['string', 'integer'],
@@ -999,7 +999,7 @@ class NACCValidator(Validator):
         # if use_age is provided, calculates age at the base_date given birth fields
         if use_age:
             birth_date = convert_to_date(f" \
-                                         {use_age[SchemaDefs.BIRTH_MONTH]:02d} \
+                                         {use_age.get(SchemaDefs.BIRTH_MONTH, 1):02d} \
                                          /{use_age.get(SchemaDefs.BIRTH_DAY, 1):02d} \
                                          /{use_age[SchemaDefs.BIRTH_YEAR]:04d}")
             # there are more "accurate" ways to calculate age
