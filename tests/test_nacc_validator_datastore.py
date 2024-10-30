@@ -31,6 +31,10 @@ class CustomDatastore(Datastore):
                 }
             ]
         }
+
+        # dummy rxcui mapping for testing
+        self.__valid_rxcui = list(range(50))
+
         super().__init__(pk_field, orderby)
 
     def get_previous_record(self, current_record: dict[str, str]) -> dict[str, str] | None:
@@ -66,8 +70,8 @@ class CustomDatastore(Datastore):
         return sorted_record[index - 1] if index != 0 else None
 
     def is_valid_rxcui(self, drugid: int) -> bool:
-        """ Ignore for this testing """
-        return False
+        """ For RXCUI testing """
+        return drugid in self.__valid_rxcui
 
 
 def create_nacc_validator_with_ds(schema: dict[str, object], pk_field: str, orderby: str) -> NACCValidator:
@@ -165,3 +169,46 @@ def test_compare_with_previous_nonempty_record():
     nv.reset_record_cache()
     assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
     assert nv.errors == {'birthmo': ['failed to retrieve record for previous visit, cannot proceed with validation birthmo == previous_record']}
+
+def test_check_with_rxnorm():
+    """ Test checking drugID is a valid RXCUI """
+    schema = {
+        "drug": {
+            "type": "integer",
+            "check_with": "rxnorm"
+        }
+    }
+
+    nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
+
+    for i in range(50):
+        assert nv.validate({"drug": i})
+
+    assert not nv.validate({"drug": -1})
+    assert nv.errors == {'drug': ['Drug ID -1 is not a valid RXCUI']}
+    assert not nv.validate({"drug": 100})
+    assert nv.errors == {'drug': ['Drug ID 100 is not a valid RXCUI']}
+
+def test_check_with_rxnorm():
+    """ Test checking drugID is a valid RXCUI """
+    schema = {
+        "drug": {
+            "nullable": True,
+            "type": "integer",
+            "check_with": "rxnorm"
+        }
+    }
+
+    nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
+
+    # 0 and None are okay
+    assert nv.validate({"drug": 0})
+    assert nv.validate({"drug": None})
+
+    for i in range(50):
+        assert nv.validate({"drug": i})
+
+    assert not nv.validate({"drug": -1})
+    assert nv.errors == {'drug': ['Drug ID -1 is not a valid RXCUI']}
+    assert not nv.validate({"drug": 100})
+    assert nv.errors == {'drug': ['Drug ID 100 is not a valid RXCUI']}
