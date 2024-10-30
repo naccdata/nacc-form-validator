@@ -968,11 +968,11 @@ def test_compare_with_current_year():
 
     # breaks current_year comparison - these will need to change once we hit 2038 :)
     assert not nv.validate({'birthyr': 2038, 'birthyradj': 2000})
-    assert nv.errors == {'birthyr': ["input value doesn't satisfy the condition birthyr <="]}
+    assert nv.errors == {'birthyr': ["input value doesn't satisfy the condition birthyr <= current_year"]}
     assert not nv.validate({'birthyr': 2023, 'birthyradj': 2023})
     assert nv.errors == {'birthyradj': ["input value doesn't satisfy the condition birthyradj <= current_year - 15"]}
     assert not nv.validate({'birthyr': 2038, 'birthyradj': 2038})
-    assert nv.errors == {'birthyr': ["input value doesn't satisfy the condition birthyr <="], 'birthyradj': ["input value doesn't satisfy the condition birthyradj <= current_year - 15"]}
+    assert nv.errors == {'birthyr': ["input value doesn't satisfy the condition birthyr <= current_year"], 'birthyradj': ["input value doesn't satisfy the condition birthyradj <= current_year - 15"]}
 
 def test_compare_with_base_is_hardcoded():
     """ Test compare_with when the base is a hardcoded 0 """
@@ -990,9 +990,9 @@ def test_compare_with_base_is_hardcoded():
     assert nv.validate({'test_var': 5})
 
     assert not nv.validate({'test_var': -1})
-    assert nv.errors ==  {'test_var': ["input value doesn't satisfy the condition test_var >"]}
+    assert nv.errors ==  {'test_var': ["input value doesn't satisfy the condition test_var > 0"]}
     assert not nv.validate({'test_var': 0})
-    assert nv.errors ==  {'test_var': ["input value doesn't satisfy the condition test_var >"]}
+    assert nv.errors ==  {'test_var': ["input value doesn't satisfy the condition test_var > 0"]}
 
 def test_compare_with_adjustment_is_another_field():
     """ Test compare_with when the adjustment is another field """

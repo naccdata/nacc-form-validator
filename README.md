@@ -79,6 +79,15 @@ will then build sdist and wheel distributions in the `dist` directory.
 
 > The version number on the distribution files is set in the `validator/BUILD` file.
 
+### Formatting and Linting a Distribution
+
+You can format and lint with pants as well using the commands:
+
+```bash
+pants fmt nacc_form_validator::   # fixes formatting
+pants lint nacc_form_validator::  # run linter
+```
+
 ### Common Build Issues
 
 #### Incompatible Python Interpreter

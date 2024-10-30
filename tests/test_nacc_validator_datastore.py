@@ -139,7 +139,7 @@ def test_compare_with_previous_record():
     assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyr': 1950})
 
     assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyr': 2000})
-    assert nv.errors == {'birthyr': ["input value doesn't satisfy the condition birthyr =="]}
+    assert nv.errors == {'birthyr': ["input value doesn't satisfy the condition birthyr == previous_record"]}
 
     nv.reset_record_cache()
     assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthyr': 1950})
@@ -164,4 +164,4 @@ def test_compare_with_previous_nonempty_record():
 
     nv.reset_record_cache()
     assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
-    assert nv.errors == {'birthmo': ['failed to retrieve record for previous visit, cannot proceed with validation birthmo ==']}
+    assert nv.errors == {'birthmo': ['failed to retrieve record for previous visit, cannot proceed with validation birthmo == previous_record']}
