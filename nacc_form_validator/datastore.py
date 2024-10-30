@@ -54,6 +54,22 @@ class Datastore(ABC):
         return None
 
     @abstractmethod
+    def get_previous_nonempty_record(self, current_record: Dict[str, str],
+                                     field: str) -> Optional[Dict[str, str]]:
+        """Abstract method to return the previous record where field is NOT
+        empty for the specified participant. Override this method to retrieve
+        the records from the desired datastore/warehouse.
+
+        Args:
+            current_record: Record currently being validated
+            field: Field to check for
+
+        Returns:
+            Dict[str, str]: Previous nonempty record or None if none found
+        """
+        return None
+
+    @abstractmethod
     def is_valid_rxcui(self, drugid: int) -> bool:
         """Abstract method to check whether a given drug ID is valid RXCUI.
         Override this method to implement drug ID validation. Check

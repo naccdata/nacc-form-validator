@@ -215,6 +215,56 @@ class NACCValidator(Validator):
 
         return record
 
+    def get_previous_record(
+            self,
+            field: str = None,
+            ignore_empty: bool = False) -> Optional[Dict[str, Mapping]]:
+        """Get the previous record from the Datastore; if not skipping empty
+        records, stores it in the prev_records cache.
+
+        Args:
+            field: If provided and ignore_empty is True, will only grab the first
+                   previous record where this field is not empty.
+            ignore_empty: Whether or not to only grab the last record where
+                          field is non-empty
+
+        Returns:
+            Dict[str, object]: Casted record Dict[field, value]
+        """
+        if not self.datastore:
+            err_msg = "Datastore not set, cannot validate temporal rules"
+            self.__add_system_error(field, err_msg)
+            raise ValidationException(err_msg)
+
+        if not self.primary_key:
+            err_msg = "Primary key field not set, cannot validate temporal rules"
+            self.__add_system_error(field, err_msg)
+            raise ValidationException(err_msg)
+
+        if self.primary_key not in self.document or not self.document[
+                self.primary_key]:
+            self._error(field, ErrorDefs.NO_PRIMARY_KEY, self.primary_key)
+            return None
+
+        record_id = self.document[self.primary_key]
+
+        # If the previous record was already retrieved and not ignore_empty, use it
+        # Similarly only save into cache if ignore_empty is false
+        if not ignore_empty and record_id in self.__prev_records:
+            prev_ins = self.__prev_records[record_id]
+        else:
+            prev_ins = (self.__datastore.get_previous_nonempty_record(
+                self.document, field) if ignore_empty else
+                        self.__datastore.get_previous_record(self.document))
+
+            if prev_ins:
+                prev_ins = self.cast_record(prev_ins)
+
+            if not ignore_empty:
+                self.__prev_records[record_id] = prev_ins
+
+        return prev_ins
+
     def __get_value_for_key(self, key: str) -> Optional[Any]:
         """Find the value for the specified key.
 
@@ -238,14 +288,6 @@ class NACCValidator(Validator):
 
         if self.document and key in self.document:
             return self.document[key]
-
-        # doesn't particularly matter if its an int or float in this case,
-        # so just try cast to float
-        try:
-            key = float(key)
-            return key
-        except ValueError:
-            pass
 
         return None
 
@@ -424,17 +466,25 @@ class NACCValidator(Validator):
         elif filled and value is None:
             self._error(field, ErrorDefs.FILLED_TRUE)
 
-    def _check_subschema_valid(self, all_conditions: Dict[str, object],
-                               operator: str) -> Tuple[bool, object]:
+    def _check_subschema_valid(
+            self,
+            all_conditions: Dict[str, object],
+            operator: str,
+            record: Dict[str, Any] = None) -> Tuple[bool, object]:
         """Creates a temporary validator to check a set of conditions.
 
         Args:
             all_conditions: Set of conditions to be validated
             operator: Logical operation (AND | OR) to merge the conditions
+            record: The record to validate on. If not provided, defaults to the
+                    document
 
         Returns:
             Tuple[bool, object]: Validation result, errors
         """
+        if not record:
+            record = self.document
+
         valid = operator != "OR"
         errors = {}
 
@@ -447,7 +497,7 @@ class NACCValidator(Validator):
                 error_handler=CustomErrorHandler(subschema),
             )
             if operator == "OR":
-                valid = valid or temp_validator.validate(self.document,
+                valid = valid or temp_validator.validate(record,
                                                          normalize=False)
                 # if something passed, don't need to evaluate rest,
                 # and ignore any errors found
@@ -458,7 +508,7 @@ class NACCValidator(Validator):
                 errors.update(temp_validator.errors)
 
             # Evaluate as logical AND operation
-            elif not temp_validator.validate(self.document, normalize=False):
+            elif not temp_validator.validate(record, normalize=False):
                 valid = False
                 errors = temp_validator.errors
                 break
@@ -484,13 +534,40 @@ class NACCValidator(Validator):
                 'schema': {
                     'type': 'dict',
                     'schema': {
-                        'index': {'type': 'integer', 'required': False},
-                        'if_op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR', 'and', 'or']},
-                        'then_op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR', 'and', 'or']},
-                        'else_op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR', 'and', 'or']},
-                        'if': {'type': 'dict', 'required': True, 'empty': False},
-                        'then': {'type': 'dict', 'required': True, 'empty': False},
-                        'else': {'type': 'dict', 'required': False, 'empty': False}
+                        'index': {
+                            'type': 'integer',
+                            'required': False
+                        },
+                        'if_op': {
+                            'type': 'string',
+                            'required': False,
+                            'allowed': ['AND', 'OR', 'and', 'or']
+                        },
+                        'then_op': {
+                            'type': 'string',
+                            'required': False,
+                            'allowed': ['AND', 'OR', 'and', 'or']
+                        },
+                        'else_op': {
+                            'type': 'string',
+                            'required': False,
+                            'allowed': ['AND', 'OR', 'and', 'or']
+                        },
+                        'if': {
+                            'type': 'dict',
+                            'required': True,
+                            'empty': False
+                        },
+                        'then': {
+                            'type': 'dict',
+                            'required': True,
+                            'empty': False
+                        },
+                        'else': {
+                            'type': 'dict',
+                            'required': False,
+                            'empty': False
+                        }
                     }
                 }
             }
@@ -564,43 +641,35 @@ class NACCValidator(Validator):
                 'schema': {
                     'type': 'dict',
                     'schema': {
-                        'index': {'type': 'integer', 'required': False},
-                        'prev_op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR', 'and', 'or']},
-                        'curr_op': {'type': 'string', 'required': False, 'allowed': ['AND', 'OR', 'and', 'or']},
-                        'previous': {'type': 'dict', 'required': True, 'empty': False},
-                        'current': {'type': 'dict', 'required': True, 'empty': False}
+                        'index': {
+                            'type': 'integer',
+                            'required': False
+                        },
+                        'prev_op': {
+                            'type': 'string',
+                            'required': False,
+                            'allowed': ['AND', 'OR', 'and', 'or']
+                        },
+                        'curr_op': {
+                            'type': 'string',
+                            'required': False,
+                            'allowed': ['AND', 'OR', 'and', 'or']
+                        },
+                        'previous': {
+                            'type': 'dict',
+                            'required': True,
+                            'empty': False
+                        },
+                        'current': {
+                            'type': 'dict',
+                            'required': True,
+                            'empty': False
+                        }
                     }
                 }
             }
         """
-
-        if not self.datastore:
-            err_msg = "Datastore not set, cannot validate temporal rules"
-            self.__add_system_error(field, err_msg)
-            raise ValidationException(err_msg)
-
-        if not self.primary_key:
-            err_msg = "Primary key field not set, cannot validate temporal rules"
-            self.__add_system_error(field, err_msg)
-            raise ValidationException(err_msg)
-
-        if self.primary_key not in self.document or not self.document[
-                self.primary_key]:
-            self._error(field, ErrorDefs.NO_PRIMARY_KEY, self.primary_key)
-            return
-
-        record_id = self.document[self.primary_key]
-
-        # If the previous record was already retrieved, use it
-        if record_id in self.__prev_records:
-            prev_ins = self.__prev_records[record_id]
-        else:
-            prev_ins = self.__datastore.get_previous_record(self.document)
-
-            if prev_ins:
-                prev_ins = self.cast_record(prev_ins)
-
-            self.__prev_records[record_id] = prev_ins
+        prev_ins = self.get_previous_record()
 
         # If temporal rules are defined, a previous vist must exist
         if prev_ins is None:
@@ -619,7 +688,9 @@ class NACCValidator(Validator):
 
             errors = None
             # Check if conditions for the previous visit is satisfied
-            valid, _ = self._check_subschema_valid(prev_conds, prev_operator)
+            valid, _ = self._check_subschema_valid(prev_conds,
+                                                   prev_operator,
+                                                   record=prev_ins)
 
             # If not satisfied, continue to next rule
             if not valid:
@@ -780,8 +851,12 @@ class NACCValidator(Validator):
                         'type': 'string',
                         'required': False,
                         'empty': False,
-                        'allowed': ["+", "-", "*", "/"],
+                        'allowed': ["+", "-", "*", "/", "abs"],
                         'dependencies': 'adjustment'
+                    },
+                    'ignore_empty': {
+                        'type': 'boolean',
+                        'required': False
                     }
                 }
             }
@@ -789,23 +864,29 @@ class NACCValidator(Validator):
 
         comparator = comparison[SchemaDefs.COMPARATOR]
         base = comparison[SchemaDefs.BASE]
-        adjustment = None
-        operator = None
-        if SchemaDefs.ADJUST in comparison:
-            adjustment = comparison[SchemaDefs.ADJUST]
-        if SchemaDefs.OP in comparison:
-            operator = comparison[SchemaDefs.OP]
+        adjustment = comparison.get(SchemaDefs.ADJUST, None)
+        operator = comparison.get(SchemaDefs.OP, None)
+        ignore_empty = comparison.get(SchemaDefs.IGNORE_EMPTY, False)
 
-        comparison_str = field + " " + comparator
+        comparison_str = f'{field} {comparator} {base}'
         if adjustment and operator:
-            comparison_str += " " + base + " " + operator + " " + str(
-                adjustment)
+            if operator == 'abs':
+                comparison_str = f'abs({field} - {base}) {comparator} {adjustment}'
+            else:
+                comparison_str += f' {operator} {adjustment}'
 
-        base_val = self.__get_value_for_key(base) if isinstance(base,
-                                                                str) else base
+        if base == SchemaDefs.PREV_RECORD:
+            record = self.get_previous_record(field=field,
+                                              ignore_empty=ignore_empty)
+            base_val = record[field] if record else None
+        else:
+            base_val = self.__get_value_for_key(base) if isinstance(
+                base, str) else base
 
         if base_val is None:
-            self._error(field, ErrorDefs.COMPARE_WITH, comparison_str)
+            error = (ErrorDefs.COMPARE_WITH_PREV if base
+                     == SchemaDefs.PREV_RECORD else ErrorDefs.COMPARE_WITH)
+            self._error(field, error, comparison_str)
             return
 
         adjusted_value = base_val
@@ -820,6 +901,9 @@ class NACCValidator(Validator):
                 adjusted_value = base_val * adjustment
             elif operator == "/":
                 adjusted_value = base_val / adjustment
+            elif operator == "abs":
+                value = abs(value - base_val)
+                adjusted_value = adjustment
 
         try:
             valid = True

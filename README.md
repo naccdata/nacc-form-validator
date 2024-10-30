@@ -11,6 +11,7 @@ See the [Cerberus usage examples](https://docs.python-cerberus.org/usage.html) f
   - [Table of Contents](#table-of-contents)
   - [Setup](#setup)
     - [Installing Pants](#installing-pants)
+    - [Formatting and Linting](#formatting-and-linting)
     - [Building a Distribution](#building-a-distribution)
     - [Common Build Issues](#common-build-issues)
       - [Incompatible Python Interpreter](#incompatible-python-interpreter)
@@ -66,6 +67,15 @@ You will need to make sure that you have a Python version compatible with the in
 The repo has a VSCode devcontainer configuration that ensures a compatible Python is available.
 You need [Docker](https://www.docker.com) installed, and [VSCode](https://code.visualstudio.com) with Dev Containers enabled.
 For this follow the [Dev Containers tutorial](https://code.visualstudio.com/docs/devcontainers/tutorial) to the point of "Check Installation".
+
+### Formatting and Linting 
+
+You can format and lint with pants using the commands:
+
+```bash
+pants fmt nacc_form_validator::   # fixes formatting
+pants lint nacc_form_validator::  # run linter
+```
 
 ### Building a Distribution
 

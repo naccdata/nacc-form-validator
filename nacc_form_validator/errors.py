@@ -38,7 +38,8 @@ class ErrorDefs:
     CHECK_GDS_4 = ErrorDefinition(0x2007, "compute_gds")
     CHECK_GDS_5 = ErrorDefinition(0x2008, "compute_gds")
     COMPARE_WITH = ErrorDefinition(0x2009, "compare_with")
-    RXNORM = ErrorDefinition(0x3000, "check_with")
+    COMPARE_WITH_PREV = ErrorDefinition(0x3000, "compare_with")
+    RXNORM = ErrorDefinition(0x3001, "check_with")
 
 
 class CustomErrorHandler(BasicErrorHandler):
@@ -64,34 +65,54 @@ class CustomErrorHandler(BasicErrorHandler):
         # Error messages are synced with ErrorDefs using the error code
         # Error codes are used to map b/w cerberus errors and NACC QC check codes
         custom_errors = {
-            0x1000: "cannot be greater than current date {0}",
-            0x1001: "cannot be greater than current year {0}",
-            0x1002: "max date/year comparison error - {0}",
-            0x1003: "cannot be less than current date {0}",
-            0x1004: "cannot be less than current year {0}",
-            0x1005: "min date/year comparison error - {0}",
-            0x1006: "cannot be empty",
-            0x1007: "must be empty",
-            0x1008: "{1} for {2} - compatibility rule no: {0}",
-            0x1009: "{1} for {2} - compatibility rule no: {0}",
+            0x1000:
+            "cannot be greater than current date {0}",
+            0x1001:
+            "cannot be greater than current year {0}",
+            0x1002:
+            "max date/year comparison error - {0}",
+            0x1003:
+            "cannot be less than current date {0}",
+            0x1004:
+            "cannot be less than current year {0}",
+            0x1005:
+            "min date/year comparison error - {0}",
+            0x1006:
+            "cannot be empty",
+            0x1007:
+            "must be empty",
+            0x1008:
+            "{1} for {2} - compatibility rule no: {0}",
+            0x1009:
+            "{1} for {2} - compatibility rule no: {0}",
             0x2000:
             "{1} in current visit for {2} in previous visit - temporal rule no: {0}",
-            0x2001: "primary key variable {0} not set in current visit data",
+            0x2001:
+            "primary key variable {0} not set in current visit data",
             0x2002:
             "failed to retrieve the previous visit, cannot proceed with validation",
-            0x2003: "error in formula evaluation - {0}",
+            0x2003:
+            "error in formula evaluation - {0}",
             0x2004:
-            "If GDS not attempted (nogds=1), total GDS score should be 88 - GDS rule no: {0}",
+            "If GDS not attempted (nogds=1), total GDS score should be 88 " +
+            "- GDS rule no: {0}",
             0x2005:
-            "If GDS not attempted (nogds=1), there cannot be >=12 questions with valid scores - GDS rule no: {0}",
+            "If GDS not attempted (nogds=1), there cannot be >=12 questions with "
+            + "valid scores - GDS rule no: {0}",
             0x2006:
             "incorrect total GDS score {1}, expected value {2} - GDS rule no: {0}",
             0x2007:
             "incorrect partial GDS score {1}, expected value {2} - GDS rule no: {0}",
             0x2008:
-            "If GDS attempted (nogds=blank), at least 12 questions need to have valid scores - GDS rule no: {0}",
-            0x2009: "input value doesn't satisfy the condition {0}",
-            0x3000: "Drug ID {0} is not a valid RXCUI"
+            "If GDS attempted (nogds=blank), at least 12 questions need to have "
+            + "valid scores - GDS rule no: {0}",
+            0x2009:
+            "input value doesn't satisfy the condition {0}",
+            0x3000:
+            "failed to retrieve record for previous visit, cannot proceed with "
+            + "validation {0}",
+            0x3001:
+            "Drug ID {0} is not a valid RXCUI",
         }
 
         self.messages.update(custom_errors)
@@ -138,9 +159,11 @@ class SchemaDefs:
     CRR_YEAR = "current_year"
     CRR_MONTH = "current_month"
     CRR_DAY = "current_day"
+    PREV_RECORD = "previous_record"
     FORMULA = "formula"
     INDEX = "index"
     FORMATTING = "formatting"
     COMPARATOR = "comparator"
     BASE = "base"
     ADJUST = "adjustment"
+    IGNORE_EMPTY = "ignore_empty"

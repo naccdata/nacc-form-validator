@@ -275,14 +275,19 @@ Used to validate the field based on comparison with another field, with optional
 * `comparator`: The comparison expression; can be one of `[">", "<", ">=", "<=", "==", "!="]`
 * `base`: The field or value to compare to
 * `adjustment`: The adjustment to make to the base expression, if any. If specified, `op` must also be provided 
-* `op`: The operation to make the adjustment for; can be one of `["+", "-", "*", "/"]`. If specified, `adjustment` must also be provided
+* `op`: The operation to make the adjustment for; can be one of `["+", "-", "*", "/", "abs"]`. If specified, `adjustment` must also be provided
+    * Follows the formula `field {comparator} base {op} adjustment`, e.g. `field <= base + adjustment`
+    * For `abs`, it instead follows the formula `abs(field - base) {comparator} adjustment`, e.g. `abs(field - base) <= adjustment`
+    * See examples below for more details
+* `ignore_empty`: If comparing to previous record(s), set this to True to ignore records where this field is empty
 
-The value to compare to (`base`) can be another field in the schema OR one of the four special keywords related to the current date (i.e. the exact time/date at time of validation).
+The value to compare to (`base`) can be another field in the schema OR a special keywords either related to the current date (i.e. the exact time/date at time of validation) or a previous record
 
 * `current_date`: Compare to the current date
 * `current_year`: Compare to the current year
 * `current_month`: Compare to the current month
 * `current_day`: Compare to the current day
+* `previous_record`: Compare to the same variable in the previous record
 
 The rule definition for `compare_with` should follow the following format:
 
@@ -293,7 +298,8 @@ The rule definition for `compare_with` should follow the following format:
             "comparator": "comparator, one of >, <, >=, <=, ==, !=",
             "base": "field or value to compare field_name to",
             "adjustment": "(optional) the adjustment field or value",
-            "op": "(optional) operation, one of +, -, *, /"
+            "op": "(optional) operation, one of +, -, *, /, abs",
+            "ignore_empty": "(optional) boolean, whether or not to ignore previous records where this field is empty"
         }
 }
 ```
@@ -313,7 +319,7 @@ birthyr:
   type: integer
   required: true
   compare_with:
-    comparator: "<="
+    comparator: <=
     base: current_year
     adjustment: 15
     op: "-"
@@ -345,6 +351,63 @@ birthyr:
 ```
 </td>
 </table>
+
+**Absolute Value Example**
+
+`abs(waist1 - waist2) <= 0.5`, e.g. the difference between `waist2` and `waist2` cannot be more than 0.5
+
+<table>
+<tr>
+<th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
+<tr>
+
+<td valign="top">
+
+```yaml
+waist1:
+  type: float
+  required: true
+  compare_with:
+    comparator: <=
+    base: waist2
+    adjustment: 0.5
+    op: abs
+waist2:
+    type: float
+    required: true
+```
+</td>
+<td valign="top">
+
+```json
+{
+        "waist1": {
+            "type": "float",
+            "required": true,
+            "compare_with": {
+                "comparator": "<=",
+                "base": "waist2",
+                "op": "abs",
+                "adjustment": 0.5
+            }
+        },
+        "waist2": {
+            "type": "float",
+            "required": true
+        }
+    }
+```
+</td>
+
+<td valign="top">
+
+```python
+{'waist1': 5, 'waist2': 5.25}   # passes
+{'waist1': 5, 'waist2': 4.4}    # fails
+```
+</td>
+</table>
+
 
 ### compatibility
 
@@ -777,7 +840,7 @@ The rule definition for `compute_gds` should follow the following format:
 ```json
 {
     "gds": {
-        "compute_gds": [list of fields used in GDS score computation]
+        "compute_gds": ["list of fields used in GDS score computation"]
     }
 }
 ```

@@ -3,6 +3,7 @@ Tests the NACCValidator (from nacc_validator.py) when a datastore is required, e
 Creates a dummy datastore for simple testing
 """
 import copy
+import pytest
 
 from nacc_form_validator.nacc_validator import NACCValidator, CustomErrorHandler
 from nacc_form_validator.datastore import Datastore
@@ -18,19 +19,24 @@ class CustomDatastore(Datastore):
             'PatientID1': [
                 {
                     "visit_num": 1,
-                    "taxes": 8
+                    "taxes": 8,
+                    "birthyr": 1950,
+                    "birthmo": None
                 },
                 {
                     "visit_num": 3,
-                    "taxes": 0
+                    "taxes": 0,
+                    "birthyr": 1950,
+                    "birthmo": 6
                 }
             ]
         }
-        super.__init__(pk_field, orderby)
+        super().__init__(pk_field, orderby)
 
     def get_previous_record(self, current_record: dict[str, str]) -> dict[str, str] | None:
         """
-        See where current record would fit in the sorted record and return the previous record
+        See where current record would fit in the sorted record and return the previous record.
+        Assumes the current record does NOT exist already in the database.
         Making a deep copy since we don't actually want to modify the record in this method
         """
         key = current_record[self.pk_field]
@@ -39,10 +45,29 @@ class CustomDatastore(Datastore):
 
         sorted_record = copy.deepcopy(self.__db[key])
         sorted_record.append(current_record)
-        sorted_record.sort(key=lambda record: record[self.__orderby])
+        sorted_record.sort(key=lambda record: record[self.orderby])
 
         index = sorted_record.index(current_record)
         return sorted_record[index - 1] if index != 0 else None
+
+    def get_previous_nonempty_record(self, current_record: dict[str, str], field: str) -> dict[str, str] | None:
+        """
+        Grabs the previous record where field is not empty
+        """
+        key = current_record[self.pk_field]
+        if key not in self.__db:
+            return None
+
+        sorted_record = [x for x in copy.deepcopy(self.__db[key]) if x.get(field, None)]
+        sorted_record.append(current_record)
+        sorted_record.sort(key=lambda record: record[self.orderby])
+
+        index = sorted_record.index(current_record)
+        return sorted_record[index - 1] if index != 0 else None
+
+    def is_valid_rxcui(self, drugid: int) -> bool:
+        """ Ignore for this testing """
+        return False
 
 
 def create_nacc_validator_with_ds(schema: dict[str, object], pk_field: str, orderby: str) -> NACCValidator:
@@ -55,11 +80,9 @@ def create_nacc_validator_with_ds(schema: dict[str, object], pk_field: str, orde
     nv.datastore = CustomDatastore(pk_field, orderby)
     return nv
 
-
-def test_temporal_check():
-    """ Temporal test check - this is basically a more involved version of the example provided in docs/index.md, namely tests when 
-    validating a record that sits inbetween or before existing records in the DS """
-    schema = {
+@pytest.fixture
+def schema():
+    return {
         "patient_id": {"type": "string"},
         "visit_num": {"type": "integer"},
         "taxes": {
@@ -78,6 +101,8 @@ def test_temporal_check():
         }
     }
 
+def test_temporal_check(schema):
+    """ Temporal test check - this is basically a more involved version of the example provided in docs/index.md """
     nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
 
     assert nv.validate({'patient_id': 'PatientID1',
@@ -85,10 +110,58 @@ def test_temporal_check():
     assert not nv.validate(
         {'patient_id': 'PatientID1', 'visit_num': 4, 'taxes': 8})
     assert nv.errors == {'taxes': [
-        "('taxes', ['unallowed value 8']) in current visit for {'allowed': [0]} in previous visit - temporal rule no: 1"]}
+        "('taxes', ['unallowed value 8']) in current visit for {'taxes': {'allowed': [0]}} in previous visit - temporal rule no: 0"]}
 
-    nv.reset_record_cache()
+def test_temporal_check_no_prev_visit(schema):
+    """ Temporal test check when there are no previous visits (e.g. before visit 0) """
+    nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
+
     assert not nv.validate(
         {'patient_id': 'PatientID1', 'visit_num': 0, 'taxes': 1})
     assert nv.errors == {'taxes': [
         'failed to retrieve the previous visit, cannot proceed with validation']}
+
+def test_compare_with_previous_record():
+    """ Test compare_with previous record """
+    schema = {
+        "patient_id": {"type": "string"},
+        "visit_num": {"type": "integer"},
+        "birthyr": {
+            "type": "integer",
+            "compare_with": {
+                "comparator": "==",
+                "base": "previous_record"
+            }
+        }
+    }
+
+    nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
+    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyr': 1950})
+
+    assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyr': 2000})
+    assert nv.errors == {'birthyr': ["input value doesn't satisfy the condition birthyr == previous_record"]}
+
+    nv.reset_record_cache()
+    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthyr': 1950})
+
+def test_compare_with_previous_nonempty_record():
+    """ Test compare_with previous nonempty record """
+    schema = {
+        "patient_id": {"type": "string"},
+        "visit_num": {"type": "integer"},
+        "birthmo": {
+            "type": "integer",
+            "compare_with": {
+                "comparator": "==",
+                "base": "previous_record",
+                "ignore_empty": True
+            }
+        }
+    }
+
+    nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
+    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthmo': 6})
+
+    nv.reset_record_cache()
+    assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
+    assert nv.errors == {'birthmo': ['failed to retrieve record for previous visit, cannot proceed with validation birthmo == previous_record']}
