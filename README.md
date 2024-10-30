@@ -11,6 +11,7 @@ See the [Cerberus usage examples](https://docs.python-cerberus.org/usage.html) f
   - [Table of Contents](#table-of-contents)
   - [Setup](#setup)
     - [Installing Pants](#installing-pants)
+    - [Formatting and Linting](#formatting-and-linting)
     - [Building a Distribution](#building-a-distribution)
     - [Common Build Issues](#common-build-issues)
       - [Incompatible Python Interpreter](#incompatible-python-interpreter)
@@ -67,6 +68,15 @@ The repo has a VSCode devcontainer configuration that ensures a compatible Pytho
 You need [Docker](https://www.docker.com) installed, and [VSCode](https://code.visualstudio.com) with Dev Containers enabled.
 For this follow the [Dev Containers tutorial](https://code.visualstudio.com/docs/devcontainers/tutorial) to the point of "Check Installation".
 
+### Formatting and Linting 
+
+You can format and lint with pants using the commands:
+
+```bash
+pants fmt nacc_form_validator::   # fixes formatting
+pants lint nacc_form_validator::  # run linter
+```
+
 ### Building a Distribution
 
 Once pants is installed, the command 
@@ -78,15 +88,6 @@ pants package nacc_form_validator:dist
 will then build sdist and wheel distributions in the `dist` directory.
 
 > The version number on the distribution files is set in the `validator/BUILD` file.
-
-### Formatting and Linting a Distribution
-
-You can format and lint with pants as well using the commands:
-
-```bash
-pants fmt nacc_form_validator::   # fixes formatting
-pants lint nacc_form_validator::  # run linter
-```
 
 ### Common Build Issues
 
