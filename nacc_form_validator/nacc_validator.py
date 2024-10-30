@@ -265,7 +265,7 @@ class NACCValidator(Validator):
 
         return prev_ins
 
-    def __get_value_for_key(self, key: str) -> Optional[Any]:
+    def __get_value_for_key(self, key: str, return_self: bool = True) -> Optional[Any]:
         """Find the value for the specified key.
 
         Args:
@@ -289,7 +289,7 @@ class NACCValidator(Validator):
         if self.document and key in self.document:
             return self.document[key]
 
-        return None
+        return key if return_self else None
 
     # pylint: disable=(unused-argument)
     def _validate_formatting(self, formatting: str, field: str, value: object):
@@ -880,8 +880,7 @@ class NACCValidator(Validator):
                                               ignore_empty=ignore_empty)
             base_val = record[field] if record else None
         else:
-            base_val = self.__get_value_for_key(base) if isinstance(
-                base, str) else base
+            base_val = self.__get_value_for_key(base)
 
         if base_val is None:
             error = (ErrorDefs.COMPARE_WITH_PREV if base
@@ -891,8 +890,7 @@ class NACCValidator(Validator):
 
         adjusted_value = base_val
         if adjustment and operator:
-            adjustment = (self.__get_value_for_key(adjustment) if isinstance(
-                adjustment, str) else adjustment)
+            adjustment = self.__get_value_for_key(adjustment)
             if operator == "+":
                 adjusted_value = base_val + adjustment
             elif operator == "-":
@@ -934,8 +932,8 @@ class NACCValidator(Validator):
         if not self.datastore.is_valid_rxcui(value):
             self._error(field, ErrorDefs.RXNORM, value)
 
-    def _validate_compare_date(self, comparison: Dict[str, Any], field: str,
-                               value: object):
+    def _validate_compare_with_date(self, comparison: Dict[str, Any], field: str,
+                                    value: object):
         """Validate a comparison between a field and a date (or age at date). Assumes base_date
         is in the expected MM/DD/YYYY or YYYY/MM/DD format, if not already a date object.
 
@@ -986,27 +984,38 @@ class NACCValidator(Validator):
         """
         comparator = comparison[SchemaDefs.COMPARATOR]
         base_str = comparison[SchemaDefs.BASE_DATE]
-        use_age = comparison.get(SchemaDefs.USE_AGE, False)
+        use_age = comparison.get(SchemaDefs.USE_AGE, None)
 
         base = self.__get_value_for_key(base_str)
-        if not base:
-            try:
-                base = convert_to_date(base_str)
-            except Exception as e:
-                 self._error(field, ErrorDefs.DATE_CONVERSION, base_str)
-                 return
-
-        # if use_age is provided, calculates age at the base_date given birth fields
-        if use_age:
-            birth_date = convert_to_date(f" \
-                                         {use_age.get(SchemaDefs.BIRTH_MONTH, 1):02d} \
-                                         /{use_age.get(SchemaDefs.BIRTH_DAY, 1):02d} \
-                                         /{use_age[SchemaDefs.BIRTH_YEAR]:04d}")
-            # there are more "accurate" ways to calculate age
-            # but basing this off of how RT has defined it in A1
-            base = (base_date - birth_date).days / 365.25
+        try:
+            base = utils.convert_to_date(base)
+        except Exception as e:
+            self._error(field, ErrorDefs.DATE_CONVERSION, base)
+            return
 
         comparison_str = f'{field} {comparator} {base}'
+
+        # if use_age is provided, calculates age at the base date given provided birth fields
+        # and assumes the value is also numerical. otherwise, convert value to a date
+        if use_age:
+            birth_month = self.__get_value_for_key(use_age.get(SchemaDefs.BIRTH_MONTH, 1))
+            birth_day = self.__get_value_for_key(use_age.get(SchemaDefs.BIRTH_DAY, 1))
+            birth_year = self.__get_value_for_key(use_age[SchemaDefs.BIRTH_YEAR])
+
+            birth_date = utils.convert_to_date(f" {birth_month:02d} \
+                                               /{birth_day:02d} \
+                                               /{birth_year:04d}")
+            # there are more "accurate" ways to calculate age
+            # but basing this off of how RT has defined it in A1
+            base = (base - birth_date).days / 365.25
+            comparison_str = f'{field} {comparator} age at {base_str}'
+        else:
+            try:
+                value = utils.convert_to_date(value)
+            except Exception as e:
+                self._error(field, ErrorDefs.DATE_CONVERSION, value)
+                return
+
         try:
             valid = utils.compare_values(comparator, value, base)
             if not valid:

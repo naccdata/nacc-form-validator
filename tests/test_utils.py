@@ -118,3 +118,7 @@ def test_compare_values_type_error():
     with pytest.raises(TypeError) as e:
         compare_values("<", 5, parser.parse("01/01/2000"))
     assert str(e.value) == "'<' not supported between instances of 'int' and 'datetime.datetime'"
+
+    with pytest.raises(TypeError) as e:
+        compare_values("<", "01/01/2000", parser.parse("01/01/2000"))
+    assert str(e.value) == "'<' not supported between instances of 'str' and 'datetime.datetime'"

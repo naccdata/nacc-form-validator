@@ -40,8 +40,8 @@ class ErrorDefs:
     COMPARE_WITH = ErrorDefinition(0x2009, "compare_with")
     COMPARE_WITH_PREV = ErrorDefinition(0x3000, "compare_with")
     RXNORM = ErrorDefinition(0x3001, "check_with")
-    DATE_CONVERSION = ErrorDefinition(0x3002, 'compare_date')
-    COMPARE_WITH_DATE = ErrorDefinition(0x3003, 'compare_date')
+    DATE_CONVERSION = ErrorDefinition(0x3002, 'compare_with_date')
+    COMPARE_WITH_DATE = ErrorDefinition(0x3003, 'compare_with_date')
 
 
 class CustomErrorHandler(BasicErrorHandler):
