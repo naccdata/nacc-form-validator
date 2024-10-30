@@ -1,5 +1,5 @@
 """
-Tests the util methods in `utils.py`, which right now are just date conversion methods.
+Tests the util methods in `utils.py`.
 """
 import pytest
 
@@ -56,3 +56,65 @@ def test_convert_to_datetime_invalid():
     with pytest.raises(parser.ParserError) as e:
         convert_to_datetime(date)
     assert str(e.value) == 'Unknown string format: Hello Sep 12 13:42:47 PDT 2024'
+
+def test_compare_values_numeric():
+    """ Test comparing two numeric values """
+    assert compare_values(">=", 2, 2)
+    assert compare_values(">=", 2.5, 1)
+
+    assert compare_values("<=", 2, 2.0)
+    assert compare_values("<=", 1.5, 2.5)
+
+    assert compare_values(">", 2, 1)
+    assert compare_values("<", 1.99, 2.00)
+
+    assert compare_values("==", 2.0, 2)
+    assert compare_values("!=", 2.00, 1.99)
+
+def test_compare_values_numeric_invalid():
+    """ Test comparing two numeric values fails the condition """
+    assert not compare_values(">=", 1, 3)
+    assert not compare_values("<=", 3.5, 1.5)
+
+    assert not compare_values(">", 1, 3)
+    assert not compare_values("<", 3.5, 1.5)
+
+    assert not compare_values("==", 1, 3)
+    assert not compare_values("!=", 3.0, 3.000)
+
+def test_compare_values_date():
+    """ Test comparing two dates """
+    assert compare_values(">=", parser.parse("01/01/2000"), parser.parse("01/01/1999"))
+    assert compare_values(">=", parser.parse("01/01/2000"), parser.parse("01/01/2000"))
+    assert compare_values(">=", parser.parse("12/01/2000"), parser.parse("01/01/2000"))
+
+    assert compare_values("<=", parser.parse("01/01/2000"), parser.parse("01/01/2001"))
+    assert compare_values("<=", parser.parse("01/01/2000"), parser.parse("01/01/2000"))
+    assert compare_values("<=", parser.parse("01/01/2000"), parser.parse("12/01/2000"))
+
+    assert compare_values(">", parser.parse("01/02/2000"), parser.parse("01/01/2000"))
+    assert compare_values("<", parser.parse("01/01/2000"), parser.parse("01/02/2000"))
+
+    assert compare_values("==", parser.parse("01/01/2000"), parser.parse("01/01/2000"))
+    assert compare_values("!=", parser.parse("01/01/2000"), parser.parse("12/12/2012"))
+
+def test_compare_values_date_invalid():
+    """ Test comparing two dates fails the condition """
+    assert not compare_values(">=", parser.parse("01/01/2000"), parser.parse("01/01/2001"))
+    assert not compare_values("<=", parser.parse("01/02/2000"), parser.parse("01/01/1999"))
+
+    assert not compare_values(">", parser.parse("01/01/2000"), parser.parse("01/01/2001"))
+    assert not compare_values("<", parser.parse("01/02/2000"), parser.parse("01/01/1999"))
+
+    assert not compare_values("==", parser.parse("01/01/2000"), parser.parse("01/01/1999"))
+    assert not compare_values("!=", parser.parse("01/01/2000"), parser.parse("01/01/2000"))
+
+def test_compare_values_type_error():
+    """ Test comparing two values of incompatible types """
+    with pytest.raises(TypeError) as e:
+        compare_values("<", None, "hello")
+    assert str(e.value) == "'<' not supported between instances of 'NoneType' and 'str'"
+
+    with pytest.raises(TypeError) as e:
+        compare_values("<", 5, parser.parse("01/01/2000"))
+    assert str(e.value) == "'<' not supported between instances of 'int' and 'datetime.datetime'"

@@ -906,25 +906,7 @@ class NACCValidator(Validator):
                 adjusted_value = adjustment
 
         try:
-            valid = True
-            if comparator == ">=" and value < adjusted_value:
-                valid = False
-
-            if comparator == ">" and value <= adjusted_value:
-                valid = False
-
-            if comparator == "<=" and value > adjusted_value:
-                valid = False
-
-            if comparator == "<" and value >= adjusted_value:
-                valid = False
-
-            if comparator == "==" and value != adjusted_value:
-                valid = False
-
-            if comparator == "!=" and value == adjusted_value:
-                valid = False
-
+            valid = utils.compare_values(comparator, value, adjusted_value)
             if not valid:
                 self._error(field, ErrorDefs.COMPARE_WITH, comparison_str)
         except TypeError:
@@ -951,3 +933,83 @@ class NACCValidator(Validator):
 
         if not self.datastore.is_valid_rxcui(value):
             self._error(field, ErrorDefs.RXNORM, value)
+
+    def _validate_compare_date(self, comparison: Dict[str, Any], field: str,
+                               value: object):
+        """Validate a comparison between a field and a date (or age at date). Assumes base_date
+        is in the expected MM/DD/YYYY or YYYY/MM/DD format, if not already a date object.
+
+        Args:
+            comparison: Comparison specified in the rule definition
+            field: Variable name
+            value: Variable value
+
+        Note: Don't remove below docstring,
+        Cerberus uses it to validate the schema definition.
+
+        The rule's arguments are validated against this schema:
+            {
+                'type': 'dict',
+                'schema': {
+                    'comparator': {
+                        'type': 'string',
+                        'required': True,
+                        'empty': False,
+                        'allowed': [">", "<", ">=", "<=", "==", "!="]
+                    },
+                    'base_date': {
+                        'type': ['string', 'date', 'datetime'],
+                        'required': True,
+                        'empty': False
+                    },
+                    'use_age': {
+                        'type': 'dict',
+                        'required': False,
+                        'empty': False,
+                        'schema': {
+                            'birth_month': {
+                                'type': ['string', 'integer'],
+                                'required': True
+                            },
+                            'birth_year': {
+                                'type': ['string', 'integer'],
+                                'required': True
+                            },
+                            'birth_day': {
+                                'type': ['string', 'integer'],
+                                'required': False
+                            }
+                        }
+                    }
+                }
+            }
+        """
+        comparator = comparison[SchemaDefs.COMPARATOR]
+        base_str = comparison[SchemaDefs.BASE_DATE]
+        use_age = comparison.get(SchemaDefs.USE_AGE, False)
+
+        base = self.__get_value_for_key(base_str)
+        if not base:
+            try:
+                base = convert_to_date(base_str)
+            except Exception as e:
+                 self._error(field, ErrorDefs.DATE_CONVERSION, base_str)
+                 return
+
+        # if use_age is provided, calculates age at the base_date given birth fields
+        if use_age:
+            birth_date = convert_to_date(f" \
+                                         {use_age[SchemaDefs.BIRTH_MONTH]:02d} \
+                                         /{use_age.get(SchemaDefs.BIRTH_DAY, 1):02d} \
+                                         /{use_age[SchemaDefs.BIRTH_YEAR]:04d}")
+            # there are more "accurate" ways to calculate age
+            # but basing this off of how RT has defined it in A1
+            base = (base_date - birth_date).days / 365.25
+
+        comparison_str = f'{field} {comparator} {base}'
+        try:
+            valid = utils.compare_values(comparator, value, base)
+            if not valid:
+                self._error(field, ErrorDefs.COMPARE_WITH_DATE, comparison_str)
+        except TypeError:
+            self._error(field, ErrorDefs.COMPARE_WITH_DATE, comparison_str)

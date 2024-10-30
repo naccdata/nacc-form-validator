@@ -40,6 +40,8 @@ class ErrorDefs:
     COMPARE_WITH = ErrorDefinition(0x2009, "compare_with")
     COMPARE_WITH_PREV = ErrorDefinition(0x3000, "compare_with")
     RXNORM = ErrorDefinition(0x3001, "check_with")
+    DATE_CONVERSION = ErrorDefinition(0x3002, 'compare_date')
+    COMPARE_WITH_DATE = ErrorDefinition(0x3003, 'compare_date')
 
 
 class CustomErrorHandler(BasicErrorHandler):
@@ -113,6 +115,10 @@ class CustomErrorHandler(BasicErrorHandler):
             + "validation {0}",
             0x3001:
             "Drug ID {0} is not a valid RXCUI",
+            0x3002:
+            "failed to convert input value to a date: {0}",
+            0x3003:
+            "input value doesn't satisfy the date condition {0}",
         }
 
         self.messages.update(custom_errors)
@@ -167,3 +173,9 @@ class SchemaDefs:
     BASE = "base"
     ADJUST = "adjustment"
     IGNORE_EMPTY = "ignore_empty"
+    BASE_DATE = "base_date"
+    USE_AGE = "use_age"
+    AGE_AT_VISIT = "age_at_visit"
+    BIRTH_MONTH = 'birth_month'
+    BIRTH_DAY = 'birth_day'
+    BIRTH_YEAR = 'birth_year'
