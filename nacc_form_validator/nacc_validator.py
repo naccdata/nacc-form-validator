@@ -249,8 +249,7 @@ class NACCValidator(Validator):
         record_id = self.document[self.primary_key]
 
         # If the previous record was already retrieved and not ignore_empty, use it
-        # NOTE: need to be careful to reset cache if have different needs for empty
-        # vs nonempty
+        # Similarly only save into cache if ignore_empty is false
         if not ignore_empty and record_id in self.__prev_records:
             prev_ins = self.__prev_records[record_id]
         else:
