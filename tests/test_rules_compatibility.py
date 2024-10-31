@@ -1,10 +1,7 @@
 """
 Tests the custom compatibility rule (_validate_compatibility).
 """
-from utils import nv, create_nacc_validator
-
-
-def test_compatibility_if_then(nv):
+def test_compatibility_if_then(create_nacc_validator):
     """ Tests if/then compatibility rule, which also tests '_validate_filled' by extension """
     schema = {
         "mode": {
@@ -59,7 +56,7 @@ def test_compatibility_if_then(nv):
     assert not nv.validate({'mode': 1, 'rmreason': 9})
     assert nv.errors == {'rmreason': ['unallowed value 9', "('rmreason', ['must be empty']) for {'mode': {'allowed': [1, 3]}} - compatibility rule no: 1"]}
 
-def test_compatibility_with_nested_logic_or():
+def test_compatibility_with_nested_logic_or(create_nacc_validator):
     """ Test when the rule has a nested compatibility - or logic """
     schema = {
         "raceasian": {
@@ -122,7 +119,7 @@ def test_compatibility_with_nested_logic_or():
     assert not nv.validate({'raceblack': 1, 'raceunkn': 1})
     assert nv.errors == {'raceunkn': ["('raceunkn', ['must be empty']) for {'raceaian': {'logic': {'formula': {'or': [{'==': [1, {'var': 'raceaian'}]}, {'==': [1, {'var': 'raceasian'}]}, {'==': [1, {'var': 'raceblack'}]}]}}}} - compatibility rule no: 0"]}
 
-def test_multiple_compatibility():
+def test_multiple_compatibility(create_nacc_validator):
     """ Test multiple compatibility rules """
     schema = {
         "enrlgenoth": {
@@ -169,7 +166,7 @@ def test_multiple_compatibility():
     assert not nv.validate({'enrlgenoth': None, 'enrlgenothx': 'somevalue'})
     assert nv.errors == {'enrlgenothx': ["('enrlgenothx', ['must be empty']) for {'enrlgenoth': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
 
-def test_compatibility_multiple_variables_and():
+def test_compatibility_multiple_variables_and(create_nacc_validator):
     """ Test when the compatibility relies on two variables on an "and" operator """
     schema = {
         "majordep": {
@@ -210,7 +207,7 @@ def test_compatibility_multiple_variables_and():
     assert not nv.validate({"majordep": 2, "otherdep": 9, "deprtreat": 0})
     assert nv.errors == {'deprtreat': ["('deprtreat', ['must be empty']) for {'majordep': {'allowed': [0, 2, 9]}, 'otherdep': {'allowed': [0, 2, 9]}} - compatibility rule no: 0"]}
 
-def test_compatibility_multiple_variables_or():
+def test_compatibility_multiple_variables_or(create_nacc_validator):
     """ Test when the compatibility relies on two variables on an "or" operator """
     schema = {
         "majordep": {
@@ -255,7 +252,7 @@ def test_compatibility_multiple_variables_or():
     assert not nv.validate({"majordep": 1, "otherdep": 1, "deprtreat": None})
     assert nv.errors == {'deprtreat': ["('deprtreat', ['null value not allowed']) for {'majordep': {'allowed': [1]}, 'otherdep': {'allowed': [1]}} - compatibility rule no: 0"]}
 
-def test_compatibility_then_multiple_blank_and():
+def test_compatibility_then_multiple_blank_and(create_nacc_validator):
     """ Test when the rule results in multiple things needing to be blank """
     schema = {
         "parentvar": {
@@ -302,7 +299,7 @@ def test_compatibility_then_multiple_blank_and():
     assert not nv.validate({"parentvar": None, "var1": None, "var2": None, "var3": 1})
     assert nv.errors == {'var1': ["('var3', ['must be empty']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 0"]}
 
-def test_compatibility_then_multiple_blank_logic_and():
+def test_compatibility_then_multiple_blank_logic_and(create_nacc_validator):
     """ Test when the rule results in multiple things needing to be blank - logic """
     schema = {
         "parentvar": {
@@ -360,7 +357,7 @@ def test_compatibility_then_multiple_blank_logic_and():
     assert not nv.validate({"parentvar": None, "var1": None, "var2": None, "var3": 1})
     assert nv.errors == {'var1': ["('var1', ['error in formula evaluation - value None does not satisfy the specified formula']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 0"]}
 
-def test_compatibility_multiple_resulting_variables_or():
+def test_compatibility_multiple_resulting_variables_or(create_nacc_validator):
     """ Tests a "If X is 1, than Y or Z should be 1", and "If X i 0, then Y and Z should be 0" situation """
     schema = {
         "bevhall": {
@@ -414,7 +411,7 @@ def test_compatibility_multiple_resulting_variables_or():
     assert not nv.validate({"hall": 0, "bevhall": None, "beahall": None})
     assert nv.errors == {'hall': ["('bevhall', ['null value not allowed']) for {'hall': {'allowed': [0]}} - compatibility rule no: 1"]}
 
-def test_compatibility_multiple_resulting_options_or():
+def test_compatibility_multiple_resulting_options_or(create_nacc_validator):
     """ Tests a "If X is 1, than Y and Z should be 0 or 2" situation """
     schema = {
         "majdepdx": {
@@ -467,7 +464,7 @@ def test_compatibility_multiple_resulting_options_or():
     assert not nv.validate({"depd": None, "majdepdx": 0, "othdepdx": 2})
     assert nv.errors == {'depd': ['null value not allowed']}
 
-def test_compatibility_multiple_else():
+def test_compatibility_multiple_else(create_nacc_validator):
     """ Tests the else clause. If VAR1 is 1 then VAR2 is 2, else VAR2 3-5 """
     schema = {
         "var2": {
@@ -504,7 +501,7 @@ def test_compatibility_multiple_else():
     assert not nv.validate({"var1": 1, "var2": 3})
     assert nv.errors == {'var1': ["('var2', ['unallowed value 3']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0"]}
 
-def test_compatibility_multiple_else_and_multiple_conditions():
+def test_compatibility_multiple_else_and_multiple_conditions(create_nacc_validator):
     """ Tests the else clause with multiple conditions. If VAR1 is 1 then VAR2 is 2, else VAR2 3-5 OR VAR3 is 9 """
     schema = {
         "var2": {
@@ -555,7 +552,7 @@ def test_compatibility_multiple_else_and_multiple_conditions():
     assert not nv.validate({"var1": 0, "var2": None, "var3": 16})
     assert nv.errors == {'var1': ["('var3', ['unallowed value 16']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0", "('var2', ['null value not allowed']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0"]}
 
-def test_compatibility_nested_anyof():
+def test_compatibility_nested_anyof(create_nacc_validator):
     """ Tests when anyof is nested inside compatibility. """
     schema = {
         "menarche": {

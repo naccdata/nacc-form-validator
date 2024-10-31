@@ -1,9 +1,9 @@
 """
 Tests general NACCValidator (from nacc_validator.py) methods
 """
+import pytest
 from dateutil import parser
 from nacc_form_validator.nacc_validator import ValidationException
-from utils import *
 
 
 def test_populate_data_types(nv):
@@ -69,7 +69,7 @@ def test_validate_formatting_invalid_field(nv):
         'dummy_int': ['formatting definition not supported for non string types']
     }
 
-def test_lots_of_rules():
+def test_lots_of_rules(create_nacc_validator):
     """ Test when a specific field has a lot of rules associated with it (in this case oldadcid) """
     schema = {
         "adcid": {

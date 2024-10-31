@@ -1,10 +1,7 @@
 """
 Tests rules that are mainly handled by the Cerberus library (e.g. non-custom rules).
 """
-from utils import date_constraint, create_nacc_validator
-
-
-def test_required():
+def test_required(create_nacc_validator):
     """ Test required case """
     schema = {'dummy_var': {'required': True, 'type': 'string'}}
     nv = create_nacc_validator(schema)
@@ -13,7 +10,7 @@ def test_required():
     assert not nv.validate({})
     assert nv.errors == {'dummy_var': ['required field']}
 
-def test_nullable():
+def test_nullable(create_nacc_validator):
     """ Test nullable case """
     schema = {'dummy_var': {'nullable': True, 'type': 'string'}}
     nv = create_nacc_validator(schema)
@@ -22,7 +19,7 @@ def test_nullable():
     assert nv.validate({'dummy_var': ''})
     assert nv.validate({})
 
-def test_minmax():
+def test_minmax(create_nacc_validator):
     """ Test min/max case """
     schema = {
         "dummy_var": {
@@ -44,7 +41,7 @@ def test_minmax():
     assert not nv.validate({'dummy_var': None})
     assert nv.errors == {'dummy_var': ['null value not allowed']}
 
-def test_regex():
+def test_regex(create_nacc_validator):
     """ Test regex """
     schema = {
         "zip": {
@@ -66,7 +63,7 @@ def test_regex():
     assert not nv.validate({'zip': "1000"})
     assert nv.errors == {'zip': ["value does not match regex '^(00[6-9]|0[1-9]\\d|[1-9]\\d{2})$'"]}
 
-def test_anyof():
+def test_anyof(create_nacc_validator):
     """ Test anyof case """
     schema = {
         "dummy_var": {
@@ -93,7 +90,7 @@ def test_anyof():
     assert not nv.validate({'dummy_var': -1})
     assert nv.errors == {'dummy_var': ['no definitions validate', {'anyof definition 0': ['min value is 0'], 'anyof definition 1': ['unallowed value -1']}]}
 
-def test_date_format(date_constraint):
+def test_date_format(date_constraint, create_nacc_validator):
     """ Test dates schema from regex """
     schema = {
         "frmdate": {

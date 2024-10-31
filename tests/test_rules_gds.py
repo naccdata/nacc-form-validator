@@ -2,11 +2,10 @@
 Tests the custom compute_gds rule (_validate_compute_gds).
 """
 import pytest
-from utils import create_nacc_validator
 
 
 @pytest.fixture
-def gds_nv():
+def gds_nv(create_nacc_validator):
     """ Create a validator with GDS fields for testing """
     schema = {
         "satis": {

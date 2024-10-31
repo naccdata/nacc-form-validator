@@ -1,10 +1,7 @@
 """
 Tests the custom logic rule (_validate_logic).
 """
-from utils import create_nacc_validator
-
-
-def test_logic_or():
+def test_logic_or(create_nacc_validator):
     """ Test mathematical logic or case """
     schema = {
         "raceasian": {
@@ -48,7 +45,7 @@ def test_logic_or():
     assert not nv.validate({'raceaian': None})
     assert nv.errors == {'raceaian': ['error in formula evaluation - value None does not satisfy the specified formula']}
 
-def test_logic_and():
+def test_logic_and(create_nacc_validator):
     """ Test mathematical logic and case """
     schema = {
         "raceasian": {

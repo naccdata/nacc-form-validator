@@ -1,9 +1,7 @@
 """
 Tests the custom compare_with_date rule (_validate_compare_with_date).
 """
-from utils import create_nacc_validator, date_constraint
-
-def test_compare_with_date(date_constraint):
+def test_compare_with_date(date_constraint, create_nacc_validator):
     """ Tests compare_with_date, simple case """
     schema = {
         "frmdate": {
@@ -29,7 +27,7 @@ def test_compare_with_date(date_constraint):
     assert not nv.validate({'frmdate': "01/01/2011"})
     assert nv.errors == {'frmdate': ["input value doesn't satisfy the date condition frmdate >= 2012-01-01"]}
 
-def test_compare_with_date_age(date_constraint):
+def test_compare_with_date_age(date_constraint, create_nacc_validator):
     """ Tests compare_with_date, age case """
     schema = {
         "frmdate": {

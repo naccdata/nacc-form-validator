@@ -70,16 +70,25 @@ For this follow the [Dev Containers tutorial](https://code.visualstudio.com/docs
 
 ### Formatting and Linting 
 
-You can format and lint with pants using the commands:
+To format and lint with pants, run:
 
 ```bash
 pants fmt nacc_form_validator::   # fixes formatting
 pants lint nacc_form_validator::  # run linter
 ```
 
+### Testing
+
+To test with pants, run:
+
+```bash
+# use the --test-force flag to ignore the cache and force all tests to run
+pants test ::
+``` 
+
 ### Building a Distribution
 
-Once pants is installed, the command 
+To package the distribution with pants, run: 
 
 ```bash
 pants package nacc_form_validator:dist
