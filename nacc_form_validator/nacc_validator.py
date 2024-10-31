@@ -995,8 +995,8 @@ class NACCValidator(Validator):
         base = self.__get_value_for_key(base_str)
         try:
             base = utils.convert_to_date(base)
-        except TypeError:
-            self._error(field, ErrorDefs.DATE_CONVERSION, base)
+        except Exception as error:
+            self._error(field, ErrorDefs.DATE_CONVERSION, base_str)
             return
 
         comparison_str = \

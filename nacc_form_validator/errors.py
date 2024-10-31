@@ -117,7 +117,7 @@ class CustomErrorHandler(BasicErrorHandler):
             0x3001:
             "Drug ID {0} is not a valid RXCUI",
             0x3002:
-            "failed to convert input value to a date: {0}",
+            "failed to convert value to a date: {0}",
             0x3003:
             "input value {0} doesn't satisfy the condition: {1}",
             0x3004:
