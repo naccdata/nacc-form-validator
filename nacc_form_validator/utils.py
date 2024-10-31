@@ -58,7 +58,7 @@ def convert_to_datetime(value) -> Any:
 
 
 def compare_values(comparator: str, value: object, base_value: object) -> bool:
-    """Compare two values
+    """Compare two values.
 
     Args:
         comparator: str, The comparator
@@ -67,7 +67,6 @@ def compare_values(comparator: str, value: object, base_value: object) -> bool:
 
     Returns:
         bool: True if the formula is satisfied, else False
-
     """
     if comparator == ">=":
         return value >= base_value

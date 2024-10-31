@@ -265,7 +265,9 @@ class NACCValidator(Validator):
 
         return prev_ins
 
-    def __get_value_for_key(self, key: str, return_self: bool = True) -> Optional[Any]:
+    def __get_value_for_key(self,
+                            key: str,
+                            return_self: bool = True) -> Optional[Any]:
         """Find the value for the specified key.
 
         Args:
@@ -932,10 +934,11 @@ class NACCValidator(Validator):
         if not self.datastore.is_valid_rxcui(value):
             self._error(field, ErrorDefs.RXNORM, value)
 
-    def _validate_compare_with_date(self, comparison: Dict[str, Any], field: str,
-                                    value: object):
-        """Validate a comparison between a field and a date (or age at date). Assumes base_date
-        is in the expected MM/DD/YYYY or YYYY/MM/DD format, if not already a date object.
+    def _validate_compare_with_date(self, comparison: Dict[str, Any],
+                                    field: str, value: object):
+        """Validate a comparison between a field and a date (or age at date).
+        Assumes base_date is in the expected MM/DD/YYYY or YYYY/MM/DD format,
+        if not already a date object.
 
         Args:
             comparison: Comparison specified in the rule definition
@@ -989,18 +992,22 @@ class NACCValidator(Validator):
         base = self.__get_value_for_key(base_str)
         try:
             base = utils.convert_to_date(base)
-        except Exception as e:
+        except TypeError:
             self._error(field, ErrorDefs.DATE_CONVERSION, base)
             return
 
         comparison_str = f'{field} {comparator} {base}'
 
-        # if use_age is provided, calculates age at the base date given provided birth fields
-        # and assumes the value is also numerical. otherwise, convert value to a date
+        # if use_age is provided, calculates age at the base date given provided
+        # birth fields and assumes the value is also numerical.
+        # otherwise, convert value to a date
         if use_age:
-            birth_month = self.__get_value_for_key(use_age.get(SchemaDefs.BIRTH_MONTH, 1))
-            birth_day = self.__get_value_for_key(use_age.get(SchemaDefs.BIRTH_DAY, 1))
-            birth_year = self.__get_value_for_key(use_age[SchemaDefs.BIRTH_YEAR])
+            birth_month = self.__get_value_for_key(
+                use_age.get(SchemaDefs.BIRTH_MONTH, 1))
+            birth_day = self.__get_value_for_key(
+                use_age.get(SchemaDefs.BIRTH_DAY, 1))
+            birth_year = self.__get_value_for_key(
+                use_age[SchemaDefs.BIRTH_YEAR])
 
             birth_date = utils.convert_to_date(f" {birth_month:02d} \
                                                /{birth_day:02d} \
@@ -1012,7 +1019,7 @@ class NACCValidator(Validator):
         else:
             try:
                 value = utils.convert_to_date(value)
-            except Exception as e:
+            except TypeError:
                 self._error(field, ErrorDefs.DATE_CONVERSION, value)
                 return
 

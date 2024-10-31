@@ -188,27 +188,3 @@ def test_check_with_rxnorm():
     assert nv.errors == {'drug': ['Drug ID -1 is not a valid RXCUI']}
     assert not nv.validate({"drug": 100})
     assert nv.errors == {'drug': ['Drug ID 100 is not a valid RXCUI']}
-
-def test_check_with_rxnorm():
-    """ Test checking drugID is a valid RXCUI """
-    schema = {
-        "drug": {
-            "nullable": True,
-            "type": "integer",
-            "check_with": "rxnorm"
-        }
-    }
-
-    nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
-
-    # 0 and None are okay
-    assert nv.validate({"drug": 0})
-    assert nv.validate({"drug": None})
-
-    for i in range(50):
-        assert nv.validate({"drug": i})
-
-    assert not nv.validate({"drug": -1})
-    assert nv.errors == {'drug': ['Drug ID -1 is not a valid RXCUI']}
-    assert not nv.validate({"drug": 100})
-    assert nv.errors == {'drug': ['Drug ID 100 is not a valid RXCUI']}

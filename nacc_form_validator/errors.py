@@ -175,7 +175,6 @@ class SchemaDefs:
     IGNORE_EMPTY = "ignore_empty"
     BASE_DATE = "base_date"
     USE_AGE = "use_age"
-    AGE_AT_VISIT = "age_at_visit"
     BIRTH_MONTH = 'birth_month'
     BIRTH_DAY = 'birth_day'
     BIRTH_YEAR = 'birth_year'
