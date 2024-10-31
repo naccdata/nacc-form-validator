@@ -1,5 +1,5 @@
 """
-Tests rules that are mainly handled by the Cerberus class (e.g. non-custom rules).
+Tests rules that are mainly handled by the Cerberus library (e.g. non-custom rules).
 """
 from utils import date_constraint, create_nacc_validator
 
