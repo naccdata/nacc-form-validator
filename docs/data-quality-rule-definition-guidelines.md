@@ -8,7 +8,7 @@
   - [Validation Rules](#validation-rules)
   - [Custom Rules Defined for UDS](#custom-rules-defined-for-uds)
     - [compare\_with](#compare_with)
-    - [compare\_with\_date](#compare_with_date)
+    - [compare\_age](#compare_age)
     - [compatibility](#compatibility)
     - [logic](#logic)
     - [temporalrules](#temporalrules)
@@ -409,82 +409,40 @@ waist2:
 </td>
 </table>
 
-### compare_with_date
+### compare_age
 
-Used to compare two dates or ages. Takes the following parameters:
+Used to compare ages. Takes the following parameters:
 
 * `comparator`: The comparison expression; can be one of `[">", "<", ">=", "<=", "==", "!="]`
-* `base`: The base date to compare to. Expected to be in `MM/DD/YYYY` or `YYYY/MM/DD` format, OR the name of a field that points to a valid date value
-* `use_age`: Optional; specified if you need to compare the _age_ of the date
-    * `birth_year`: The birth year (or year the age should start) - required if using this option
-    * `birth_month`: The birth month (or month the age should start) - optional, defaults to 1 (first month year
-    * `birth_day`: The birth day (or day the age should start) - optional, defaults to 1 (first day of year)
-    * Only `birth_year` is required, but specifying the month and date allows the comparison to be more fine-grained
+* `base_date`: The base date to compare to. Expected to be in `MM/DD/YYYY` or `YYYY/MM/DD` format, OR the name of a field that points to a valid date value
+* `birth_year`: The birth year (or year the age should start)
+* `birth_month`: The birth month (or month the age should start) - optional, defaults to 1 (first month year
+* `birth_day`: The birth day (or day the age should start) - optional, defaults to 1 (first day of year)
+* `ages_to_compare`: List of ages to compare to the `base_date` to; can either be the names of integer fields or explicit ages (integers). If not provided, defaults to `["field_name"]`
+
+Things to note:
+
+* Only `birth_year` is required, but specifying the month and date allows the comparison to be more fine-grained
 * Currently this does NOT support the same special date keywords used in `compare_with` (`current_date`, `current_year`, etc.)
 
-The rule definition for `compare_with_date` should follow the following format:
+The rule definition for `compare_age` should follow the following format:
 
 ```json
 {
     "field_name": {
-        "compare_with_date": {
+        "compare_age": {
             "comparator": "comparator, one of >, <, >=, <=, ==, !=",
             "base_date": "base date to compare to; expected to be in MM/DD/YYYY or YYYY/MM/DD format, OR the name of a field that points to a valid date value",
-            "use_age": {
-                "birth_year": "the birth year (or year the age should start) - required if using this option",
-                "birth_month": "the birth month (or month the age should start) - optional, defaults to 1 (first month year)",
-                "birth_day": "the birth day (or day the age should start) - optional, defaults to 1 (first day of year)"
-            }
+            "birth_year": "the birth year (or year the age should start)",
+            "birth_month": "the birth month (or month the age should start) - optional, defaults to 1 (first month year)",
+            "birth_day": "the birth day (or day the age should start) - optional, defaults to 1 (first day of year)",
+            "ages_to_compare": "(optional) list of ages to compare base_date to; if not provided, defaults to [field_name]"
         }
     }
 }
 ```
 
 **Example:**
-
-`frmdate >= 01/01/2012`, e.g. `formdate` must be after or equal to the start of 2012
-
-<table>
-<tr>
-<th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
-<tr>
-<td valign="top">
-
-```yaml
-frmdate:
-  type: string
-  compare_with_date:
-    comparator: ">="
-    base: "01/01/2012"
-```
-</td>
-<td valign="top">
-
-```json
-{
-    "frmdate": {
-        "type": "string",
-        "formatting": "date",
-        "compare_with_date": {
-            "comparator": ">=",
-            "base_date": "01/01/2012"
-        }
-    }
-}
-```
-</td>
-
-<td valign="top">
-
-```python
-{"frmdate": "01/01/2012"}   # passes
-{"frmdate": "01/01/2024"}   # passes
-{"frmdate": "12/31/2011"}   # fails
-```
-</td>
-</table>
-
-**Example using age:**
 
 `behage < age at frmdate`
 
@@ -509,12 +467,11 @@ birthyr:
 
 behage:
   type: integer
-  compare_with_date:
+  compare_age:
     comparator: "<"
     base: frmdate
-    use_age:
-        birth_year: birthyr
-        birth_month: birthmo
+    birth_year: birthyr
+    birth_month: birthmo
 ```
 </td>
 <td valign="top">
@@ -535,13 +492,11 @@ behage:
     },
     "behage": {
         "type": "integer",
-        "compare_with_date": {
+        "compare_age": {
             "comparator": "<=",
             "base_date": "frmdate",
-            "use_age": {
-                "birth_year": "birthyr",
-                "birth_month": "birthmo"
-            }
+            "birth_year": "birthyr",
+            "birth_month": "birthmo"
         }
     }
 }

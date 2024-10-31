@@ -40,8 +40,9 @@ class ErrorDefs:
     COMPARE_WITH = ErrorDefinition(0x2009, "compare_with")
     COMPARE_WITH_PREV = ErrorDefinition(0x3000, "compare_with")
     RXNORM = ErrorDefinition(0x3001, "check_with")
-    DATE_CONVERSION = ErrorDefinition(0x3002, 'compare_with_date')
-    COMPARE_WITH_DATE = ErrorDefinition(0x3003, 'compare_with_date')
+    DATE_CONVERSION = ErrorDefinition(0x3002, 'compare_age')
+    COMPARE_AGE = ErrorDefinition(0x3003, 'compare_age')
+    COMPARE_AGE_INVALID_COMPARISON = ErrorDefinition(0x3004, 'compare_age')
 
 
 class CustomErrorHandler(BasicErrorHandler):
@@ -118,7 +119,9 @@ class CustomErrorHandler(BasicErrorHandler):
             0x3002:
             "failed to convert input value to a date: {0}",
             0x3003:
-            "input value doesn't satisfy the date condition {0}",
+            "input value {0} doesn't satisfy the condition: {1}",
+            0x3004:
+            "input value {0} is not a valid age to compare to {1}: {2}"
         }
 
         self.messages.update(custom_errors)
@@ -174,7 +177,7 @@ class SchemaDefs:
     ADJUST = "adjustment"
     IGNORE_EMPTY = "ignore_empty"
     BASE_DATE = "base_date"
-    USE_AGE = "use_age"
     BIRTH_MONTH = 'birth_month'
     BIRTH_DAY = 'birth_day'
     BIRTH_YEAR = 'birth_year'
+    AGES_TO_COMPARE = "ages_to_compare"

@@ -41,6 +41,33 @@ def test_minmax(create_nacc_validator):
     assert not nv.validate({'dummy_var': None})
     assert nv.errors == {'dummy_var': ['null value not allowed']}
 
+def test_minmax_date(date_constraint, create_nacc_validator):
+    """ Tests min/max when dates are involved """
+    schema = {
+        "frmdate": {
+            "type": "string",
+            "formatting": "date",
+            "regex": date_constraint,
+            "min": "2012/01/01",
+            "max": "02/02/2024"
+        }
+    }
+
+    nv = create_nacc_validator(schema)
+
+    # valid cases
+    assert nv.validate({'frmdate': "2024/02/02"})
+    assert nv.validate({'frmdate': "01/01/2012"})
+    assert nv.validate({'frmdate': "06/09/2019"})
+
+    # invalid cases
+    assert not nv.validate({'frmdate': "2011/12/31"})
+    assert nv.errors ==  {'frmdate': ['min value is 2012/01/01']}
+    assert not nv.validate({'frmdate': "01/01/2011"})
+    assert nv.errors ==  {'frmdate': ['min value is 2012/01/01']}
+    assert not nv.validate({'frmdate': "2024/03/03"})
+    assert nv.errors ==  {'frmdate': ['max value is 02/02/2024']}
+
 def test_regex(create_nacc_validator):
     """ Test regex """
     schema = {

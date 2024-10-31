@@ -934,11 +934,13 @@ class NACCValidator(Validator):
         if not self.datastore.is_valid_rxcui(value):
             self._error(field, ErrorDefs.RXNORM, value)
 
-    def _validate_compare_with_date(self, comparison: Dict[str, Any],
-                                    field: str, value: object):
-        """Validate a comparison between a field and a date (or age at date).
-        Assumes base_date is in the expected MM/DD/YYYY or YYYY/MM/DD format,
-        if not already a date object.
+    # pylint: disable=(unused-argument)
+    def _validate_compare_age(self, comparison: Dict[str, Any], field: str,
+                              value: object):
+        """Validate a comparison between the field and the age at a base_date
+        itself or fields specified by `ages_to_compare`. Assumes base_date is
+        in the expected MM/DD/YYYY or YYYY/MM/DD format, if not already a date
+        object.
 
         Args:
             comparison: Comparison specified in the rule definition
@@ -963,23 +965,24 @@ class NACCValidator(Validator):
                         'required': True,
                         'empty': False
                     },
-                    'use_age': {
-                        'type': 'dict',
+                    'birth_year': {
+                        'type': ['string', 'integer'],
+                        'required': True,
+                        'empty': False
+                    },
+                    'birth_month': {
+                        'type': ['string', 'integer'],
+                        'required': False
+                    },
+                    'birth_day': {
+                        'type': ['string', 'integer'],
+                        'required': False
+                    },
+                    'ages_to_compare': {
+                        'type': 'list',
                         'required': False,
-                        'empty': False,
                         'schema': {
-                            'birth_year': {
-                                'type': ['string', 'integer'],
-                                'required': True
-                            },
-                            'birth_month': {
-                                'type': ['string', 'integer'],
-                                'required': False
-                            },
-                            'birth_day': {
-                                'type': ['string', 'integer'],
-                                'required': False
-                            }
+                            'type': ['string', 'integer']
                         }
                     }
                 }
@@ -987,7 +990,7 @@ class NACCValidator(Validator):
         """
         comparator = comparison[SchemaDefs.COMPARATOR]
         base_str = comparison[SchemaDefs.BASE_DATE]
-        use_age = comparison.get(SchemaDefs.USE_AGE, None)
+        ages_to_compare = comparison.get(SchemaDefs.AGES_TO_COMPARE, [field])
 
         base = self.__get_value_for_key(base_str)
         try:
@@ -996,35 +999,31 @@ class NACCValidator(Validator):
             self._error(field, ErrorDefs.DATE_CONVERSION, base)
             return
 
-        comparison_str = f'{field} {comparator} {base}'
+        comparison_str = \
+            f'{", ".join(map(str, ages_to_compare))} {comparator} age at {base_str}'
 
-        # if use_age is provided, calculates age at the base date given provided
+        # calculates age at the base date given provided
         # birth fields and assumes the value is also numerical.
-        # otherwise, convert value to a date
-        if use_age:
-            birth_month = self.__get_value_for_key(
-                use_age.get(SchemaDefs.BIRTH_MONTH, 1))
-            birth_day = self.__get_value_for_key(
-                use_age.get(SchemaDefs.BIRTH_DAY, 1))
-            birth_year = self.__get_value_for_key(
-                use_age[SchemaDefs.BIRTH_YEAR])
+        birth_month = self.__get_value_for_key(
+            comparison.get(SchemaDefs.BIRTH_MONTH, 1))
+        birth_day = self.__get_value_for_key(
+            comparison.get(SchemaDefs.BIRTH_DAY, 1))
+        birth_year = self.__get_value_for_key(
+            comparison[SchemaDefs.BIRTH_YEAR])
 
-            birth_date = utils.convert_to_date(f"{birth_month:02d} \
-                                               /{birth_day:02d} \
-                                               /{birth_year:04d}")
-            # age calculation is based off of how RT has defined it in A1
-            base = (base - birth_date).days / 365.25
-            comparison_str = f'{field} {comparator} age at {base_str}'
-        else:
+        birth_date = utils.convert_to_date(f"{birth_month:02d} \
+                                           /{birth_day:02d} \
+                                           /{birth_year:04d}")
+        # age calculation is based off of how RT has defined it in A1
+        base = (base - birth_date).days / 365.25
+
+        for compare_field in ages_to_compare:
+            compare_value = self.__get_value_for_key(compare_field)
             try:
-                value = utils.convert_to_date(value)
-            except TypeError:
-                self._error(field, ErrorDefs.DATE_CONVERSION, value)
-                return
-
-        try:
-            valid = utils.compare_values(comparator, value, base)
-            if not valid:
-                self._error(field, ErrorDefs.COMPARE_WITH_DATE, comparison_str)
-        except TypeError:
-            self._error(field, ErrorDefs.COMPARE_WITH_DATE, comparison_str)
+                valid = utils.compare_values(comparator, compare_value, base)
+                if not valid:
+                    self._error(field, ErrorDefs.COMPARE_AGE, compare_field,
+                                comparison_str)
+            except TypeError as error:
+                self._error(field, ErrorDefs.COMPARE_AGE_INVALID_COMPARISON,
+                            compare_field, base_str, str(error))
