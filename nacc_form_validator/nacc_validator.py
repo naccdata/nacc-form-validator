@@ -1009,11 +1009,10 @@ class NACCValidator(Validator):
             birth_year = self.__get_value_for_key(
                 use_age[SchemaDefs.BIRTH_YEAR])
 
-            birth_date = utils.convert_to_date(f" {birth_month:02d} \
+            birth_date = utils.convert_to_date(f"{birth_month:02d} \
                                                /{birth_day:02d} \
                                                /{birth_year:04d}")
-            # there are more "accurate" ways to calculate age
-            # but basing this off of how RT has defined it in A1
+            # age calculation is based off of how RT has defined it in A1
             base = (base - birth_date).days / 365.25
             comparison_str = f'{field} {comparator} age at {base_str}'
         else:
