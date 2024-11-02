@@ -36,10 +36,9 @@ class ErrorDefs:
     CHECK_GDS_2 = ErrorDefinition(0x2005, "compute_gds")
     CHECK_GDS_3 = ErrorDefinition(0x2006, "compute_gds")
     CHECK_GDS_4 = ErrorDefinition(0x2007, "compute_gds")
-    CHECK_GDS_5 = ErrorDefinition(0x2008, "compute_gds")
-    COMPARE_WITH = ErrorDefinition(0x2009, "compare_with")
-    COMPARE_WITH_PREV = ErrorDefinition(0x3000, "compare_with")
-    RXNORM = ErrorDefinition(0x3001, "check_with")
+    COMPARE_WITH = ErrorDefinition(0x2008, "compare_with")
+    COMPARE_WITH_PREV = ErrorDefinition(0x2009, "compare_with")
+    RXNORM = ErrorDefinition(0x3000, "check_with")
 
 
 class CustomErrorHandler(BasicErrorHandler):
@@ -100,18 +99,16 @@ class CustomErrorHandler(BasicErrorHandler):
             "If GDS not attempted (nogds=1), there cannot be >=12 questions with "
             + "valid scores - GDS rule no: {0}",
             0x2006:
-            "incorrect total GDS score {1}, expected value {2} - GDS rule no: {0}",
+            "incorrect GDS score {1}, expected value {2} - GDS rule no: {0}",
             0x2007:
-            "incorrect partial GDS score {1}, expected value {2} - GDS rule no: {0}",
-            0x2008:
             "If GDS attempted (nogds=blank), at least 12 questions need to have "
             + "valid scores - GDS rule no: {0}",
-            0x2009:
+            0x2008:
             "input value doesn't satisfy the condition {0}",
-            0x3000:
+            0x3009:
             "failed to retrieve record for previous visit, cannot proceed with "
             + "validation {0}",
-            0x3001:
+            0x3000:
             "Drug ID {0} is not a valid RXCUI",
         }
 
