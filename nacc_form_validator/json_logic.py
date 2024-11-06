@@ -165,6 +165,14 @@ def missing_some(data, args, min_required=1):
     return ret
 
 
+def count_exact(args):
+    if len(args) < 2:
+        raise ValueError("count_exact needs a base and at least 1 value to compare to")
+
+    base = args[0]
+    return sum([1 for x in args[1:] if x == base])
+
+
 operations = {
     "==": soft_equals,
     "===": hard_equals,
@@ -192,6 +200,7 @@ operations = {
     "max": lambda *args: max(args),
     "merge": merge,
     "count": lambda *args: sum(1 if a else 0 for a in args),
+    "count_exact": lambda *args: count_exact(args)
 }
 
 

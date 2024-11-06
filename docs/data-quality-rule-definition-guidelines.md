@@ -758,6 +758,12 @@ The rule definition for `logic` should follow the following format:
 }
 ```
 
+The validator also has a custom operator in addition to the ones provided by json-logic-py:
+
+| Operator | Arguments | Description |
+| -------- | --------- | ----------- |
+| `count_exact` | `[base, var1, var2, var3, ...]` | Counts how many values in the list equal the base. The first value is alwyas considered the base, and the rest of the list is compared to it, so this operator requires at least 2 items. |
+
 **Example:**
 
 One of `var1`, `var2`, or `var3` must be `1`.
