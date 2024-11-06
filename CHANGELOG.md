@@ -4,6 +4,7 @@ Documentation of release versions of `nacc-form-validator`
 
 ## 0.4.0
 
+* Updates `_validate_compute_gds` to remove partial GDS score calculation
 * Updates `_check_subschema_valid` to accept an optional record parameter, defaults to the document - used for rules that require the previous record
 * Updates `compare_with` to support the `abs` operator
 * Refactors the tests to be more modularized so that they're more manageable
