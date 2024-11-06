@@ -160,7 +160,7 @@ def test_compute_gds_all_answered(gds_nv, gds_record):
     # invalid, test wrong gds value
     gds_record.update({'gds': 5})
     assert not gds_nv.validate(gds_record)
-    assert gds_nv.errors == {'gds': ['incorrect total GDS score 5, expected value 0 - GDS rule no: 2']}
+    assert gds_nv.errors == {'gds': ['incorrect GDS score 5, expected value 0 - GDS rule no: 2']}
 
 def test_compute_gds_nogds_is_1(gds_nv, gds_record):
     """ Test compute_gds when `nogds` is 1 """
@@ -195,11 +195,12 @@ def test_compute_gds_nogds_is_blank(gds_nv, gds_record):
         if k not in ['nogds', 'gds']:
             gds_record[k] = 9
             count += 1
+            gds_record['gds'] -= 1
             if count <= 3:
-                assert gds_nv.validate(gds_record)  # when all are 1, scoring algorithm will compute all to be 15
+                assert gds_nv.validate(gds_record)
             else:
                 assert not gds_nv.validate(gds_record)
-                assert gds_nv.errors == {'gds': ['If GDS attempted (nogds=blank), at least 12 questions need to have valid scores - GDS rule no: 4']}
+                assert gds_nv.errors == {'gds': ['If GDS attempted (nogds=blank), at least 12 questions need to have valid scores - GDS rule no: 3']}
 
 def test_compute_gds_scoring_algorithm(gds_nv):
     """ Test the GDS scoring algorithm specifically """
@@ -220,7 +221,7 @@ def test_compute_gds_scoring_algorithm(gds_nv):
         "energy": 0,
         "hopeless": 0,
         "better": 0,
-        "gds": 6,
+        "gds": 5,
         "nogds": None
     }
 
@@ -228,4 +229,4 @@ def test_compute_gds_scoring_algorithm(gds_nv):
 
     record['gds'] = 13
     assert not gds_nv.validate(record)
-    assert gds_nv.errors ==  {'gds': ['incorrect partial GDS score 13, expected value 6 - GDS rule no: 3']}
+    assert gds_nv.errors ==  {'gds': ['incorrect GDS score 13, expected value 5 - GDS rule no: 2']}
