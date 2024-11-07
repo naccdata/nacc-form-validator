@@ -12,7 +12,7 @@ Documentation of release versions of `nacc-form-validator`
 * Adds `previous_record` as a special keyword for `compare_with`
 * Adds `get_previous_record` method to grab previous record from Datastore, which can grab the previous record or the previous record where a specific field is non-empty
 * Adds new rule `compare_age` to handle rules that need to compare ages relative to a date
-* Adds custum operator `count_exact` to `json_logic.py`
+* Adds custom operator `count_exact` to `json_logic.py`
 
 ## 0.3.0
 

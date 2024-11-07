@@ -355,7 +355,7 @@ birthyr:
 
 **Absolute Value Example**
 
-`abs(waist1 - waist2) <= 0.5`, e.g. the difference between `waist2` and `waist2` cannot be more than 0.5
+`abs(waist1 - waist2) <= 0.5`, e.g. the difference between `waist1` and `waist2` cannot be more than 0.5
 
 <table>
 <tr>
@@ -419,8 +419,11 @@ Used to compare ages. Takes the following parameters:
 * `birth_day`: The birth day (or day the age should start) - optional, defaults to 1 (first day of year)
 * `compare_to`: Variable name, integer, or list of variable names/integers to compare the field's age to
 
-Things to note:
+Age is calculated by combining and converting the `birth_*` fields into a date, and then calculating the age at the field (assuming the field's value is also a valid date). The exact calculation is `age = (field_value - birth_date).days / 365.25`. This result must then satisfy the comparison formula against the `compare_to` field, e.g. `age <= compare_to`. 
 
+Additional things to note:
+
+* This rule only supports being defined under `date` fields or `string` fields with `formatting: date`
 * Only `birth_year` is required, but specifying the month and date allows the comparison to be more fine-grained
 * Currently this does NOT support the same special date keywords used in `compare_with` (`current_date`, `current_year`, etc.)
 
@@ -452,24 +455,24 @@ The rule definition for `compare_age` should follow the following format:
 
 ```yaml
 frmdate:
-    type: string
-    formatting: date
-  compare_age:
-    comparator: "<"
-    birth_year: birthyr
-    birth_month: birthmo
-    compare_to: behage
+  type: string
+  formatting: date
+    compare_age:
+      comparator: "<"
+      birth_year: birthyr
+      birth_month: birthmo
+      compare_to: behage
 
 birthmo:
-    type: integer
-    min: 1
-    max: 12
+  type: integer
+  min: 1
+  max: 12
 
 birthyr:
-    type: integer
+  type: integer
 
 behage:
-    type: integer
+  type: integer
 ```
 </td>
 <td valign="top">

@@ -143,4 +143,4 @@ def test_compare_age_invalid_base(create_nacc_validator):
 
     nv = create_nacc_validator(schema)
     assert not nv.validate({'frmdate': 'hello world', 'birthyr': 2024, 'behage': 50})
-    assert nv.errors == {'frmdate': ["failed to convert value to a date: hello world"]}
+    assert nv.errors == {'frmdate': ['failed to convert value hello world to a date: Unknown string format: hello world']}

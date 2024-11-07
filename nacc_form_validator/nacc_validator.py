@@ -271,7 +271,10 @@ class NACCValidator(Validator):
         """Find the value for the specified key.
 
         Args:
-            key: key (field name or special key such as current_year)
+            key: Field name or special key such as current_year
+            return_self: Whether or not to return the key itself as the value
+                         if none of the conditions are satisifed. If False, just
+                         returns None
 
         Returns:
             Any: Value of the specified key or None
@@ -895,26 +898,26 @@ class NACCValidator(Validator):
             self._error(field, error, comparison_str)
             return
 
-        adjusted_value = base_val
-        if adjustment and operator:
-            adjustment = self.__get_value_for_key(adjustment)
-            if operator == "+":
-                adjusted_value = base_val + adjustment
-            elif operator == "-":
-                adjusted_value = base_val - adjustment
-            elif operator == "*":
-                adjusted_value = base_val * adjustment
-            elif operator == "/":
-                adjusted_value = base_val / adjustment
-            elif operator == "abs":
-                value = abs(value - base_val)
-                adjusted_value = adjustment
-
         try:
+            adjusted_value = base_val
+            if adjustment and operator:
+                adjustment = self.__get_value_for_key(adjustment)
+                if operator == "+":
+                    adjusted_value = base_val + adjustment
+                elif operator == "-":
+                    adjusted_value = base_val - adjustment
+                elif operator == "*":
+                    adjusted_value = base_val * adjustment
+                elif operator == "/":
+                    adjusted_value = base_val / adjustment
+                elif operator == "abs":
+                    value = abs(value - base_val)
+                    adjusted_value = adjustment
+
             valid = utils.compare_values(comparator, value, adjusted_value)
             if not valid:
                 self._error(field, ErrorDefs.COMPARE_WITH, comparison_str)
-        except TypeError:
+        except (TypeError, ValueError):
             self._error(field, ErrorDefs.COMPARE_WITH, comparison_str)
 
     def _check_with_rxnorm(self, field: str, value: Optional[int]):
@@ -941,7 +944,8 @@ class NACCValidator(Validator):
 
     def _validate_compare_age(self, comparison: Dict[str, Any], field: str,
                               value: object):
-        """Validate a comparison between the field and a list of compare_to values.
+        """Validate a comparison between the field and a list of compare_to
+        values.
 
         Args:
             comparison: Comparison specified in the rule definition
@@ -984,7 +988,7 @@ class NACCValidator(Validator):
                                     'type': 'list',
                                     'minlength': 1,
                                     'schema': {
-                                        'type': 'string'
+                                        'type': ['string', 'integer']
                                     }
                                 }
                             ]
@@ -1001,8 +1005,8 @@ class NACCValidator(Validator):
 
         try:
             value = utils.convert_to_date(value)
-        except Exception as error:
-            self._error(field, ErrorDefs.DATE_CONVERSION, value)
+        except parser.ParserError as error:
+            self._error(field, ErrorDefs.DATE_CONVERSION, value, error)
             return
 
         comparison_str = \
@@ -1021,12 +1025,12 @@ class NACCValidator(Validator):
                                            /{birth_day:02d} \
                                            /{birth_year:04d}")
         # age calculation is based off of how RT has defined it in A1
-        value = (value - birth_date).days / 365.25
+        age = (value - birth_date).days / 365.25
 
         for compare_field in ages_to_compare:
             compare_value = self.__get_value_for_key(compare_field)
             try:
-                valid = utils.compare_values(comparator, compare_value, value)
+                valid = utils.compare_values(comparator, compare_value, age)
                 if not valid:
                     self._error(field, ErrorDefs.COMPARE_AGE, compare_field,
                                 comparison_str)
