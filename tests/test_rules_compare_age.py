@@ -119,7 +119,7 @@ def test_compare_age_invalid_field(date_constraint, create_nacc_validator):
 
     nv = create_nacc_validator(schema)
     assert not nv.validate({'frmdate': '2024/02/02', 'birthyr': 2024, 'behage': "dummy_str"})
-    assert nv.errors == {'frmdate': ["Error in comparing behage to age frmdate: '<=' not supported between instances of 'float' and 'str'"]}
+    assert nv.errors == {'frmdate': ["Error in comparing behage to age at frmdate (0.08761122518822724): '<=' not supported between instances of 'float' and 'str'"]}
 
 def test_compare_age_invalid_base(create_nacc_validator):
     """ Test case where base_date is invalid """

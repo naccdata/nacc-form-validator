@@ -118,7 +118,7 @@ class CustomErrorHandler(BasicErrorHandler):
             0x3002:
             "input value {0} doesn't satisfy the condition: {1}",
             0x3003:
-            "Error in comparing {0} to age {1}: {2}"
+            "Error in comparing {0} to age at {1} ({2}): {3}"
         }
 
         self.messages.update(custom_errors)

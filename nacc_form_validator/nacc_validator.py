@@ -1036,4 +1036,4 @@ class NACCValidator(Validator):
                                 comparison_str)
             except TypeError as error:
                 self._error(field, ErrorDefs.COMPARE_AGE_INVALID_COMPARISON,
-                            compare_field, field, str(error))
+                            compare_field, field, age, str(error))
