@@ -1010,7 +1010,7 @@ class NACCValidator(Validator):
             return
 
         comparison_str = \
-            f'{", ".join(map(str, ages_to_compare))} {comparator} age at {field}'
+            f'age at {field} {comparator} {", ".join(map(str, ages_to_compare))}'
 
         # calculates age at the value of this field given the
         # birth fields and assumes the ages_to_compare values to are also numerical
