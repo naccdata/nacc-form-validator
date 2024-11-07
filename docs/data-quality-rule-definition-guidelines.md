@@ -457,11 +457,11 @@ The rule definition for `compare_age` should follow the following format:
 frmdate:
   type: string
   formatting: date
-    compare_age:
-      comparator: "<"
-      birth_year: birthyr
-      birth_month: birthmo
-      compare_to: behage
+  compare_age:
+    comparator: "<"
+    birth_year: birthyr
+    birth_month: birthmo
+    compare_to: behage
 
 birthmo:
   type: integer
