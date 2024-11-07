@@ -846,7 +846,7 @@ The validator also has custom operators in addition to the ones provided by json
 | Operator | Arguments | Description |
 | -------- | --------- | ----------- |
 | `count` | `[var1, var2, var3...]` | Counts how many valid variables are in the list, ignoring null and 0 values |
-| `count_exact` | `[base, var1, var2, var3, ...]` | Counts how many values in the list equal the base. The first value is alwyas considered the base, and the rest of the list is compared to it, so this operator requires at least 2 items. |
+| `count_exact` | `[base, var1, var2, var3, ...]` | Counts how many values in the list equal the base. The first value is always considered the base, and the rest of the list is compared to it, so this operator requires at least 2 items. |
 
 
 ### temporalrules
