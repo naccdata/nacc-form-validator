@@ -1030,7 +1030,7 @@ class NACCValidator(Validator):
         for compare_field in ages_to_compare:
             compare_value = self.__get_value_for_key(compare_field)
             try:
-                valid = utils.compare_values(comparator, compare_value, age)
+                valid = utils.compare_values(comparator, age, compare_value)
                 if not valid:
                     self._error(field, ErrorDefs.COMPARE_AGE, compare_field,
                                 comparison_str)
