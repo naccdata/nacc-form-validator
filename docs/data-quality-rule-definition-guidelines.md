@@ -445,7 +445,7 @@ The rule definition for `compare_age` should follow the following format:
 
 **Example:**
 
-`behage < age at frmdate`
+`age at frmdate >= behage`
 
 <table>
 <tr>
@@ -458,7 +458,7 @@ frmdate:
   type: string
   formatting: date
   compare_age:
-    comparator: "<"
+    comparator: ">="
     birth_year: birthyr
     birth_month: birthmo
     compare_to: behage
@@ -483,7 +483,7 @@ behage:
         "type": "string",
         "formatting": "date",
         "compare_age": {
-            "comparator": "<=",
+            "comparator": ">=",
             "birth_year": "birthyr",
             "birth_month": "birthmo",
             "compare_to": "behage"

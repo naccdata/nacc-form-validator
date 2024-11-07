@@ -1010,7 +1010,7 @@ class NACCValidator(Validator):
             return
 
         comparison_str = \
-            f'{", ".join(map(str, ages_to_compare))} {comparator} age at {field}'
+            f'age at {field} {comparator} {", ".join(map(str, ages_to_compare))}'
 
         # calculates age at the value of this field given the
         # birth fields and assumes the ages_to_compare values to are also numerical
@@ -1030,10 +1030,10 @@ class NACCValidator(Validator):
         for compare_field in ages_to_compare:
             compare_value = self.__get_value_for_key(compare_field)
             try:
-                valid = utils.compare_values(comparator, compare_value, age)
+                valid = utils.compare_values(comparator, age, compare_value)
                 if not valid:
                     self._error(field, ErrorDefs.COMPARE_AGE, compare_field,
                                 comparison_str)
             except TypeError as error:
                 self._error(field, ErrorDefs.COMPARE_AGE_INVALID_COMPARISON,
-                            compare_field, field, str(error))
+                            compare_field, field, age, str(error))

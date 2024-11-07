@@ -9,7 +9,7 @@ def test_compare_age(date_constraint, create_nacc_validator):
             "formatting": "date",
             "regex": date_constraint,
             "compare_age": {
-                "comparator": "<=",
+                "comparator": ">=",
                 "birth_year": "birthyr",
                 "birth_month": "birthmo",
                 "compare_to": "behage"
@@ -38,7 +38,7 @@ def test_compare_age(date_constraint, create_nacc_validator):
     # invalid cases
     assert not nv.validate({'frmdate': '2024/02/02', 'birthmo': 1, 'birthyr': 2024, 'behage': 50})
     assert nv.errors == {'frmdate': [
-                            "input value behage doesn't satisfy the condition: behage <= age at frmdate"
+                            "input value behage doesn't satisfy the condition: age at frmdate >= behage"
                         ]}
 
 def test_compare_age_list(date_constraint, create_nacc_validator):
@@ -49,7 +49,7 @@ def test_compare_age_list(date_constraint, create_nacc_validator):
             "formatting": "date",
             "regex": date_constraint,
             "compare_age": {
-                "comparator": "<=",
+                "comparator": ">=",
                 "birth_year": "birthyr",
                 "birth_month": "birthmo",
                 "compare_to": [
@@ -91,8 +91,8 @@ def test_compare_age_list(date_constraint, create_nacc_validator):
     # invalid cases
     assert not nv.validate({'frmdate': '2024/02/02', 'birthmo': 1, 'birthyr': 2024, 'behage': 50, 'cogage': 0, 'perchage': 60})
     assert nv.errors == {'frmdate': [
-                            "input value perchage doesn't satisfy the condition: behage, cogage, perchage, 0 <= age at frmdate",
-                            "input value behage doesn't satisfy the condition: behage, cogage, perchage, 0 <= age at frmdate"
+                            "input value perchage doesn't satisfy the condition: age at frmdate >= behage, cogage, perchage, 0",
+                            "input value behage doesn't satisfy the condition: age at frmdate >= behage, cogage, perchage, 0"
                         ]}
 
 def test_compare_age_invalid_field(date_constraint, create_nacc_validator):
@@ -119,7 +119,7 @@ def test_compare_age_invalid_field(date_constraint, create_nacc_validator):
 
     nv = create_nacc_validator(schema)
     assert not nv.validate({'frmdate': '2024/02/02', 'birthyr': 2024, 'behage': "dummy_str"})
-    assert nv.errors == {'frmdate': ["input value behage is not a valid age to compare to frmdate: '<=' not supported between instances of 'str' and 'float'"]}
+    assert nv.errors == {'frmdate': ["Error in comparing behage to age at frmdate (0.08761122518822724): '<=' not supported between instances of 'float' and 'str'"]}
 
 def test_compare_age_invalid_base(create_nacc_validator):
     """ Test case where base_date is invalid """
