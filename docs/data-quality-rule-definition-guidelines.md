@@ -8,6 +8,7 @@
   - [Validation Rules](#validation-rules)
   - [Custom Rules Defined for UDS](#custom-rules-defined-for-uds)
     - [compare\_with](#compare_with)
+    - [compare\_age](#compare_age)
     - [compatibility](#compatibility)
     - [logic](#logic)
     - [temporalrules](#temporalrules)
@@ -354,7 +355,7 @@ birthyr:
 
 **Absolute Value Example**
 
-`abs(waist1 - waist2) <= 0.5`, e.g. the difference between `waist2` and `waist2` cannot be more than 0.5
+`abs(waist1 - waist2) <= 0.5`, e.g. the difference between `waist1` and `waist2` cannot be more than 0.5
 
 <table>
 <tr>
@@ -404,6 +405,110 @@ waist2:
 ```python
 {'waist1': 5, 'waist2': 5.25}   # passes
 {'waist1': 5, 'waist2': 4.4}    # fails
+```
+</td>
+</table>
+
+### compare_age
+
+Used to compare ages. Takes the following parameters:
+
+* `comparator`: The comparison expression; can be one of `[">", "<", ">=", "<=", "==", "!="]`
+* `birth_year`: The birth year (or year the age should start)
+* `birth_month`: The birth month (or month the age should start) - optional, defaults to 1 (first month year
+* `birth_day`: The birth day (or day the age should start) - optional, defaults to 1 (first day of year)
+* `compare_to`: Variable name, integer, or list of variable names/integers to compare the field's age to
+
+Age is calculated by combining and converting the `birth_*` fields into a date, and then calculating the age at the field (assuming the field's value is also a valid date). The exact calculation is `age = (field_value - birth_date).days / 365.25`. This result must then satisfy the comparison formula against the `compare_to` field, e.g. `age <= compare_to`. 
+
+Additional things to note:
+
+* This rule only supports being defined under `date` fields or `string` fields with `formatting: date`
+* Only `birth_year` is required, but specifying the month and date allows the comparison to be more fine-grained
+* Currently this does NOT support the same special date keywords used in `compare_with` (`current_date`, `current_year`, etc.)
+
+The rule definition for `compare_age` should follow the following format:
+
+```json
+{
+    "field_name": {
+        "compare_age": {
+            "comparator": "comparator, one of >, <, >=, <=, ==, !=",
+            "birth_year": "the birth year (or year the age should start)",
+            "birth_month": "the birth month (or month the age should start) - optional, defaults to 1 (first month year)",
+            "birth_day": "the birth day (or day the age should start) - optional, defaults to 1 (first day of year)",
+            "compare_to": "variable name, integer, or list of variable names/integers to compare to"
+        }
+    }
+}
+```
+
+**Example:**
+
+`behage < age at frmdate`
+
+<table>
+<tr>
+<th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
+<tr>
+<td valign="top">
+
+```yaml
+frmdate:
+  type: string
+  formatting: date
+  compare_age:
+    comparator: "<"
+    birth_year: birthyr
+    birth_month: birthmo
+    compare_to: behage
+
+birthmo:
+  type: integer
+  min: 1
+  max: 12
+
+birthyr:
+  type: integer
+
+behage:
+  type: integer
+```
+</td>
+<td valign="top">
+
+```json
+{
+    "frmdate": {
+        "type": "string",
+        "formatting": "date",
+        "compare_age": {
+            "comparator": "<=",
+            "birth_year": "birthyr",
+            "birth_month": "birthmo",
+            "compare_to": "behage"
+        }
+    },
+    "birthmo": {
+        "type": "integer",
+        "min": 1,
+        "max": 12
+    },
+    "birthyr": {
+        "type": "integer"
+    },
+    "behage": {
+        "type": "integer"
+    }
+}
+```
+</td>
+
+<td valign="top">
+
+```python
+{'frmdate': '2024/02/02', 'birthmo': 6, 'birthyr': 1950, 'behage': 50}  # passes
+{'frmdate': '2024/02/02', 'birthmo': 1, 'birthyr': 2024, 'behage': 50}  # fails
 ```
 </td>
 </table>
@@ -733,6 +838,16 @@ var3:
 ```
 </td>
 </table>
+
+#### Custom Operations
+
+The validator also has custom operators in addition to the ones provided by json-logic-py:
+
+| Operator | Arguments | Description |
+| -------- | --------- | ----------- |
+| `count` | `[var1, var2, var3...]` | Counts how many valid variables are in the list, ignoring null and 0 values |
+| `count_exact` | `[base, var1, var2, var3, ...]` | Counts how many values in the list equal the base. The first value is always considered the base, and the rest of the list is compared to it, so this operator requires at least 2 items. |
+
 
 ### temporalrules
 

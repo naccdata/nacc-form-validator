@@ -2,13 +2,17 @@
 
 Documentation of release versions of `nacc-form-validator`
 
-## 0.3.1
+## 0.4.0
 
 * Updates `_validate_compute_gds` to remove partial GDS score calculation
 * Updates `_check_subschema_valid` to accept an optional record parameter, defaults to the document - used for rules that require the previous record
 * Updates `compare_with` to support the `abs` operator
+* Refactors the tests to be more modularized so that they're more manageable
+* Refactors logic for `compare_values` by moving it to its own utility method
 * Adds `previous_record` as a special keyword for `compare_with`
 * Adds `get_previous_record` method to grab previous record from Datastore, which can grab the previous record or the previous record where a specific field is non-empty
+* Adds new rule `compare_age` to handle rules that need to compare ages relative to a date
+* Adds custom operator `count_exact` to `json_logic.py`
 
 ## 0.3.0
 

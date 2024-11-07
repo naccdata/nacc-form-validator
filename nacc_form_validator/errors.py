@@ -39,6 +39,9 @@ class ErrorDefs:
     COMPARE_WITH = ErrorDefinition(0x2008, "compare_with")
     COMPARE_WITH_PREV = ErrorDefinition(0x2009, "compare_with")
     RXNORM = ErrorDefinition(0x3000, "check_with")
+    DATE_CONVERSION = ErrorDefinition(0x3001, 'compare_age')
+    COMPARE_AGE = ErrorDefinition(0x3002, 'compare_age')
+    COMPARE_AGE_INVALID_COMPARISON = ErrorDefinition(0x3003, 'compare_age')
 
 
 class CustomErrorHandler(BasicErrorHandler):
@@ -105,11 +108,17 @@ class CustomErrorHandler(BasicErrorHandler):
             + "valid scores - GDS rule no: {0}",
             0x2008:
             "input value doesn't satisfy the condition {0}",
-            0x3009:
+            0x2009:
             "failed to retrieve record for previous visit, cannot proceed with "
             + "validation {0}",
             0x3000:
             "Drug ID {0} is not a valid RXCUI",
+            0x3001:
+            "failed to convert value {0} to a date: {1}",
+            0x3002:
+            "input value {0} doesn't satisfy the condition: {1}",
+            0x3003:
+            "input value {0} is not a valid age to compare to {1}: {2}"
         }
 
         self.messages.update(custom_errors)
@@ -164,3 +173,7 @@ class SchemaDefs:
     BASE = "base"
     ADJUST = "adjustment"
     IGNORE_EMPTY = "ignore_empty"
+    BIRTH_MONTH = 'birth_month'
+    BIRTH_DAY = 'birth_day'
+    BIRTH_YEAR = 'birth_year'
+    COMPARE_TO = "compare_to"

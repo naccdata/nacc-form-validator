@@ -32,3 +32,6 @@ use_rust_parser = true
 
 [update-build-files]
 formatter="yapf"
+
+[pytest]
+args=["-vv"]

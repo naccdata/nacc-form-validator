@@ -265,11 +265,16 @@ class NACCValidator(Validator):
 
         return prev_ins
 
-    def __get_value_for_key(self, key: str) -> Optional[Any]:
+    def __get_value_for_key(self,
+                            key: str,
+                            return_self: bool = True) -> Optional[Any]:
         """Find the value for the specified key.
 
         Args:
-            key: key (field name or special key such as current_year)
+            key: Field name or special key such as current_year
+            return_self: Whether or not to return the key itself as the value
+                         if none of the conditions are satisifed. If False, just
+                         returns None
 
         Returns:
             Any: Value of the specified key or None
@@ -289,7 +294,7 @@ class NACCValidator(Validator):
         if self.document and key in self.document:
             return self.document[key]
 
-        return None
+        return key if return_self else None
 
     # pylint: disable=(unused-argument)
     def _validate_formatting(self, formatting: str, field: str, value: object):
@@ -885,8 +890,7 @@ class NACCValidator(Validator):
                                               ignore_empty=ignore_empty)
             base_val = record[field] if record else None
         else:
-            base_val = self.__get_value_for_key(base) if isinstance(
-                base, str) else base
+            base_val = self.__get_value_for_key(base)
 
         if base_val is None:
             error = (ErrorDefs.COMPARE_WITH_PREV if base
@@ -894,45 +898,26 @@ class NACCValidator(Validator):
             self._error(field, error, comparison_str)
             return
 
-        adjusted_value = base_val
-        if adjustment and operator:
-            adjustment = (self.__get_value_for_key(adjustment) if isinstance(
-                adjustment, str) else adjustment)
-            if operator == "+":
-                adjusted_value = base_val + adjustment
-            elif operator == "-":
-                adjusted_value = base_val - adjustment
-            elif operator == "*":
-                adjusted_value = base_val * adjustment
-            elif operator == "/":
-                adjusted_value = base_val / adjustment
-            elif operator == "abs":
-                value = abs(value - base_val)
-                adjusted_value = adjustment
-
         try:
-            valid = True
-            if comparator == ">=" and value < adjusted_value:
-                valid = False
+            adjusted_value = base_val
+            if adjustment and operator:
+                adjustment = self.__get_value_for_key(adjustment)
+                if operator == "+":
+                    adjusted_value = base_val + adjustment
+                elif operator == "-":
+                    adjusted_value = base_val - adjustment
+                elif operator == "*":
+                    adjusted_value = base_val * adjustment
+                elif operator == "/":
+                    adjusted_value = base_val / adjustment
+                elif operator == "abs":
+                    value = abs(value - base_val)
+                    adjusted_value = adjustment
 
-            if comparator == ">" and value <= adjusted_value:
-                valid = False
-
-            if comparator == "<=" and value > adjusted_value:
-                valid = False
-
-            if comparator == "<" and value >= adjusted_value:
-                valid = False
-
-            if comparator == "==" and value != adjusted_value:
-                valid = False
-
-            if comparator == "!=" and value == adjusted_value:
-                valid = False
-
+            valid = utils.compare_values(comparator, value, adjusted_value)
             if not valid:
                 self._error(field, ErrorDefs.COMPARE_WITH, comparison_str)
-        except TypeError:
+        except (TypeError, ValueError):
             self._error(field, ErrorDefs.COMPARE_WITH, comparison_str)
 
     def _check_with_rxnorm(self, field: str, value: Optional[int]):
@@ -956,3 +941,99 @@ class NACCValidator(Validator):
 
         if not self.datastore.is_valid_rxcui(value):
             self._error(field, ErrorDefs.RXNORM, value)
+
+    def _validate_compare_age(self, comparison: Dict[str, Any], field: str,
+                              value: object):
+        """Validate a comparison between the field and a list of compare_to
+        values.
+
+        Args:
+            comparison: Comparison specified in the rule definition
+            field: Variable name
+            value: Variable value
+
+        Note: Don't remove below docstring,
+        Cerberus uses it to validate the schema definition.
+
+        The rule's arguments are validated against this schema:
+            {
+                'type': 'dict',
+                'schema': {
+                    'comparator': {
+                        'type': 'string',
+                        'required': True,
+                        'empty': False,
+                        'allowed': [">", "<", ">=", "<=", "==", "!="]
+                    },
+                    'birth_year': {
+                        'type': ['string', 'integer'],
+                        'required': True,
+                        'empty': False
+                    },
+                    'birth_month': {
+                        'type': ['string', 'integer'],
+                        'required': False
+                    },
+                    'birth_day': {
+                        'type': ['string', 'integer'],
+                        'required': False
+                    },
+                    'compare_to': {
+                        'required': True,
+                        'schema': {
+                            'oneof': [
+                                {'type': 'string', 'empty': False},
+                                {'type': 'integer', 'empty': False},
+                                {
+                                    'type': 'list',
+                                    'minlength': 1,
+                                    'schema': {
+                                        'type': ['string', 'integer']
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        """
+        comparator = comparison[SchemaDefs.COMPARATOR]
+        ages_to_compare = comparison[SchemaDefs.COMPARE_TO]
+
+        if isinstance(ages_to_compare, (str, int)):
+            ages_to_compare = [ages_to_compare]
+
+        try:
+            value = utils.convert_to_date(value)
+        except parser.ParserError as error:
+            self._error(field, ErrorDefs.DATE_CONVERSION, value, error)
+            return
+
+        comparison_str = \
+            f'{", ".join(map(str, ages_to_compare))} {comparator} age at {field}'
+
+        # calculates age at the value of this field given the
+        # birth fields and assumes the ages_to_compare values to are also numerical
+        birth_month = self.__get_value_for_key(
+            comparison.get(SchemaDefs.BIRTH_MONTH, 1))
+        birth_day = self.__get_value_for_key(
+            comparison.get(SchemaDefs.BIRTH_DAY, 1))
+        birth_year = self.__get_value_for_key(
+            comparison[SchemaDefs.BIRTH_YEAR])
+
+        birth_date = utils.convert_to_date(f"{birth_month:02d} \
+                                           /{birth_day:02d} \
+                                           /{birth_year:04d}")
+        # age calculation is based off of how RT has defined it in A1
+        age = (value - birth_date).days / 365.25
+
+        for compare_field in ages_to_compare:
+            compare_value = self.__get_value_for_key(compare_field)
+            try:
+                valid = utils.compare_values(comparator, compare_value, age)
+                if not valid:
+                    self._error(field, ErrorDefs.COMPARE_AGE, compare_field,
+                                comparison_str)
+            except TypeError as error:
+                self._error(field, ErrorDefs.COMPARE_AGE_INVALID_COMPARISON,
+                            compare_field, field, str(error))

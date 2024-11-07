@@ -55,3 +55,35 @@ def convert_to_datetime(value) -> Any:
         return parser.parse(value, yearfirst=yearfirst)
     except (ValueError, TypeError, parser.ParserError) as error:
         raise parser.ParserError(error) from error
+
+
+def compare_values(comparator: str, value: object, base_value: object) -> bool:
+    """Compare two values.
+
+    Args:
+        comparator: str, The comparator
+        value: The value being evaluated on
+        base_value: The value being evaluated against
+
+    Returns:
+        bool: True if the formula is satisfied, else False
+    """
+    if comparator == ">=":
+        return value >= base_value
+
+    if comparator == ">":
+        return value > base_value
+
+    if comparator == "<=":
+        return value <= base_value
+
+    if comparator == "<":
+        return value < base_value
+
+    if comparator == "==":
+        return value == base_value
+
+    if comparator == "!=":
+        return value != base_value
+
+    return False
