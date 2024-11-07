@@ -2,14 +2,19 @@
 Tests the custom compare_with_date rule (_validate_compare_with_date).
 """
 def test_compare_age(date_constraint, create_nacc_validator):
-    """ Tests compare_age, case where ages_to_compare is not provided so compares against field
-        the rule is written under
-    """
+    """ Tests compare_age, case where compare_to is another field"""
     schema = {
         "frmdate": {
             "type": "string",
             "formatting": "date",
-            "regex": date_constraint
+            "regex": date_constraint,
+            "compare_age": {
+                "comparator": "<=",
+                "birth_year": "birthyr",
+                "birth_month": "birthmo",
+                "compare_to": "behage"
+            }
+
         },
         "birthmo": {
             "type": "integer",
@@ -20,13 +25,7 @@ def test_compare_age(date_constraint, create_nacc_validator):
             "type": "integer"
         },
         "behage": {
-            "type": "integer",
-            "compare_age": {
-                "base_date": "frmdate",
-                "comparator": "<=",
-                "birth_year": "birthyr",
-                "birth_month": "birthmo"
-            }
+            "type": "integer"
         }
     }
 
@@ -38,23 +37,22 @@ def test_compare_age(date_constraint, create_nacc_validator):
 
     # invalid cases
     assert not nv.validate({'frmdate': '2024/02/02', 'birthmo': 1, 'birthyr': 2024, 'behage': 50})
-    assert nv.errors == {'behage': [
+    assert nv.errors == {'frmdate': [
                             "input value behage doesn't satisfy the condition: behage <= age at frmdate"
                         ]}
 
 def test_compare_age_list(date_constraint, create_nacc_validator):
-    """ Tests compare_age, case where ages_to_compare is provided """
+    """ Tests compare_age, case where compare_to is a list """
     schema = {
         "frmdate": {
             "type": "string",
             "formatting": "date",
             "regex": date_constraint,
             "compare_age": {
-                "base_date": "frmdate",
                 "comparator": "<=",
                 "birth_year": "birthyr",
                 "birth_month": "birthmo",
-                "ages_to_compare": [
+                "compare_to": [
                     "behage",
                     "cogage",
                     "perchage",
@@ -103,44 +101,46 @@ def test_compare_age_invalid_field(date_constraint, create_nacc_validator):
         "frmdate": {
             "type": "string",
             "formatting": "date",
-            "regex": date_constraint
+            "regex": date_constraint,
+            "compare_age": {
+                "comparator": "<=",
+                "birth_year": "birthyr",
+                "compare_to": "behage"
+            }
+
         },
         "birthyr": {
             "type": "integer"
         },
         "behage": {
-            "type": "string",
-            "compare_age": {
-                "base_date": "frmdate",
-                "comparator": "<=",
-                "birth_year": "birthyr"
-            }
+            "type": "string"
         }
     }
 
     nv = create_nacc_validator(schema)
     assert not nv.validate({'frmdate': '2024/02/02', 'birthyr': 2024, 'behage': "dummy_str"})
-    assert nv.errors == {'behage': ["input value behage is not a valid age to compare to frmdate: '<=' not supported between instances of 'str' and 'float'"]}
+    assert nv.errors == {'frmdate': ["input value behage is not a valid age to compare to frmdate: '<=' not supported between instances of 'str' and 'float'"]}
 
 def test_compare_age_invalid_base(create_nacc_validator):
     """ Test case where base_date is invalid """
     schema = {
         "frmdate": {
-            "type": "string"
+            "type": "string",
+            "compare_age": {
+                "comparator": "<=",
+                "birth_year": "birthyr",
+                "compare_to": "behage",
+            }
+
         },
         "birthyr": {
             "type": "integer"
         },
         "behage": {
-            "type": "integer",
-            "compare_age": {
-                "base_date": "frmdate",
-                "comparator": "<=",
-                "birth_year": "birthyr"
-            }
+            "type": "integer"
         }
     }
 
     nv = create_nacc_validator(schema)
     assert not nv.validate({'frmdate': 'hello world', 'birthyr': 2024, 'behage': 50})
-    assert nv.errors == {'behage': ["failed to convert value to a date: frmdate"]}
+    assert nv.errors == {'frmdate': ["failed to convert value to a date: hello world"]}

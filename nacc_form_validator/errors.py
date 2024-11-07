@@ -173,8 +173,7 @@ class SchemaDefs:
     BASE = "base"
     ADJUST = "adjustment"
     IGNORE_EMPTY = "ignore_empty"
-    BASE_DATE = "base_date"
     BIRTH_MONTH = 'birth_month'
     BIRTH_DAY = 'birth_day'
     BIRTH_YEAR = 'birth_year'
-    AGES_TO_COMPARE = "ages_to_compare"
+    COMPARE_TO = "compare_to"

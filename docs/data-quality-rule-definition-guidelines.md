@@ -414,11 +414,10 @@ waist2:
 Used to compare ages. Takes the following parameters:
 
 * `comparator`: The comparison expression; can be one of `[">", "<", ">=", "<=", "==", "!="]`
-* `base_date`: The base date to compare to. Expected to be in `MM/DD/YYYY` or `YYYY/MM/DD` format, OR the name of a field that points to a valid date value
 * `birth_year`: The birth year (or year the age should start)
 * `birth_month`: The birth month (or month the age should start) - optional, defaults to 1 (first month year
 * `birth_day`: The birth day (or day the age should start) - optional, defaults to 1 (first day of year)
-* `ages_to_compare`: List of ages to compare to the `base_date` to; can either be the names of integer fields or explicit ages (integers). If not provided, defaults to `["field_name"]`
+* `compare_to`: Variable name, integer, or list of variable names/integers to compare the field's age to
 
 Things to note:
 
@@ -432,11 +431,10 @@ The rule definition for `compare_age` should follow the following format:
     "field_name": {
         "compare_age": {
             "comparator": "comparator, one of >, <, >=, <=, ==, !=",
-            "base_date": "base date to compare to; expected to be in MM/DD/YYYY or YYYY/MM/DD format, OR the name of a field that points to a valid date value",
             "birth_year": "the birth year (or year the age should start)",
             "birth_month": "the birth month (or month the age should start) - optional, defaults to 1 (first month year)",
             "birth_day": "the birth day (or day the age should start) - optional, defaults to 1 (first day of year)",
-            "ages_to_compare": "(optional) list of ages to compare base_date to; if not provided, defaults to [field_name]"
+            "compare_to": "variable name, integer, or list of variable names/integers to compare to"
         }
     }
 }
@@ -456,6 +454,11 @@ The rule definition for `compare_age` should follow the following format:
 frmdate:
     type: string
     formatting: date
+  compare_age:
+    comparator: "<"
+    birth_year: birthyr
+    birth_month: birthmo
+    compare_to: behage
 
 birthmo:
     type: integer
@@ -466,12 +469,7 @@ birthyr:
     type: integer
 
 behage:
-  type: integer
-  compare_age:
-    comparator: "<"
-    base: frmdate
-    birth_year: birthyr
-    birth_month: birthmo
+    type: integer
 ```
 </td>
 <td valign="top">
@@ -480,7 +478,13 @@ behage:
 {
     "frmdate": {
         "type": "string",
-        "formatting": "date"
+        "formatting": "date",
+        "compare_age": {
+            "comparator": "<=",
+            "birth_year": "birthyr",
+            "birth_month": "birthmo",
+            "compare_to": "behage"
+        }
     },
     "birthmo": {
         "type": "integer",
@@ -491,13 +495,7 @@ behage:
         "type": "integer"
     },
     "behage": {
-        "type": "integer",
-        "compare_age": {
-            "comparator": "<=",
-            "base_date": "frmdate",
-            "birth_year": "birthyr",
-            "birth_month": "birthmo"
-        }
+        "type": "integer"
     }
 }
 ```
