@@ -217,7 +217,7 @@ class NACCValidator(Validator):
 
     def get_previous_record(
             self,
-            field: str = None,
+            field: Tuple[str, List[str]] = None,
             ignore_empty: bool = False) -> Optional[Dict[str, Mapping]]:
         """Get the previous record from the Datastore; if not skipping empty
         records, stores it in the prev_records cache.
@@ -671,8 +671,19 @@ class NACCValidator(Validator):
                             'empty': False
                         },
                         'ignore_empty': {
-                            'type': 'boolean',
-                            'required': False
+                            'schema': {
+                                'oneof': [
+                                    {'type': 'string', 'empty': False},
+                                    {
+                                        'type': 'list',
+                                        'minlength': 1,
+                                        'schema': {
+                                            'type': "string"
+                                        }
+                                    }
+                                ]
+                            },
+                            "required": False
                         }
                     }
                 }
@@ -680,16 +691,22 @@ class NACCValidator(Validator):
         """
         rule_no = -1
         for temporalrule in temporalrules:
-            ignore_empty = temporalrule.get(SchemaDefs.IGNORE_EMPTY, False)
-            prev_ins = self.get_previous_record(field=field,
-                                                ignore_empty=ignore_empty)
+            ignore_empty_fields = temporalrule.get(SchemaDefs.IGNORE_EMPTY,
+                                                   None)
+            prev_ins = self.get_previous_record(
+                field=ignore_empty_fields,
+                ignore_empty=True if ignore_empty_fields else False)
 
             # If temporal rules are defined, a previous vist must exist
             if prev_ins is None:
-                if not ignore_empty:
+                if not ignore_empty_fields:
                     self._error(field, ErrorDefs.NO_PREV_VISIT)
                 else:
-                    self._error(field, ErrorDefs.NO_PREV_NONEMPTY_VISIT, field)
+                    if isinstance(ignore_empty_fields, str):
+                        ignore_empty_fields = [ignore_empty_fields]
+
+                    self._error(field, ErrorDefs.NO_PREV_NONEMPTY_VISIT,
+                                ', '.join(ignore_empty_fields))
                 return
 
             # Extract operators if specified, default is AND

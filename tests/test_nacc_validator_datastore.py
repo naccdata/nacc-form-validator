@@ -21,13 +21,15 @@ class CustomDatastore(Datastore):
                     "visit_num": 1,
                     "taxes": 8,
                     "birthyr": 1950,
-                    "birthmo": None
+                    "birthmo": None,
+                    "birthdy": None
                 },
                 {
                     "visit_num": 3,
                     "taxes": 0,
                     "birthyr": 1950,
-                    "birthmo": 6
+                    "birthmo": 6,
+                    "birthdy": 9
                 }
             ]
         }
@@ -54,13 +56,25 @@ class CustomDatastore(Datastore):
         index = sorted_record.index(current_record)
         return sorted_record[index - 1] if index != 0 else None
 
-    def get_previous_nonempty_record(self, current_record: dict[str, str], field: str) -> dict[str, str] | None:
+    def get_previous_nonempty_record(self, current_record: dict[str, str], field: tuple[str, list[str]]) -> dict[str, str] | None:
         """
         Grabs the previous record where field is not empty
         """
         key = current_record[self.pk_field]
         if key not in self.__db:
             return None
+
+        if isinstance(field, str):
+            field = [field]
+
+        sorted_record = []
+        for x in self.__db[key]:
+            for field in field:
+                if x.get(field, None) is None:
+                    break
+            else:
+                sorted_record.append(x)
+            break
 
         sorted_record = [x for x in copy.deepcopy(self.__db[key]) if x.get(field, None)]
         sorted_record.append(current_record)
@@ -135,9 +149,10 @@ def test_temporal_check_previous_nonempty():
             "temporalrules": [
                 {
                     "index": 0,
-                    "ignore_empty": True,
+                    "ignore_empty": ["birthmo", "birthdy"],
                     "previous": {
-                        "birthmo": {"nullable": False}
+                        "birthmo": {"nullable": False},
+                        "birthdy": {"nullable": False},
                     },
                     "current": {
                         "birthmo": {"nullable": False}
@@ -150,7 +165,7 @@ def test_temporal_check_previous_nonempty():
     assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthmo': 6})
 
     assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
-    assert nv.errors == {'birthmo': ['failed to retrieve the previous visit where birthmo is nonempty, cannot proceed with validation']}
+    assert nv.errors == {'birthmo': ['failed to retrieve the previous visit where birthmo, birthdy is nonempty, cannot proceed with validation']}
 
 def test_compare_with_previous_record():
     """ Test compare_with previous record """
