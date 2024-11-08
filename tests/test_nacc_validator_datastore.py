@@ -69,14 +69,13 @@ class CustomDatastore(Datastore):
 
         sorted_record = []
         for x in self.__db[key]:
-            for field in field:
-                if x.get(field, None) is None:
-                    break
-            else:
+            nonempty = True
+            for f in field:
+                if x.get(f, None) is None:
+                    nonempty = False
+            if nonempty:
                 sorted_record.append(x)
-            break
 
-        sorted_record = [x for x in copy.deepcopy(self.__db[key]) if x.get(field, None)]
         sorted_record.append(current_record)
         sorted_record.sort(key=lambda record: record[self.orderby])
 
