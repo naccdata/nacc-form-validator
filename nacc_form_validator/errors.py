@@ -42,6 +42,7 @@ class ErrorDefs:
     DATE_CONVERSION = ErrorDefinition(0x3001, 'compare_age')
     COMPARE_AGE = ErrorDefinition(0x3002, 'compare_age')
     COMPARE_AGE_INVALID_COMPARISON = ErrorDefinition(0x3003, 'compare_age')
+    NO_PREV_NONEMPTY_VISIT = ErrorDefinition(0x3004, "temporalrules")
 
 
 class CustomErrorHandler(BasicErrorHandler):
@@ -118,7 +119,10 @@ class CustomErrorHandler(BasicErrorHandler):
             0x3002:
             "input value {0} doesn't satisfy the condition: {1}",
             0x3003:
-            "Error in comparing {0} to age at {1} ({2}): {3}"
+            "Error in comparing {0} to age at {1} ({2}): {3}",
+            0x3004:
+            "failed to retrieve the previous visit where {0} is nonempty, " +
+            "cannot proceed with validation"
         }
 
         self.messages.update(custom_errors)

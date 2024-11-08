@@ -669,20 +669,29 @@ class NACCValidator(Validator):
                             'type': 'dict',
                             'required': True,
                             'empty': False
+                        },
+                        'ignore_empty': {
+                            'type': 'boolean',
+                            'required': False
                         }
                     }
                 }
             }
         """
-        prev_ins = self.get_previous_record()
-
-        # If temporal rules are defined, a previous vist must exist
-        if prev_ins is None:
-            self._error(field, ErrorDefs.NO_PREV_VISIT)
-            return
-
         rule_no = -1
         for temporalrule in temporalrules:
+            ignore_empty = temporalrule.get(SchemaDefs.IGNORE_EMPTY, False)
+            prev_ins = self.get_previous_record(field=field,
+                                                ignore_empty=ignore_empty)
+
+            # If temporal rules are defined, a previous vist must exist
+            if prev_ins is None:
+                if not ignore_empty:
+                    self._error(field, ErrorDefs.NO_PREV_VISIT)
+                else:
+                    self._error(field, ErrorDefs.NO_PREV_NONEMPTY_VISIT, field)
+                return
+
             # Extract operators if specified, default is AND
             prev_operator = temporalrule.get(SchemaDefs.PREV_OP, "AND").upper()
             curr_operator = temporalrule.get(SchemaDefs.CURR_OP, "AND").upper()

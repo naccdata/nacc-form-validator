@@ -853,7 +853,8 @@ The validator also has custom operators in addition to the ones provided by json
 
 Used to specify the list of checks to be performed against the previous visit for the same participant.
 * Each constraint specifies `previous` and `current` attributes. If conditions specified under `previous` subschema satisfied by the previous visit record, then the current visit record must satisfy the conditions specified under `current` subschema.
-* Each `previous/current` attribute can have several fields which need to be satisifed, with the `*_op` attribute specifying the boolean operation in which to compare the different fields. For example, if `prev_op = or`, then as long as _any_ of the fields satsify their schema, the `current` attribute will be evaluated. The default `*_op` is `and`.
+* Each `previous/current` attribute can have several fields which need to be satisifed, with the optional `*_op` attribute specifying the boolean operation in which to compare the different fields. For example, if `prev_op = or`, then as long as _any_ of the fields satsify their schema, the `current` attribute will be evaluated. The default `*_op` is `and`.
+* Each constraint also allows for an optional `ignore_empty` boolean option, defaulting to False. If True, it will evaluate on the previous record where the parent `field_name` the rule is defined under is not empty
 
 *To validate `temporalrules`, validator should have a `Datastore` instance which will be used to retrieve the previous visit record(s) for the participant.*
 
@@ -861,7 +862,7 @@ The rule definition for `temporalrules` should follow the following format:
 
 ```json
 {
-    "<field_name>": {
+    "<parent_field_name>": {
         "temporalrules": [
                 {
                     "previous": {
@@ -872,6 +873,7 @@ The rule definition for `temporalrules` should follow the following format:
                     }
                 },
                 {
+                    "ignore_empty": true,
                     "prev_op": "or",
                     "previous": {
                         "<field_name>": "subschema to be satisfied for the previous record",
