@@ -697,17 +697,23 @@ class NACCValidator(Validator):
                 field=ignore_empty_fields,
                 ignore_empty=True if ignore_empty_fields else False)
 
-            # If temporal rules are defined, a previous vist must exist
-            if prev_ins is None:
-                if not ignore_empty_fields:
-                    self._error(field, ErrorDefs.NO_PREV_VISIT)
-                else:
-                    if isinstance(ignore_empty_fields, str):
-                        ignore_empty_fields = [ignore_empty_fields]
+            # if not found, pass through validation
+            if not prev_ins:
+                continue
 
-                    self._error(field, ErrorDefs.NO_PREV_NONEMPTY_VISIT,
-                                ', '.join(ignore_empty_fields))
-                return
+            # We are allowing a previous visit to not exist, commenting this
+            # out in case we need to bring it back
+            # # If temporal rules are defined, a previous vist must exist
+            # if prev_ins is None:
+            #     if not ignore_empty_fields:
+            #         self._error(field, ErrorDefs.NO_PREV_VISIT)
+            #     else:
+            #         if isinstance(ignore_empty_fields, str):
+            #             ignore_empty_fields = [ignore_empty_fields]
+
+            #         self._error(field, ErrorDefs.NO_PREV_NONEMPTY_VISIT,
+            #                     ', '.join(ignore_empty_fields))
+            #     return
 
             # Extract operators if specified, default is AND
             prev_operator = temporalrule.get(SchemaDefs.PREV_OP, "AND").upper()
