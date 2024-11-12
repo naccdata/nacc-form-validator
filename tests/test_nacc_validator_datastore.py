@@ -168,9 +168,11 @@ def test_compare_with_previous_nonempty_record():
     nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
     assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthmo': 6})
 
-    nv.reset_record_cache()
-    assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
-    assert nv.errors == {'birthmo': ['failed to retrieve record for previous visit, cannot proceed with validation birthmo == birthmo (previous record)']}
+    # right now we're ignoring/allowing this case, but comment it out in case we need to bring it back
+    # nv.reset_record_cache()
+    # assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
+    # assert nv.errors == {'birthmo': ['failed to retrieve record for previous visit, cannot proceed with validation birthmo == birthmo (previous record)']}
+    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
 
 def test_compare_with_previous_different_variable():
     """ Test compare_with previous record and a different variable name.

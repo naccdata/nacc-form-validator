@@ -10,6 +10,7 @@ Documentation of release versions of `nacc-form-validator`
 * Refactors the tests to be more modularized so that they're more manageable
 * Refactors logic for `compare_values` by moving it to its own utility method
 * Adds `get_previous_record` method to grab previous record from Datastore, which can grab the previous record or the previous record where a specific field is non-empty
+	* Rules that rely on this set to _ignore_ the rule (e.g. pass validation) if no record is found 
 * Adds support for comparing against the previous record in `compare_with`
 * Adds new rule `compare_age` to handle rules that need to compare ages relative to a date
 * Adds custom operator `count_exact` to `json_logic.py`

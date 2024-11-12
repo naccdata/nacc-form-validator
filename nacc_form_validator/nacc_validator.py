@@ -896,14 +896,14 @@ class NACCValidator(Validator):
         if prev_record:
             record = self.get_previous_record(field=base,
                                               ignore_empty=ignore_empty)
-            base_val = record[base] if record else None
+            if not record:  # pass through validation if no records found
+                return
+            base_val = record[base]
         else:
             base_val = self.__get_value_for_key(base)
 
         if base_val is None:
-            error = (ErrorDefs.COMPARE_WITH_PREV if prev_record
-                     else ErrorDefs.COMPARE_WITH)
-            self._error(field, error, comparison_str)
+            self._error(field, ErrorDefs.COMPARE_WITH, comparison_str)
             return
 
         try:
