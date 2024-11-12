@@ -280,7 +280,8 @@ Used to validate the field based on comparison with another field, with optional
     * Follows the formula `field {comparator} base {op} adjustment`, e.g. `field <= base + adjustment`
     * For `abs`, it instead follows the formula `abs(field - base) {comparator} adjustment`, e.g. `abs(field - base) <= adjustment`
     * See examples below for more details
-* `ignore_empty`: If comparing to previous record(s), set this to True to ignore records where this field is empty
+* `previous_record`: Optional boolean - if True, will search for `base` in the previous record and make the comparison against that
+* `ignore_empty`: Optional boolean - if comparing to previous record(s), set this to True to ignore records where the specified `base` is empty
 
 The value to compare to (`base`) can be another field in the schema OR a special keywords either related to the current date (i.e. the exact time/date at time of validation) or a previous record
 
@@ -288,7 +289,6 @@ The value to compare to (`base`) can be another field in the schema OR a special
 * `current_year`: Compare to the current year
 * `current_month`: Compare to the current month
 * `current_day`: Compare to the current day
-* `previous_record`: Compare to the same variable in the previous record
 
 The rule definition for `compare_with` should follow the following format:
 
@@ -300,6 +300,7 @@ The rule definition for `compare_with` should follow the following format:
             "base": "field or value to compare field_name to",
             "adjustment": "(optional) the adjustment field or value",
             "op": "(optional) operation, one of +, -, *, /, abs",
+            "previous_record": "(optional) boolean, whether or not to compare to base in the previous record",
             "ignore_empty": "(optional) boolean, whether or not to ignore previous records where this field is empty"
         }
 }

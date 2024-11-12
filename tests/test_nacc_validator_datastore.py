@@ -134,7 +134,8 @@ def test_compare_with_previous_record():
             "type": "integer",
             "compare_with": {
                 "comparator": "==",
-                "base": "previous_record"
+                "base": "birthyr",
+                "previous_record": True
             }
         }
     }
@@ -143,7 +144,7 @@ def test_compare_with_previous_record():
     assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyr': 1950})
 
     assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyr': 2000})
-    assert nv.errors == {'birthyr': ["input value doesn't satisfy the condition birthyr == previous_record"]}
+    assert nv.errors == {'birthyr': ["input value doesn't satisfy the condition birthyr == birthyr (previous record)"]}
 
     nv.reset_record_cache()
     assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthyr': 1950})
@@ -157,7 +158,8 @@ def test_compare_with_previous_nonempty_record():
             "type": "integer",
             "compare_with": {
                 "comparator": "==",
-                "base": "previous_record",
+                "base": "birthmo",
+                "previous_record": True,
                 "ignore_empty": True
             }
         }
@@ -168,7 +170,34 @@ def test_compare_with_previous_nonempty_record():
 
     nv.reset_record_cache()
     assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
-    assert nv.errors == {'birthmo': ['failed to retrieve record for previous visit, cannot proceed with validation birthmo == previous_record']}
+    assert nv.errors == {'birthmo': ['failed to retrieve record for previous visit, cannot proceed with validation birthmo == birthmo (previous record)']}
+
+def test_compare_with_previous_different_variable():
+    """ Test compare_with previous record and a different variable name.
+        This is identical to the test_compare_with_previous_record test
+        just with different variables
+    """
+    schema = {
+        "patient_id": {"type": "string"},
+        "visit_num": {"type": "integer"},
+        "birthyear": {
+            "type": "integer",
+            "compare_with": {
+                "comparator": "==",
+                "base": "birthyr",
+                "previous_record": True
+            }
+        }
+    }
+
+    nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
+    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyear': 1950})
+
+    assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyear': 2000})
+    assert nv.errors == {'birthyear': ["input value doesn't satisfy the condition birthyear == birthyr (previous record)"]}
+
+    nv.reset_record_cache()
+    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthyear': 1950})
 
 def test_check_with_rxnorm():
     """ Test checking drugID is a valid RXCUI """
