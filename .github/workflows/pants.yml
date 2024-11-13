@@ -1,7 +1,7 @@
 # Based on
 # https://github.com/pantsbuild/example-python/blob/main/.github/workflows/pants.yaml
 
-name: Pants
+name: Pants Lint and Test
 
 on:
   push:
@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build:
-    name: Lint and test with Pants
+    name: Pants Lint and Test
     runs-on: ubuntu-latest
     strategy:
       matrix:
