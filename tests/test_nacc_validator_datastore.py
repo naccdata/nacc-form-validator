@@ -133,12 +133,10 @@ def test_temporal_check_no_prev_visit(schema):
     """ Temporal test check when there are no previous visits (e.g. before visit 0) """
     nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
 
-    # right now we're ignoring/allowing this case, but comment it out in case we need to bring it back
-    # assert not nv.validate(
-    #     {'patient_id': 'PatientID1', 'visit_num': 0, 'taxes': 1})
-    # assert nv.errors == {'taxes': [
-    #     'failed to retrieve the previous visit, cannot proceed with validation']}
-    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 0, 'taxes': 1})
+    assert not nv.validate(
+        {'patient_id': 'PatientID1', 'visit_num': 0, 'taxes': 1})
+    assert nv.errors == {'taxes': [
+        'failed to retrieve the previous visit, cannot proceed with validation']}
 
 def test_temporal_check_previous_nonempty():
     """ Temporal check where previous record is nonempty """
@@ -165,9 +163,7 @@ def test_temporal_check_previous_nonempty():
     nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
     assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthmo': 6})
 
-    # right now we're ignoring/allowing this case, but comment it out in case we need to bring it back
-    # assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
-    # assert nv.errors == {'birthmo': ['failed to retrieve the previous visit where birthmo, birthdy is nonempty, cannot proceed with validation']}
+    # if ignore_empty is set and we cannot find a record, pass through the validation
     assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
 
 def test_compare_with_previous_record():
