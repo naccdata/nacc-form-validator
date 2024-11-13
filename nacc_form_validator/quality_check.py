@@ -1,6 +1,6 @@
 """Module for performing data quality checks."""
 
-from typing import Dict, List, Mapping, Tuple
+from typing import Dict, List, Mapping, Optional, Tuple
 
 from cerberus.errors import DocumentErrorTree
 from cerberus.schema import SchemaError
@@ -74,7 +74,7 @@ class QualityCheck:
         """
         return self.__validator
 
-    def __init_validator(self, datastore: Datastore = None):
+    def __init_validator(self, datastore: Optional[Datastore] = None):
         """Initialize the validator object.
 
         Raises:

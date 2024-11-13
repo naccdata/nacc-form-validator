@@ -928,8 +928,8 @@ class NACCValidator(Validator):
             base_val = self.__get_value_for_key(base)
 
         if base_val is None:
-            error = (ErrorDefs.COMPARE_WITH_PREV if prev_record
-                     else ErrorDefs.COMPARE_WITH)
+            error = (ErrorDefs.COMPARE_WITH_PREV
+                     if prev_record else ErrorDefs.COMPARE_WITH)
             self._error(field, error, comparison_str)
             return
 
