@@ -865,7 +865,7 @@ class NACCValidator(Validator):
                         'dependencies': 'adjustment'
                     },
                     'previous_record': {
-                        'boolean',
+                        'type': 'boolean',
                         'required': False
                     }
                     'ignore_empty': {
@@ -896,7 +896,7 @@ class NACCValidator(Validator):
         if prev_record:
             record = self.get_previous_record(field=base,
                                               ignore_empty=ignore_empty)
-            # pass through validation if no records found and ignore_empty set
+            # pass through validation if no records found and ignore_empty is True
             if not record and ignore_empty:
                 return
 
