@@ -217,7 +217,7 @@ class NACCValidator(Validator):
 
     def get_previous_record(
             self,
-            field: str = None,
+            field: Tuple[str, List[str]] = None,
             ignore_empty: bool = False) -> Optional[Dict[str, Mapping]]:
         """Get the previous record from the Datastore; if not skipping empty
         records, stores it in the prev_records cache.
@@ -669,20 +669,43 @@ class NACCValidator(Validator):
                             'type': 'dict',
                             'required': True,
                             'empty': False
+                        },
+                        'ignore_empty': {
+                            'schema': {
+                                'oneof': [
+                                    {'type': 'string', 'empty': False},
+                                    {
+                                        'type': 'list',
+                                        'minlength': 1,
+                                        'schema': {
+                                            'type': "string"
+                                        }
+                                    }
+                                ]
+                            },
+                            "required": False
                         }
                     }
                 }
             }
         """
-        prev_ins = self.get_previous_record()
-
-        # If temporal rules are defined, a previous vist must exist
-        if prev_ins is None:
-            self._error(field, ErrorDefs.NO_PREV_VISIT)
-            return
-
         rule_no = -1
         for temporalrule in temporalrules:
+            ignore_empty_fields = temporalrule.get(SchemaDefs.IGNORE_EMPTY,
+                                                   None)
+            prev_ins = self.get_previous_record(
+                field=ignore_empty_fields,
+                ignore_empty=True if ignore_empty_fields else False)
+
+            # If previous record was not found, return an error unless
+            # ignore_empty_fields was set. If it was set, then no record
+            # being returned is okay and we pass through validation
+            if not prev_ins:
+                if ignore_empty_fields:
+                    continue
+                self._error(field, ErrorDefs.NO_PREV_VISIT)
+                return
+
             # Extract operators if specified, default is AND
             prev_operator = temporalrule.get(SchemaDefs.PREV_OP, "AND").upper()
             curr_operator = temporalrule.get(SchemaDefs.CURR_OP, "AND").upper()

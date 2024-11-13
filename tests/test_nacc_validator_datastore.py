@@ -21,13 +21,15 @@ class CustomDatastore(Datastore):
                     "visit_num": 1,
                     "taxes": 8,
                     "birthyr": 1950,
-                    "birthmo": None
+                    "birthmo": None,
+                    "birthdy": None
                 },
                 {
                     "visit_num": 3,
                     "taxes": 0,
                     "birthyr": 1950,
-                    "birthmo": 6
+                    "birthmo": 6,
+                    "birthdy": 9
                 }
             ]
         }
@@ -54,7 +56,7 @@ class CustomDatastore(Datastore):
         index = sorted_record.index(current_record)
         return sorted_record[index - 1] if index != 0 else None
 
-    def get_previous_nonempty_record(self, current_record: dict[str, str], field: str) -> dict[str, str] | None:
+    def get_previous_nonempty_record(self, current_record: dict[str, str], field: tuple[str, list[str]]) -> dict[str, str] | None:
         """
         Grabs the previous record where field is not empty
         """
@@ -62,7 +64,18 @@ class CustomDatastore(Datastore):
         if key not in self.__db:
             return None
 
-        sorted_record = [x for x in copy.deepcopy(self.__db[key]) if x.get(field, None)]
+        if isinstance(field, str):
+            field = [field]
+
+        sorted_record = []
+        for x in self.__db[key]:
+            nonempty = True
+            for f in field:
+                if x.get(f, None) is None:
+                    nonempty = False
+            if nonempty:
+                sorted_record.append(x)
+
         sorted_record.append(current_record)
         sorted_record.sort(key=lambda record: record[self.orderby])
 
@@ -92,15 +105,15 @@ def schema():
         "taxes": {
             "type": "integer",
             "temporalrules": [
-                    {
-                        "index": 0,
-                        "previous": {
-                            "taxes": {"allowed": [0]}
-                        },
-                        "current": {
-                            "taxes": {"forbidden": [8]}
-                        }
+                {
+                    "index": 0,
+                    "previous": {
+                        "taxes": {"allowed": [0]}
+                    },
+                    "current": {
+                        "taxes": {"forbidden": [8]}
                     }
+                }
             ]
         }
     }
@@ -125,6 +138,34 @@ def test_temporal_check_no_prev_visit(schema):
     assert nv.errors == {'taxes': [
         'failed to retrieve the previous visit, cannot proceed with validation']}
 
+def test_temporal_check_previous_nonempty():
+    """ Temporal check where previous record is nonempty """
+    schema = {
+        "patient_id": {"type": "string"},
+        "visit_num": {"type": "integer"},
+        "birthmo": {
+            "type": "integer",
+            "temporalrules": [
+                {
+                    "index": 0,
+                    "ignore_empty": ["birthmo", "birthdy"],
+                    "previous": {
+                        "birthmo": {"nullable": False},
+                        "birthdy": {"nullable": False},
+                    },
+                    "current": {
+                        "birthmo": {"nullable": False}
+                    }
+                }
+            ]
+        }
+    }
+    nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
+    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthmo': 6})
+
+    # if ignore_empty is set and we cannot find a record, pass through the validation
+    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
+
 def test_compare_with_previous_record():
     """ Test compare_with previous record """
     schema = {
@@ -145,7 +186,6 @@ def test_compare_with_previous_record():
     assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyr': 2000})
     assert nv.errors == {'birthyr': ["input value doesn't satisfy the condition birthyr == previous_record"]}
 
-    nv.reset_record_cache()
     assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthyr': 1950})
 
 def test_compare_with_previous_nonempty_record():
@@ -166,7 +206,6 @@ def test_compare_with_previous_nonempty_record():
     nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
     assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthmo': 6})
 
-    nv.reset_record_cache()
     assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
     assert nv.errors == {'birthmo': ['failed to retrieve record for previous visit, cannot proceed with validation birthmo == previous_record']}
 

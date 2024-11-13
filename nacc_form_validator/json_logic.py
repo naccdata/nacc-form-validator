@@ -166,10 +166,10 @@ def missing_some(data, args, min_required=1):
 
 
 def count_exact(args):
-    """Counts how many items in a list match the base
+    """Counts how many items in a list match the base.
 
-    Assumes the base is the first item in `args`, and compares it against
-    the rest of the list.
+    Assumes the base is the first item in `args`, and compares it
+    against the rest of the list.
     """
     if len(args) < 2:
         raise ValueError(
