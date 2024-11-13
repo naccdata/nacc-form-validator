@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build:
-    name: Perform CI checks
+    name: Lint and test with Pants
     runs-on: ubuntu-latest
     strategy:
       matrix:
