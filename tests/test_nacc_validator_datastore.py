@@ -164,6 +164,7 @@ def test_temporal_check_previous_nonempty():
     assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthmo': 6})
 
     # if ignore_empty is set and we cannot find a record, pass through the validation
+    nv.reset_record_cache()
     assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
 
 def test_compare_with_previous_record():
@@ -187,6 +188,7 @@ def test_compare_with_previous_record():
     assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyr': 2000})
     assert nv.errors == {'birthyr': ["input value doesn't satisfy the condition birthyr == birthyr (previous record)"]}
 
+    nv.reset_record_cache()
     assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthyr': 1950})
 
 def test_compare_with_previous_nonempty_record():
@@ -209,6 +211,7 @@ def test_compare_with_previous_nonempty_record():
     assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthmo': 6})
 
     # since ignore_empty = True, this will skip over validation in the previous record not found
+    nv.reset_record_cache()
     assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
 
 def test_compare_with_previous_nonempty_record_not_allowed():
@@ -230,6 +233,7 @@ def test_compare_with_previous_nonempty_record_not_allowed():
     assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthmo': 6})
 
     # since ignore_empty = False, this is not allowed
+    nv.reset_record_cache()
     assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
     assert nv.errors == {'birthmo': ['failed to retrieve record for previous visit, cannot proceed with validation birthmo == birthmo (previous record)']}
 
