@@ -887,9 +887,14 @@ class NACCValidator(Validator):
                         'allowed': ["+", "-", "*", "/", "abs"],
                         'dependencies': 'adjustment'
                     },
-                    'ignore_empty': {
+                    'previous_record': {
                         'type': 'boolean',
                         'required': False
+                    }
+                    'ignore_empty': {
+                        'type': 'boolean',
+                        'required': False,
+                        'dependencies': 'previous_record'
                     }
                 }
             }
@@ -899,25 +904,32 @@ class NACCValidator(Validator):
         base = comparison[SchemaDefs.BASE]
         adjustment = comparison.get(SchemaDefs.ADJUST, None)
         operator = comparison.get(SchemaDefs.OP, None)
+
+        prev_record = comparison.get(SchemaDefs.PREV_RECORD, False)
         ignore_empty = comparison.get(SchemaDefs.IGNORE_EMPTY, False)
 
-        comparison_str = f'{field} {comparator} {base}'
+        base_str = f'{base} (previous record)' if prev_record else base
+        comparison_str = f'{field} {comparator} {base_str}'
         if adjustment and operator:
             if operator == 'abs':
-                comparison_str = f'abs({field} - {base}) {comparator} {adjustment}'
+                comparison_str = f'abs({field} - {base_str}) {comparator} {adjustment}'
             else:
                 comparison_str += f' {operator} {adjustment}'
 
-        if base == SchemaDefs.PREV_RECORD:
-            record = self.get_previous_record(field=field,
+        if prev_record:
+            record = self.get_previous_record(field=base,
                                               ignore_empty=ignore_empty)
-            base_val = record[field] if record else None
+            # pass through validation if no records found and ignore_empty is True
+            if not record and ignore_empty:
+                return
+
+            base_val = record[base] if record else None
         else:
             base_val = self.__get_value_for_key(base)
 
         if base_val is None:
-            error = (ErrorDefs.COMPARE_WITH_PREV if base
-                     == SchemaDefs.PREV_RECORD else ErrorDefs.COMPARE_WITH)
+            error = (ErrorDefs.COMPARE_WITH_PREV if prev_record
+                     else ErrorDefs.COMPARE_WITH)
             self._error(field, error, comparison_str)
             return
 

@@ -9,9 +9,9 @@ Documentation of release versions of `nacc-form-validator`
 * Updates `compare_with` to support the `abs` operator
 * Refactors the tests to be more modularized so that they're more manageable
 * Refactors logic for `compare_values` by moving it to its own utility method
-* Adds `previous_record` as a special keyword for `compare_with`
 * Adds `get_previous_record` method to grab previous record from Datastore, which can grab the previous record or the previous record where a specific field is non-empty
 	* Updates `_validate_temporalrules` to also support the `ignore_empty` parameter
+* Adds support for comparing against the previous record in `compare_with`
 * Adds new rule `compare_age` to handle rules that need to compare ages relative to a date
 * Adds custom operator `count_exact` to `json_logic.py`
 
