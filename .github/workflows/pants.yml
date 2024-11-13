@@ -20,7 +20,6 @@ jobs:
       matri:
         python-version: [3.11]
     steps:
-    - name: Set up Pants with Python 3.11
     - uses: actions/checkout@v4
       uses: actions/setup-python@v5
       with:
