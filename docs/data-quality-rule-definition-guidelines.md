@@ -282,6 +282,7 @@ Used to validate the field based on comparison with another field, with optional
     * See examples below for more details
 * `previous_record`: Optional boolean - if True, will search for `base` in the previous record and make the comparison against that
 * `ignore_empty`: Optional boolean - if comparing to previous record(s), set this to True to ignore records where the specified `base` is empty
+    * If this is set to True, the validation will _ignore_ cases when a previous record was not found (e.g. pass through validation without errors)
 
 The value to compare to (`base`) can be another field in the schema OR a special keywords either related to the current date (i.e. the exact time/date at time of validation) or a previous record
 
