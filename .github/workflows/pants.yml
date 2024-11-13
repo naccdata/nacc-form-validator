@@ -17,7 +17,7 @@ jobs:
     name: Perform CI checks
     runs-on: ubuntu-latest
     strategy:
-      matri:
+      matrix:
         python-version: [3.11]
     steps:
     - uses: actions/checkout@v4
