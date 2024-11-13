@@ -855,15 +855,17 @@ The validator also has custom operators in addition to the ones provided by json
 
 Used to specify the list of checks to be performed against the previous visit for the same participant.
 * Each constraint specifies `previous` and `current` attributes. If conditions specified under `previous` subschema satisfied by the previous visit record, then the current visit record must satisfy the conditions specified under `current` subschema.
-* Each `previous/current` attribute can have several fields which need to be satisifed, with the `*_op` attribute specifying the boolean operation in which to compare the different fields. For example, if `prev_op = or`, then as long as _any_ of the fields satsify their schema, the `current` attribute will be evaluated. The default `*_op` is `and`.
+* Each `previous/current` attribute can have several fields which need to be satisifed, with the optional `*_op` attribute specifying the boolean operation in which to compare the different fields. For example, if `prev_op = or`, then as long as _any_ of the fields satsify their schema, the `current` attribute will be evaluated. The default `*_op` is `and`.
+* Each constraint also allows for an optional `ignore_empty` option, which can take a string or list of strings denoting fields that cannot be empty. When grabbing the previous record, the validator will grab the first previous record where all specified fields are non-empty.
+    * If no record is found that satisfies all fields being non-empty, the validator will _ignore_ the check (e.g. pass through validation without errors)
 
-*To validate `temporalrules`, validator should have a `Datastore` instance which will be used to retrieve the previous visit record(s) for the participant.*
+*To validate `temporalrules`, the validator should have a `Datastore` instance which will be used to retrieve the previous visit record(s) for the participant.*
 
 The rule definition for `temporalrules` should follow the following format:
 
 ```json
 {
-    "<field_name>": {
+    "<parent_field_name>": {
         "temporalrules": [
                 {
                     "previous": {
@@ -874,10 +876,11 @@ The rule definition for `temporalrules` should follow the following format:
                     }
                 },
                 {
+                    "ignore_empty": ["<field_name_1>", "<field_name_2>"],
                     "prev_op": "or",
                     "previous": {
-                        "<field_name>": "subschema to be satisfied for the previous record",
-                        "<field_name1>": "subschema to be satisfied for the previous record"
+                        "<field_name_1>": "subschema to be satisfied for the previous record",
+                        "<field_name_2>": "subschema to be satisfied for the previous record"
                     },
                     "current": {
                         "<field_name>": "subschema to be satisfied for the current record"
