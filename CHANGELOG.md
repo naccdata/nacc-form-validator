@@ -7,6 +7,7 @@ Documentation of release versions of `nacc-form-validator`
 * Updates `_validate_compute_gds` to remove partial GDS score calculation
 * Updates `_check_subschema_valid` to accept an optional record parameter, defaults to the document - used for rules that require the previous record
 * Updates `compare_with` to support the `abs` operator
+* Updates `compatibility` error message to be more verbose
 * Refactors the tests to be more modularized so that they're more manageable
 * Refactors logic for `compare_values` by moving it to its own utility method
 * Adds `get_previous_record` method to grab previous record from Datastore, which can grab the previous record or the previous record where a specific field is non-empty

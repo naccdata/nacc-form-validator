@@ -600,7 +600,7 @@ class NACCValidator(Validator):
             else_conds = constraint.get(SchemaDefs.ELSE, None)
 
             # Check if dependencies satisfied the If clause
-            error_def = ErrorDefs.COMPATIBILITY_FALSE
+            error_def = ErrorDefs.COMPATIBILITY
             errors = None
             valid, _ = self._check_subschema_valid(if_conds, if_operator)
 
@@ -608,21 +608,24 @@ class NACCValidator(Validator):
             if valid:
                 valid, errors = self._check_subschema_valid(
                     then_conds, then_operator)
-                error_def = ErrorDefs.COMPATIBILITY_TRUE
 
             # Otherwise validate the else clause, if they exist
             elif else_conds:
                 valid, errors = self._check_subschema_valid(
                     else_conds, else_operator)
-                error_def = ErrorDefs.COMPATIBILITY_FALSE
+                error_def = ErrorDefs.COMPATIBILITY_ELSE
             else:  # if the If condition is not satisfied, do nothing
                 pass
 
             # Something in the then/else clause failed - report errors
             if errors:
                 for error in errors.items():
-                    self._error(field, error_def, rule_no, str(error),
-                                if_conds)
+                    if error_def == ErrorDefs.COMPATIBILITY:
+                        self._error(field, error_def, rule_no, str(error),
+                                    if_conds, then_conds)
+                    else:
+                        self._error(field, error_def, rule_no, str(error),
+                                    if_conds, else_conds)
 
     # pylint: disable=(too-many-locals)
     def _validate_temporalrules(self, temporalrules: List[Mapping], field: str,
