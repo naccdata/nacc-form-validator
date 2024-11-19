@@ -26,8 +26,8 @@ class ErrorDefs:
     INVALID_DATE_MIN = ErrorDefinition(0x1005, "min")
     FILLED_TRUE = ErrorDefinition(0x1006, "filled")
     FILLED_FALSE = ErrorDefinition(0x1007, "filled")
-    COMPATIBILITY_TRUE = ErrorDefinition(0x1008, "compatibility")
-    COMPATIBILITY_FALSE = ErrorDefinition(0x1009, "compatibility")
+    COMPATIBILITY = ErrorDefinition(0x1008, "compatibility")
+    COMPATIBILITY_ELSE = ErrorDefinition(0x1009, "compatibility")
     TEMPORAL = ErrorDefinition(0x2000, "temporalrules")
     NO_PRIMARY_KEY = ErrorDefinition(0x2001, "temporalrules")
     NO_PREV_VISIT = ErrorDefinition(0x2002, "temporalrules")
@@ -84,9 +84,9 @@ class CustomErrorHandler(BasicErrorHandler):
             0x1007:
             "must be empty",
             0x1008:
-            "{1} for {2} - compatibility rule no: {0}",
+            "{1} for if {2} then {3} - compatibility rule no: {0}",
             0x1009:
-            "{1} for {2} - compatibility rule no: {0}",
+            "{1} for if {2} else {3} - compatibility rule no: {0}",
             0x2000:
             "{1} in current visit for {2} in previous visit - temporal rule no: {0}",
             0x2001:

@@ -46,15 +46,15 @@ def test_compatibility_if_then(create_nacc_validator):
     assert not nv.validate({'mode': 2, 'rmreason': 9})
     assert nv.errors == {'rmreason': ['unallowed value 9']}
     assert not nv.validate({'mode': 2, 'rmreason': None})
-    assert nv.errors == {'rmreason': ["('rmreason', ['null value not allowed']) for {'mode': {'allowed': [2]}} - compatibility rule no: 0"]}
+    assert nv.errors == {'rmreason': ["('rmreason', ['null value not allowed']) for if {'mode': {'allowed': [2]}} then {'rmreason': {'nullable': False}} - compatibility rule no: 0"]}
 
     # invalid cases for second condition
     assert not nv.validate({'mode': 3, 'rmreason': 1})
-    assert nv.errors == {'rmreason': ["('rmreason', ['must be empty']) for {'mode': {'allowed': [1, 3]}} - compatibility rule no: 1"]}
+    assert nv.errors == {'rmreason': ["('rmreason', ['must be empty']) for if {'mode': {'allowed': [1, 3]}} then {'rmreason': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
     assert not nv.validate({'mode': 1, 'rmreason': 5})
-    assert nv.errors == {'rmreason': ["('rmreason', ['must be empty']) for {'mode': {'allowed': [1, 3]}} - compatibility rule no: 1"]}
+    assert nv.errors == {'rmreason': ["('rmreason', ['must be empty']) for if {'mode': {'allowed': [1, 3]}} then {'rmreason': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
     assert not nv.validate({'mode': 1, 'rmreason': 9})
-    assert nv.errors == {'rmreason': ['unallowed value 9', "('rmreason', ['must be empty']) for {'mode': {'allowed': [1, 3]}} - compatibility rule no: 1"]}
+    assert nv.errors ==  {'rmreason': ['unallowed value 9', "('rmreason', ['must be empty']) for if {'mode': {'allowed': [1, 3]}} then {'rmreason': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
 
 def test_compatibility_with_nested_logic_or(create_nacc_validator):
     """ Test when the rule has a nested compatibility - or logic """
@@ -113,11 +113,11 @@ def test_compatibility_with_nested_logic_or(create_nacc_validator):
 
     # the compatibility if/then with logic inside means that raceunkn cannot be 1 if any of the others are set
     assert not nv.validate({'raceaian': 1, 'raceunkn': 1})
-    assert nv.errors == {'raceunkn': ["('raceunkn', ['must be empty']) for {'raceaian': {'logic': {'formula': {'or': [{'==': [1, {'var': 'raceaian'}]}, {'==': [1, {'var': 'raceasian'}]}, {'==': [1, {'var': 'raceblack'}]}]}}}} - compatibility rule no: 0"]}
+    assert nv.errors == {'raceunkn': ["('raceunkn', ['must be empty']) for if {'raceaian': {'logic': {'formula': {'or': [{'==': [1, {'var': 'raceaian'}]}, {'==': [1, {'var': 'raceasian'}]}, {'==': [1, {'var': 'raceblack'}]}]}}}} then {'raceunkn': {'nullable': True, 'filled': False}} - compatibility rule no: 0"]}
     assert not nv.validate({'raceasian': 1, 'raceunkn': 1})
-    assert nv.errors == {'raceunkn': ["('raceunkn', ['must be empty']) for {'raceaian': {'logic': {'formula': {'or': [{'==': [1, {'var': 'raceaian'}]}, {'==': [1, {'var': 'raceasian'}]}, {'==': [1, {'var': 'raceblack'}]}]}}}} - compatibility rule no: 0"]}
+    assert nv.errors == {'raceunkn': ["('raceunkn', ['must be empty']) for if {'raceaian': {'logic': {'formula': {'or': [{'==': [1, {'var': 'raceaian'}]}, {'==': [1, {'var': 'raceasian'}]}, {'==': [1, {'var': 'raceblack'}]}]}}}} then {'raceunkn': {'nullable': True, 'filled': False}} - compatibility rule no: 0"]}
     assert not nv.validate({'raceblack': 1, 'raceunkn': 1})
-    assert nv.errors == {'raceunkn': ["('raceunkn', ['must be empty']) for {'raceaian': {'logic': {'formula': {'or': [{'==': [1, {'var': 'raceaian'}]}, {'==': [1, {'var': 'raceasian'}]}, {'==': [1, {'var': 'raceblack'}]}]}}}} - compatibility rule no: 0"]}
+    assert nv.errors == {'raceunkn': ["('raceunkn', ['must be empty']) for if {'raceaian': {'logic': {'formula': {'or': [{'==': [1, {'var': 'raceaian'}]}, {'==': [1, {'var': 'raceasian'}]}, {'==': [1, {'var': 'raceblack'}]}]}}}} then {'raceunkn': {'nullable': True, 'filled': False}} - compatibility rule no: 0"]}
 
 def test_multiple_compatibility(create_nacc_validator):
     """ Test multiple compatibility rules """
@@ -162,9 +162,9 @@ def test_multiple_compatibility(create_nacc_validator):
 
     # invalid cases
     assert not nv.validate({'enrlgenoth': 1, 'enrlgenothx': None})
-    assert nv.errors == {'enrlgenothx': ["('enrlgenothx', ['null value not allowed']) for {'enrlgenoth': {'allowed': [1]}} - compatibility rule no: 0"]}
+    assert nv.errors == {'enrlgenothx': ["('enrlgenothx', ['null value not allowed']) for if {'enrlgenoth': {'allowed': [1]}} then {'enrlgenothx': {'nullable': False}} - compatibility rule no: 0"]}
     assert not nv.validate({'enrlgenoth': None, 'enrlgenothx': 'somevalue'})
-    assert nv.errors == {'enrlgenothx': ["('enrlgenothx', ['must be empty']) for {'enrlgenoth': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
+    assert nv.errors == {'enrlgenothx': ["('enrlgenothx', ['must be empty']) for if {'enrlgenoth': {'nullable': True, 'filled': False}} then {'enrlgenothx': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
 
 def test_compatibility_multiple_variables_and(create_nacc_validator):
     """ Test when the compatibility relies on two variables on an "and" operator """
@@ -203,9 +203,9 @@ def test_compatibility_multiple_variables_and(create_nacc_validator):
     assert nv.validate({"majordep": 1, "otherdep": 2, "deprtreat": 1})
 
     assert not nv.validate({"majordep": 0, "otherdep": 2, "deprtreat": 1})
-    assert nv.errors == {'deprtreat': ["('deprtreat', ['must be empty']) for {'majordep': {'allowed': [0, 2, 9]}, 'otherdep': {'allowed': [0, 2, 9]}} - compatibility rule no: 0"]}
+    assert nv.errors == {'deprtreat': ["('deprtreat', ['must be empty']) for if {'majordep': {'allowed': [0, 2, 9]}, 'otherdep': {'allowed': [0, 2, 9]}} then {'deprtreat': {'nullable': True, 'filled': False}} - compatibility rule no: 0"]}
     assert not nv.validate({"majordep": 2, "otherdep": 9, "deprtreat": 0})
-    assert nv.errors == {'deprtreat': ["('deprtreat', ['must be empty']) for {'majordep': {'allowed': [0, 2, 9]}, 'otherdep': {'allowed': [0, 2, 9]}} - compatibility rule no: 0"]}
+    assert nv.errors == {'deprtreat': ["('deprtreat', ['must be empty']) for if {'majordep': {'allowed': [0, 2, 9]}, 'otherdep': {'allowed': [0, 2, 9]}} then {'deprtreat': {'nullable': True, 'filled': False}} - compatibility rule no: 0"]}
 
 def test_compatibility_multiple_variables_or(create_nacc_validator):
     """ Test when the compatibility relies on two variables on an "or" operator """
@@ -246,11 +246,11 @@ def test_compatibility_multiple_variables_or(create_nacc_validator):
     assert nv.validate({"majordep": 9, "otherdep": 1, "deprtreat": 0})
 
     assert not nv.validate({"majordep": 1, "otherdep": 2, "deprtreat": None})
-    assert nv.errors == {'deprtreat': ["('deprtreat', ['null value not allowed']) for {'majordep': {'allowed': [1]}, 'otherdep': {'allowed': [1]}} - compatibility rule no: 0"]}
+    assert nv.errors == {'deprtreat': ["('deprtreat', ['null value not allowed']) for if {'majordep': {'allowed': [1]}, 'otherdep': {'allowed': [1]}} then {'deprtreat': {'nullable': False}} - compatibility rule no: 0"]}
     assert not nv.validate({"majordep": 9, "otherdep": 1, "deprtreat": None})
-    assert nv.errors == {'deprtreat': ["('deprtreat', ['null value not allowed']) for {'majordep': {'allowed': [1]}, 'otherdep': {'allowed': [1]}} - compatibility rule no: 0"]}
+    assert nv.errors == {'deprtreat': ["('deprtreat', ['null value not allowed']) for if {'majordep': {'allowed': [1]}, 'otherdep': {'allowed': [1]}} then {'deprtreat': {'nullable': False}} - compatibility rule no: 0"]}
     assert not nv.validate({"majordep": 1, "otherdep": 1, "deprtreat": None})
-    assert nv.errors == {'deprtreat': ["('deprtreat', ['null value not allowed']) for {'majordep': {'allowed': [1]}, 'otherdep': {'allowed': [1]}} - compatibility rule no: 0"]}
+    assert nv.errors == {'deprtreat': ["('deprtreat', ['null value not allowed']) for if {'majordep': {'allowed': [1]}, 'otherdep': {'allowed': [1]}} then {'deprtreat': {'nullable': False}} - compatibility rule no: 0"]}
 
 def test_compatibility_then_multiple_blank_and(create_nacc_validator):
     """ Test when the rule results in multiple things needing to be blank """
@@ -292,12 +292,12 @@ def test_compatibility_then_multiple_blank_and(create_nacc_validator):
     assert nv.validate({"parentvar": 0, "var1": None, "var2": 2, "var3": None})
 
     assert not nv.validate({"parentvar": None, "var1": 1, "var2": None, "var3": None})
-    assert nv.errors == {'var1': ["('var1', ['must be empty']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 0"]}
+    assert nv.errors == {'var1': ["('var1', ['must be empty']) for if {'parentvar': {'nullable': True, 'filled': False}} then {'var1': {'nullable': True, 'filled': False}, 'var2': {'nullable': True, 'filled': False}, 'var3': {'nullable': True, 'filled': False}} - compatibility rule no: 0"]}
     assert not nv.validate({"parentvar": None, "var1": 1, "var2": 1, "var3": 1})
-    assert nv.errors == {'var1': ["('var1', ['must be empty']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 0"]}
+    assert nv.errors == {'var1': ["('var1', ['must be empty']) for if {'parentvar': {'nullable': True, 'filled': False}} then {'var1': {'nullable': True, 'filled': False}, 'var2': {'nullable': True, 'filled': False}, 'var3': {'nullable': True, 'filled': False}} - compatibility rule no: 0"]}
     
     assert not nv.validate({"parentvar": None, "var1": None, "var2": None, "var3": 1})
-    assert nv.errors == {'var1': ["('var3', ['must be empty']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 0"]}
+    assert nv.errors == {'var1': ["('var3', ['must be empty']) for if {'parentvar': {'nullable': True, 'filled': False}} then {'var1': {'nullable': True, 'filled': False}, 'var2': {'nullable': True, 'filled': False}, 'var3': {'nullable': True, 'filled': False}} - compatibility rule no: 0"]}
 
 def test_compatibility_then_multiple_blank_logic_and(create_nacc_validator):
     """ Test when the rule results in multiple things needing to be blank - logic """
@@ -348,14 +348,14 @@ def test_compatibility_then_multiple_blank_logic_and(create_nacc_validator):
     assert nv.validate({"parentvar": 0, "var1": None, "var2": 2, "var3": None})
 
     assert not nv.validate({"parentvar": None, "var1": 1, "var2": None, "var3": None})
-    assert nv.errors == {'var1': ["('var1', ['error in formula evaluation - value 1 does not satisfy the specified formula']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 0"]}
+    assert nv.errors == {'var1': ["('var1', ['error in formula evaluation - value 1 does not satisfy the specified formula']) for if {'parentvar': {'nullable': True, 'filled': False}} then {'var1': {'nullable': True, 'logic': {'formula': {'and': [{'==': [None, {'var': 'var1'}]}, {'==': [None, {'var': 'var2'}]}, {'==': [None, {'var': 'var3'}]}]}}}} - compatibility rule no: 0"]}
     assert not nv.validate({"parentvar": None, "var1": 1, "var2": 1, "var3": 1})
-    assert nv.errors == {'var1': ["('var1', ['error in formula evaluation - value 1 does not satisfy the specified formula']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 0"]}
+    assert nv.errors == {'var1': ["('var1', ['error in formula evaluation - value 1 does not satisfy the specified formula']) for if {'parentvar': {'nullable': True, 'filled': False}} then {'var1': {'nullable': True, 'logic': {'formula': {'and': [{'==': [None, {'var': 'var1'}]}, {'==': [None, {'var': 'var2'}]}, {'==': [None, {'var': 'var3'}]}]}}}} - compatibility rule no: 0"]}
     
     # TODO: it looks like this error message is misleading, it fails because of var3 not var1 but since this logic is on var1 its reported as a var1 failure
     #       something to improve on. But also because of this you should avoid using logic and instead do it as shown in test_compatibility_then_multiple_blank_and
     assert not nv.validate({"parentvar": None, "var1": None, "var2": None, "var3": 1})
-    assert nv.errors == {'var1': ["('var1', ['error in formula evaluation - value None does not satisfy the specified formula']) for {'parentvar': {'nullable': True, 'filled': False}} - compatibility rule no: 0"]}
+    assert nv.errors == {'var1': ["('var1', ['error in formula evaluation - value None does not satisfy the specified formula']) for if {'parentvar': {'nullable': True, 'filled': False}} then {'var1': {'nullable': True, 'logic': {'formula': {'and': [{'==': [None, {'var': 'var1'}]}, {'==': [None, {'var': 'var2'}]}, {'==': [None, {'var': 'var3'}]}]}}}} - compatibility rule no: 0"]}
 
 def test_compatibility_multiple_resulting_variables_or(create_nacc_validator):
     """ Tests a "If X is 1, than Y or Z should be 1", and "If X i 0, then Y and Z should be 0" situation """
@@ -373,6 +373,7 @@ def test_compatibility_multiple_resulting_variables_or(create_nacc_validator):
             "required": True,
             "compatibility": [
                 {
+                    "index": 0,
                     "then_op": "or",
                     "if": {
                         "hall": {"allowed": [1]}
@@ -383,6 +384,7 @@ def test_compatibility_multiple_resulting_variables_or(create_nacc_validator):
                     }
                 },
                 {
+                    "index": 1,
                     "then_op": "and",
                     "if": {
                         "hall": {"allowed": [0]}
@@ -405,11 +407,13 @@ def test_compatibility_multiple_resulting_variables_or(create_nacc_validator):
     assert nv.validate({"hall": 0, "bevhall": 0, "beahall": 0})
 
     assert not nv.validate({"hall": 1, "bevhall": 0, "beahall": 0})
-    assert nv.errors == {'hall': ["('beahall', ['unallowed value 0']) for {'hall': {'allowed': [1]}} - compatibility rule no: 0", "('bevhall', ['unallowed value 0']) for {'hall': {'allowed': [1]}} - compatibility rule no: 0"]}
+    # TODO: the duplicate error message is due to the `then_op: or` clause - should probably fix
+    assert nv.errors == {'hall': ["('beahall', ['unallowed value 0']) for if {'hall': {'allowed': [1]}} then {'bevhall': {'allowed': [1]}, 'beahall': {'allowed': [1]}} - compatibility rule no: 0",
+                                  "('bevhall', ['unallowed value 0']) for if {'hall': {'allowed': [1]}} then {'bevhall': {'allowed': [1]}, 'beahall': {'allowed': [1]}} - compatibility rule no: 0"]}
     assert not nv.validate({"hall": 0, "bevhall": 0, "beahall": 1})
-    assert nv.errors == {'hall': ["('beahall', ['unallowed value 1']) for {'hall': {'allowed': [0]}} - compatibility rule no: 1"]}
+    assert nv.errors == {'hall': ["('beahall', ['unallowed value 1']) for if {'hall': {'allowed': [0]}} then {'bevhall': {'allowed': [0]}, 'beahall': {'allowed': [0]}} - compatibility rule no: 1"]}
     assert not nv.validate({"hall": 0, "bevhall": None, "beahall": None})
-    assert nv.errors == {'hall': ["('bevhall', ['null value not allowed']) for {'hall': {'allowed': [0]}} - compatibility rule no: 1"]}
+    assert nv.errors == {'hall': ["('bevhall', ['null value not allowed']) for if {'hall': {'allowed': [0]}} then {'bevhall': {'allowed': [0]}, 'beahall': {'allowed': [0]}} - compatibility rule no: 1"]}
 
 def test_compatibility_multiple_resulting_options_or(create_nacc_validator):
     """ Tests a "If X is 1, than Y and Z should be 0 or 2" situation """
@@ -460,7 +464,7 @@ def test_compatibility_multiple_resulting_options_or(create_nacc_validator):
     assert nv.validate({"depd": 5, "majdepdx": 1, "othdepdx": 1})
 
     assert not nv.validate({"depd": 2, "majdepdx": 0, "othdepdx": 2})
-    assert nv.errors == {'depd': ["('majdepdx', ['unallowed value 0']) for {'depd': {'allowed': [2]}} - compatibility rule no: 2"]}
+    assert nv.errors == {'depd': ["('majdepdx', ['unallowed value 0']) for if {'depd': {'allowed': [2]}} then {'majdepdx': {'allowed': [1]}, 'othdepdx': {'allowed': [1]}} - compatibility rule no: 2"]}
     assert not nv.validate({"depd": None, "majdepdx": 0, "othdepdx": 2})
     assert nv.errors == {'depd': ['null value not allowed']}
 
@@ -497,9 +501,9 @@ def test_compatibility_multiple_else(create_nacc_validator):
     assert nv.validate({"var1": 1, "var2": 2})
 
     assert not nv.validate({"var1": 0, "var2": 8})
-    assert nv.errors == {'var1': ["('var2', ['unallowed value 8']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0"]}
+    assert nv.errors == {'var1': ["('var2', ['unallowed value 8']) for if {'var1': {'allowed': [1]}} else {'var2': {'allowed': [3, 4, 5]}} - compatibility rule no: 0"]}
     assert not nv.validate({"var1": 1, "var2": 3})
-    assert nv.errors == {'var1': ["('var2', ['unallowed value 3']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0"]}
+    assert nv.errors == {'var1': ["('var2', ['unallowed value 3']) for if {'var1': {'allowed': [1]}} then {'var2': {'allowed': [2]}} - compatibility rule no: 0"]}
 
 def test_compatibility_multiple_else_and_multiple_conditions(create_nacc_validator):
     """ Tests the else clause with multiple conditions. If VAR1 is 1 then VAR2 is 2, else VAR2 3-5 OR VAR3 is 9 """
@@ -541,16 +545,20 @@ def test_compatibility_multiple_else_and_multiple_conditions(create_nacc_validat
     assert nv.validate({"var1": 1, "var2": 2, "var3": None})
 
     assert not nv.validate({"var1": 1, "var2": 3, "var3": None})
-    assert nv.errors == {'var1': ["('var2', ['unallowed value 3']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0"]}
+    assert nv.errors == {'var1': ["('var2', ['unallowed value 3']) for if {'var1': {'allowed': [1]}} then {'var2': {'allowed': [2]}} - compatibility rule no: 0"]}
     assert not nv.validate({"var1": 1, "var2": None, "var3": 6})
-    assert nv.errors == {'var1': ["('var2', ['null value not allowed']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0"]}
+    assert nv.errors == {'var1': ["('var2', ['null value not allowed']) for if {'var1': {'allowed': [1]}} then {'var2': {'allowed': [2]}} - compatibility rule no: 0"]}
 
     assert not nv.validate({"var1": 0, "var2": 8, "var3": None})
-    assert nv.errors == {'var1': ["('var3', ['null value not allowed']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0", "('var2', ['unallowed value 8']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0"]}
+    assert nv.errors == {'var1': ["('var3', ['null value not allowed']) for if {'var1': {'allowed': [1]}} else {'var2': {'allowed': [3, 4, 5]}, 'var3': {'allowed': [9]}} - compatibility rule no: 0",
+                                  "('var2', ['unallowed value 8']) for if {'var1': {'allowed': [1]}} else {'var2': {'allowed': [3, 4, 5]}, 'var3': {'allowed': [9]}} - compatibility rule no: 0"]}
     assert not nv.validate({"var1": 0, "var2": None, "var3": None})
-    assert nv.errors == {'var1': ["('var3', ['null value not allowed']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0", "('var2', ['null value not allowed']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0"]}
+    assert nv.errors == {'var1': ["('var3', ['null value not allowed']) for if {'var1': {'allowed': [1]}} else {'var2': {'allowed': [3, 4, 5]}, 'var3': {'allowed': [9]}} - compatibility rule no: 0",
+                                  "('var2', ['null value not allowed']) for if {'var1': {'allowed': [1]}} else {'var2': {'allowed': [3, 4, 5]}, 'var3': {'allowed': [9]}} - compatibility rule no: 0"]}
+
     assert not nv.validate({"var1": 0, "var2": None, "var3": 16})
-    assert nv.errors == {'var1': ["('var3', ['unallowed value 16']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0", "('var2', ['null value not allowed']) for {'var1': {'allowed': [1]}} - compatibility rule no: 0"]}
+    assert nv.errors == {'var1': ["('var3', ['unallowed value 16']) for if {'var1': {'allowed': [1]}} else {'var2': {'allowed': [3, 4, 5]}, 'var3': {'allowed': [9]}} - compatibility rule no: 0",
+                                  "('var2', ['null value not allowed']) for if {'var1': {'allowed': [1]}} else {'var2': {'allowed': [3, 4, 5]}, 'var3': {'allowed': [9]}} - compatibility rule no: 0"]}
 
 def test_compatibility_nested_anyof(create_nacc_validator):
     """ Tests when anyof is nested inside compatibility. """
@@ -613,10 +621,179 @@ def test_compatibility_nested_anyof(create_nacc_validator):
 
     for i in range (5, 26):
         assert not nv.validate({"menarche": 5, "nomensage": None})
-    assert nv.errors == {'nomensage': ["('nomensage', ['null value not allowed']) for {'menarche': {'anyof': [{'min': 5, 'max': 25}, {'allowed': [99]}]}} - compatibility rule no: 0"]}
+    assert nv.errors == {'nomensage': ["('nomensage', ['null value not allowed']) for if {'menarche': {'anyof': [{'min': 5, 'max': 25}, {'allowed': [99]}]}} then {'nomensage': {'nullable': False}} - compatibility rule no: 0"]}
     assert not nv.validate({"menarche": 99, "nomensage": None})
-    assert nv.errors == {'nomensage': ["('nomensage', ['null value not allowed']) for {'menarche': {'anyof': [{'min': 5, 'max': 25}, {'allowed': [99]}]}} - compatibility rule no: 0"]}
+    assert nv.errors == {'nomensage': ["('nomensage', ['null value not allowed']) for if {'menarche': {'anyof': [{'min': 5, 'max': 25}, {'allowed': [99]}]}} then {'nomensage': {'nullable': False}} - compatibility rule no: 0"]}
     assert not nv.validate({"menarche": 88, "nomensage": 10})
-    assert nv.errors == {'nomensage': ["('nomensage', ['must be empty']) for {'menarche': {'nullable': True, 'anyof': [{'nullable': True, 'filled': False}, {'allowed': [88]}]}} - compatibility rule no: 1"]}
+    assert nv.errors == {'nomensage': ["('nomensage', ['must be empty']) for if {'menarche': {'nullable': True, 'anyof': [{'nullable': True, 'filled': False}, {'allowed': [88]}]}} then {'nomensage': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
     assert not nv.validate({"menarche": None, "nomensage": 10})
-    assert nv.errors == {'nomensage': ["('nomensage', ['must be empty']) for {'menarche': {'nullable': True, 'anyof': [{'nullable': True, 'filled': False}, {'allowed': [88]}]}} - compatibility rule no: 1"]}
+    assert nv.errors == {'nomensage': ["('nomensage', ['must be empty']) for if {'menarche': {'nullable': True, 'anyof': [{'nullable': True, 'filled': False}, {'allowed': [88]}]}} then {'nomensage': {'nullable': True, 'filled': False}} - compatibility rule no: 1"]}
+
+def test_compatibility_logic_with_divide(create_nacc_validator):
+    """ Testing case where logic is dividing something - we need to ensure we do not divide by 0
+        This is a truncated/modified version of the C2F ftdsnrat case """
+    schema = {
+        "ftdhaird": {
+            "nullable": True,
+            "type": "integer",
+            "allowed": [0, 1]
+        },
+        "ftdspit": {
+            "nullable": True,
+            "type": "integer",
+            "allowed": [0, 1]
+        },
+        "ftdnose": {
+            "nullable": True,
+            "type": "integer",
+            "allowed": [0, 1]
+        },
+        "ftdsnrat": {
+            "nullable": True,
+            "type": "float",
+            "anyof": [
+                {"min": 0.0, "max": 3.0},
+                {"allowed": [88.88]}
+            ],
+            "compatibility": [
+                {
+                    "index": 0,
+                    "if_op": "and",
+                    "if": {
+                        "ftdhaird": {
+                            "allowed": [0, 1]
+                        },
+                        "ftdspit": {
+                            "allowed": [0, 1]
+                        },
+                        "ftdnose": {
+                            "allowed": [0, 1]
+                        },
+                        "ftdsnrat": {
+                            "logic": {
+                                "formula": {
+                                    "and": [
+                                        {
+                                            "!=": [
+                                                0,
+                                                {
+                                                    "count_exact": [
+                                                        0,
+                                                        {"var": "ftdhaird"},
+                                                        {"var": "ftdspit"},
+                                                        {"var": "ftdnose"}
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "!=": [
+                                                0,
+                                                {
+                                                    "count_exact": [
+                                                        1,
+                                                        {"var": "ftdhaird"},
+                                                        {"var": "ftdspit"},
+                                                        {"var": "ftdnose"}
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "then": {
+                        "ftdsnrat": {
+                            "logic": {
+                                "formula": {
+                                    "==": [
+                                        {"var": "ftdsnrat"},
+                                        {
+                                            "/": [
+                                                {
+                                                    "count_exact": [
+                                                        1,
+                                                        {"var": "ftdhaird"},
+                                                        {"var": "ftdspit"},
+                                                        {"var": "ftdnose"}
+                                                    ]
+                                                },
+                                                {
+                                                    "count_exact": [
+                                                        0,
+                                                        {"var": "ftdhaird"},
+                                                        {"var": "ftdspit"},
+                                                        {"var": "ftdnose"}
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "index": 1,
+                    "if_op": "or",
+                    "if": {
+                        "ftdhaird": { "nullable": True, "filled": False },
+                        "ftdspit": { "nullable": True, "filled": False },
+                        "ftdnose": { "nullable": True, "filled": False }
+                    },
+                    "then": {
+                        "ftdsnrat": {
+                            "allowed": [88.88]
+                        }
+                    }
+                },
+                {
+                    "index": 2,
+                    "if_op": "and",
+                    "if": {
+                        "ftdhaird": { "allowed": [0] },
+                        "ftdspit": { "allowed": [0] },
+                        "ftdnose": { "allowed": [0] }
+                    },
+                    "then": {
+                        "ftdsnrat": {
+                            "allowed": [88.88]
+                        }
+                    }
+                },
+                {
+                    "index": 3,
+                    "if_op": "and",
+                    "if": {
+                        "ftdhaird": { "allowed": [1] },
+                        "ftdspit": { "allowed": [1] },
+                        "ftdnose": { "allowed": [1] }
+                    },
+                    "then": {
+                        "ftdsnrat": {
+                            "allowed": [88.88]
+                        }
+                    }
+                }
+            ]
+        }
+    }
+    nv = create_nacc_validator(schema)
+
+    assert nv.validate({"ftdsnrat": 88.88, "ftdhaird": 0, "ftdspit": 0, "ftdnose": 0})
+    assert nv.validate({"ftdsnrat": 88.88, "ftdhaird": 1, "ftdspit": 1, "ftdnose": 1})
+    assert nv.validate({"ftdsnrat": 88.88, "ftdhaird": None, "ftdspit": None, "ftdnose": None})
+    assert nv.validate({"ftdsnrat": 88.88, "ftdhaird": None, "ftdspit": None, "ftdnose": 0})
+    assert nv.validate({"ftdsnrat": 88.88, "ftdhaird": None, "ftdspit": 1, "ftdnose": 0})
+
+    assert nv.validate({"ftdsnrat": 2.0 , "ftdhaird": 1, "ftdspit": 1, "ftdnose": 0})
+    assert nv.validate({"ftdsnrat": 0.5 , "ftdhaird": 0, "ftdspit": 1, "ftdnose": 0})
+
+    assert not nv.validate({"ftdsnrat": 0.0 , "ftdhaird": 0, "ftdspit": 0, "ftdnose": 0})
+    assert nv.errors == {'ftdsnrat': ["('ftdsnrat', ['unallowed value 0.0']) for if {'ftdhaird': {'allowed': [0]}, 'ftdspit': {'allowed': [0]}, 'ftdnose': {'allowed': [0]}} then {'ftdsnrat': {'allowed': [88.88]}} - compatibility rule no: 2"]}
+
+    assert not nv.validate({"ftdsnrat": 0.0 , "ftdhaird": 1, "ftdspit": 1, "ftdnose": 1})
+    assert nv.errors == {'ftdsnrat': ["('ftdsnrat', ['unallowed value 0.0']) for if {'ftdhaird': {'allowed': [1]}, 'ftdspit': {'allowed': [1]}, 'ftdnose': {'allowed': [1]}} then {'ftdsnrat': {'allowed': [88.88]}} - compatibility rule no: 3"]}
