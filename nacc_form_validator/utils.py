@@ -68,6 +68,23 @@ def compare_values(comparator: str, value: object, base_value: object) -> bool:
     Returns:
         bool: True if the formula is satisfied, else False
     """
+    # test these first as they don't care about null values
+    if comparator == "==":
+        return value == base_value
+
+    if comparator == "!=":
+        return value != base_value
+
+    # for < and >, follow same convention as jsonlogic for null values
+    # for >= and <=, allow equality case (both None)
+    if value is None and base_value is None:
+        return True if comparator in ["<=", ">="] else False
+    if value is None:
+        return True if comparator in ["<", "<="] else False
+    if base_value is None:
+        return False if comparator in ["<", "<="] else True
+
+    # now try as normal
     if comparator == ">=":
         return value >= base_value
 
@@ -80,10 +97,4 @@ def compare_values(comparator: str, value: object, base_value: object) -> bool:
     if comparator == "<":
         return value < base_value
 
-    if comparator == "==":
-        return value == base_value
-
-    if comparator == "!=":
-        return value != base_value
-
-    return False
+    raise TypeError(f"Unrecognized comparator: {comparator}")
