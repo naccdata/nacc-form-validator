@@ -89,7 +89,7 @@ class CustomErrorHandler(BasicErrorHandler):
             0x1009:
             "{1} for if {2} else {3} - compatibility rule no: {0}",
             0x2000:
-            "{1} in current visit for {2} in previous visit - temporal rule no: {0}",
+            "{1} in current visit for if {2} in previous visit then {3} in current visit - temporal rule no: {0}",
             0x2001:
             "primary key variable {0} not set in current visit data",
             0x2002:
@@ -121,7 +121,7 @@ class CustomErrorHandler(BasicErrorHandler):
             0x3003:
             "Error in comparing {0} to age at {1} ({2}): {3}",
             0x3004:
-            "{1} in previous visit for {2} in current visit - temporal rule no: {0}",
+            "{1} in previous visit for if {2} in current visit then {3} in previous visit - temporal rule no: {0}",
         }
 
         self.messages.update(custom_errors)

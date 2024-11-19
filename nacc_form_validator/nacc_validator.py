@@ -764,7 +764,7 @@ class NACCValidator(Validator):
             if not valid and errors:
                 for error in errors.items():
                     self._error(field, error_def, rule_no, str(error),
-                                prev_conds)
+                                prev_conds, curr_conds)
 
     def _validate_logic(self, logic: Dict[str, Any], field: str,
                         value: object):
