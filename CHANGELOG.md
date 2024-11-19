@@ -15,6 +15,7 @@ Documentation of release versions of `nacc-form-validator`
 * Adds support for comparing against the previous record in `compare_with`
 * Adds new rule `compare_age` to handle rules that need to compare ages relative to a date
 * Adds custom operator `count_exact` to `json_logic.py`
+* Fixes issue where `datastore` was not being set for the temp validator in `_check_subschema_valid`, causing nested conditions with previous records to not evaluate correctly
 
 ## 0.3.0
 

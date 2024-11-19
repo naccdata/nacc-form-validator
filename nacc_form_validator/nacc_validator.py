@@ -501,6 +501,12 @@ class NACCValidator(Validator):
                 allow_unknown=True,
                 error_handler=CustomErrorHandler(subschema),
             )
+
+            # pass the same datastore
+            if self.primary_key and self.datastore:
+                temp_validator.primary_key = self.primary_key
+                temp_validator.datastore = self.datastore
+
             if operator == "OR":
                 valid = valid or temp_validator.validate(record,
                                                          normalize=False)

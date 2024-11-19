@@ -264,6 +264,36 @@ def test_compare_with_previous_different_variable():
     nv.reset_record_cache()
     assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthyear': 1950})
 
+def test_temporal_check_with_nested_compare_with_previous_record():
+    """ Test when compare_with previous_record nested inside a temporalrules """
+    schema = {
+        "patient_id": {"type": "string"},
+        "visit_num": {"type": "integer"},
+        "birthyr": {
+            "type": "integer",
+            "temporalrules": [
+                {
+                    "index": 0,
+                    "previous": {"birthyr": {"forbidden": [-1]}},
+                    "current": {
+                        "birthyr": {
+                            "compare_with": {
+                                "comparator": "==",
+                                "base": "birthyr",
+                                "previous_record": True
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+    nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
+    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyr': 1950})
+
+    assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyr': 1951})
+    assert nv.errors == {'birthyr': ['(\'birthyr\', ["input value doesn\'t satisfy the condition birthyr == birthyr (previous record)"]) in current visit for {\'birthyr\': {\'forbidden\': [-1]}} in previous visit - temporal rule no: 0']}
+
 def test_check_with_rxnorm():
     """ Test checking drugID is a valid RXCUI """
     schema = {
