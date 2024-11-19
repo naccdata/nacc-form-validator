@@ -42,6 +42,7 @@ class ErrorDefs:
     DATE_CONVERSION = ErrorDefinition(0x3001, 'compare_age')
     COMPARE_AGE = ErrorDefinition(0x3002, 'compare_age')
     COMPARE_AGE_INVALID_COMPARISON = ErrorDefinition(0x3003, 'compare_age')
+    TEMPORAL_SWAPPED = ErrorDefinition(0x3004, 'temporalrules')
 
 
 class CustomErrorHandler(BasicErrorHandler):
@@ -119,6 +120,8 @@ class CustomErrorHandler(BasicErrorHandler):
             "input value {0} doesn't satisfy the condition: {1}",
             0x3003:
             "Error in comparing {0} to age at {1} ({2}): {3}",
+            0x3004:
+            "{1} in previous visit for {2} in current visit - temporal rule no: {0}",
         }
 
         self.messages.update(custom_errors)
@@ -177,3 +180,4 @@ class SchemaDefs:
     BIRTH_DAY = 'birth_day'
     BIRTH_YEAR = 'birth_year'
     COMPARE_TO = "compare_to"
+    SWAP_ORDER = "swap_order"

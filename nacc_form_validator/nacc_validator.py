@@ -693,6 +693,10 @@ class NACCValidator(Validator):
                                 ]
                             },
                             "required": False
+                        },
+                        'swap_order': {
+                            'type': 'boolean',
+                            'required': False
                         }
                     }
                 }
@@ -700,6 +704,7 @@ class NACCValidator(Validator):
         """
         rule_no = -1
         for temporalrule in temporalrules:
+            swap_order = temporalrule.get(SchemaDefs.SWAP_ORDER, False)
             ignore_empty_fields = temporalrule.get(SchemaDefs.IGNORE_EMPTY,
                                                    None)
             prev_ins = self.get_previous_record(
@@ -723,24 +728,42 @@ class NACCValidator(Validator):
             prev_conds = temporalrule[SchemaDefs.PREVIOUS]
             curr_conds = temporalrule[SchemaDefs.CURRENT]
 
-            errors = None
-            # Check if conditions for the previous visit is satisfied
-            valid, _ = self._check_subschema_valid(prev_conds,
-                                                   prev_operator,
-                                                   record=prev_ins)
+            # default order of operations is to first check if conditions for
+            # previous visit is satisfied, then current visit, but
+            # occasionally we need to swap that order
+            error, valid = None, False
+            error_def = ErrorDefs.TEMPORAL
 
-            # If not satisfied, continue to next rule
-            if not valid:
-                continue
+            if not swap_order:
+                # Check if conditions for the previous visit is satisfied
+                valid, _ = self._check_subschema_valid(
+                    prev_conds, prev_operator, record=prev_ins)
 
-            # If satisfied, validate the current visit
-            valid, errors = self._check_subschema_valid(
-                curr_conds, curr_operator)
+                # If not satisfied, continue to next rule
+                if not valid:
+                    continue
+
+                # If satisfied, validate the current visit
+                valid, errors = self._check_subschema_valid(
+                    curr_conds, curr_operator)
+            else:
+                # do the other way; check if condition for current visit is satisfied
+                error_def = ErrorDefs.TEMPORAL_SWAPPED
+                valid, _ = self._check_subschema_valid(curr_conds,
+                                                       curr_operator)
+
+                # if not satisfied, continue to next rule
+                if not valid:
+                    continue
+
+                # if satisfied, validate previous visit
+                valid, errors = self._check_subschema_valid(
+                    prev_conds, prev_operator, record=prev_ins)
 
             # Cross visit validation failed - report errors
             if not valid and errors:
                 for error in errors.items():
-                    self._error(field, ErrorDefs.TEMPORAL, rule_no, str(error),
+                    self._error(field, error_def, rule_no, str(error),
                                 prev_conds)
 
     def _validate_logic(self, logic: Dict[str, Any], field: str,

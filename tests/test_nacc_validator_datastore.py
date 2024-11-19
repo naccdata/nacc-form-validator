@@ -122,12 +122,24 @@ def test_temporal_check(schema):
     """ Temporal test check - this is basically a more involved version of the example provided in docs/index.md """
     nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
 
-    assert nv.validate({'patient_id': 'PatientID1',
-                       'visit_num': 4, 'taxes': 1})
-    assert not nv.validate(
-        {'patient_id': 'PatientID1', 'visit_num': 4, 'taxes': 8})
+    assert nv.validate({'patient_id': 'PatientID1','visit_num': 4, 'taxes': 1})
+
+    assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'taxes': 8})
     assert nv.errors == {'taxes': [
         "('taxes', ['unallowed value 8']) in current visit for {'taxes': {'allowed': [0]}} in previous visit - temporal rule no: 0"]}
+
+def test_temporal_check_swap_order(schema):
+    """ Test temporal check when the order of evaluation is swapped """
+    schema['taxes']['temporalrules'][0]['swap_order'] = True
+    nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
+
+    assert nv.validate({'patient_id': 'PatientID1','visit_num': 4, 'taxes': 1})
+    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'taxes': 8})  # since 8 fails the current condition, validation skipped
+
+    nv.reset_record_cache()
+    assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'taxes': 1})
+    assert nv.errors == {'taxes': [
+        "('taxes', ['unallowed value 8']) in previous visit for {'taxes': {'allowed': [0]}} in current visit - temporal rule no: 0"]}
 
 def test_temporal_check_no_prev_visit(schema):
     """ Temporal test check when there are no previous visits (e.g. before visit 0) """
