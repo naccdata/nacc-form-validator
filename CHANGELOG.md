@@ -9,7 +9,7 @@ Documentation of release versions of `nacc-form-validator`
 * Updates `compare_with` to support the `abs` operator
 * Updates `compatibility` error message to be more verbose
 * Refactors the tests to be more modularized so that they're more manageable
-* Refactors logic for `compare_values` by moving it to its own utility method
+* Refactors logic for `compare_values` by moving it to its own utility method and allows comparing to null values
 * Adds `get_previous_record` method to grab previous record from Datastore, which can grab the previous record or the previous record where a specific field is non-empty
 	* Updates `_validate_temporalrules` to also support the `ignore_empty` parameter
 * Adds support for comparing against the previous record in `compare_with`

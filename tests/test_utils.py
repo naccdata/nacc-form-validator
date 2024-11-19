@@ -110,10 +110,10 @@ def test_compare_values_date_invalid():
     assert not compare_values("!=", parser.parse("01/01/2000"), parser.parse("01/01/2000"))
 
 def test_compare_values_type_error():
-    """ Test comparing two values of incompatible types """
+    """ Test comparing two values of incompatible types or unrecognized comparator """
     with pytest.raises(TypeError) as e:
-        compare_values("<", None, "hello")
-    assert str(e.value) == "'<' not supported between instances of 'NoneType' and 'str'"
+        compare_values("*", 5, 10)
+    assert str(e.value) == "Unrecognized comparator: *"
 
     with pytest.raises(TypeError) as e:
         compare_values("<", 5, parser.parse("01/01/2000"))
@@ -122,3 +122,25 @@ def test_compare_values_type_error():
     with pytest.raises(TypeError) as e:
         compare_values("<", "01/01/2000", parser.parse("01/01/2000"))
     assert str(e.value) == "'<' not supported between instances of 'str' and 'datetime.datetime'"
+
+def test_compare_values_null_values_valid():
+    """ Test comparing when at least one of the values is null """
+    assert compare_values("==", None, None)
+    assert not compare_values("==", None, 5)
+    assert not compare_values("!=", None, None)
+    assert compare_values("!=", 5, None)
+
+    assert compare_values("<", None, 5)
+    assert not compare_values("<", 5, None)
+    assert not compare_values(">", None, 5)
+    assert compare_values(">", 5, None)
+
+    assert compare_values("<=", None, 5)
+    assert not compare_values("<=", 5, None)
+    assert not compare_values(">=", None, 5)
+    assert compare_values(">=", 5, None)
+
+    assert not compare_values("<", None, None)
+    assert not compare_values(">", None, None)
+    assert compare_values("<=", None, None)
+    assert compare_values(">=", None, None)
