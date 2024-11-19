@@ -75,6 +75,9 @@ def compare_values(comparator: str, value: object, base_value: object) -> bool:
     if comparator == "!=":
         return value != base_value
 
+    if comparator not in ["<=", ">=", "<", ">"]:
+        raise TypeError(f"Unrecognized comparator: {comparator}")
+
     # for < and >, follow same convention as jsonlogic for null values
     # for >= and <=, allow equality case (both None)
     if value is None and base_value is None:

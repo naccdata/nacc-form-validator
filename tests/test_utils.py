@@ -116,6 +116,10 @@ def test_compare_values_type_error():
     assert str(e.value) == "Unrecognized comparator: *"
 
     with pytest.raises(TypeError) as e:
+        compare_values("+", None, None)
+    assert str(e.value) == "Unrecognized comparator: +"
+
+    with pytest.raises(TypeError) as e:
         compare_values("<", 5, parser.parse("01/01/2000"))
     assert str(e.value) == "'<' not supported between instances of 'int' and 'datetime.datetime'"
 
