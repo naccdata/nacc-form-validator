@@ -736,8 +736,9 @@ class NACCValidator(Validator):
 
             if not swap_order:
                 # Check if conditions for the previous visit is satisfied
-                valid, _ = self._check_subschema_valid(
-                    prev_conds, prev_operator, record=prev_ins)
+                valid, _ = self._check_subschema_valid(prev_conds,
+                                                       prev_operator,
+                                                       record=prev_ins)
 
                 # If not satisfied, continue to next rule
                 if not valid:
@@ -757,8 +758,9 @@ class NACCValidator(Validator):
                     continue
 
                 # if satisfied, validate previous visit
-                valid, errors = self._check_subschema_valid(
-                    prev_conds, prev_operator, record=prev_ins)
+                valid, errors = self._check_subschema_valid(prev_conds,
+                                                            prev_operator,
+                                                            record=prev_ins)
 
             # Cross visit validation failed - report errors
             if not valid and errors:
