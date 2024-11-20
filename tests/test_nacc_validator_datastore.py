@@ -139,7 +139,7 @@ def test_temporal_check_swap_order(schema):
     nv.reset_record_cache()
     assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'taxes': 1})
     assert nv.errors == {'taxes': [
-    "('taxes', ['unallowed value 8']) in previous visit for if {'taxes': {'allowed': [0]}} in current visit then {'taxes': {'forbidden': [8]}} in previous visit - temporal rule no: 0"]}
+        "('taxes', ['unallowed value 8']) in previous visit for if {'taxes': {'forbidden': [8]}} in current visit then {'taxes': {'allowed': [0]}} in previous visit - temporal rule no: 0"]}
 
 def test_temporal_check_no_prev_visit(schema):
     """ Temporal test check when there are no previous visits (e.g. before visit 0) """

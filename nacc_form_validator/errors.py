@@ -122,7 +122,7 @@ class CustomErrorHandler(BasicErrorHandler):
             0x3003:
             "Error in comparing {0} to age at {1} ({2}): {3}",
             0x3004:
-            "{1} in previous visit for if {2} in current visit then {3} " +
+            "{1} in previous visit for if {3} in current visit then {2} " +
             "in previous visit - temporal rule no: {0}",
         }
 
