@@ -36,7 +36,6 @@ The form validator uses QC rules defined as JSON or YAML data objects to check d
 ptid:
   type: integer
   required: true
-
 birthmo:
   type: integer
   required: true
