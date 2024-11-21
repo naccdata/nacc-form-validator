@@ -924,7 +924,7 @@ class NACCValidator(Validator):
                     'previous_record': {
                         'type': 'boolean',
                         'required': False
-                    }
+                    },
                     'ignore_empty': {
                         'type': 'boolean',
                         'required': False,
