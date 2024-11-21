@@ -89,7 +89,7 @@ class CustomErrorHandler(BasicErrorHandler):
             0x1009:
             "{1} for if {2} else {3} - compatibility rule no: {0}",
             0x2000:
-            "{1} in current visit for if {2} in previous visit then {3} " +
+            "{1} for if {2} in previous visit then {3} " +
             "in current visit - temporal rule no: {0}",
             0x2001:
             "primary key variable {0} not set in current visit data",
@@ -122,7 +122,7 @@ class CustomErrorHandler(BasicErrorHandler):
             0x3003:
             "Error in comparing {0} to age at {1} ({2}): {3}",
             0x3004:
-            "{1} in previous visit for if {3} in current visit then {2} " +
+            "{1} for if {3} in current visit then {2} " +
             "in previous visit - temporal rule no: {0}",
         }
 

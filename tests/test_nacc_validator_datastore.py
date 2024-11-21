@@ -126,7 +126,7 @@ def test_temporal_check(schema):
 
     assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'taxes': 8})
     assert nv.errors == {'taxes': [
-        "('taxes', ['unallowed value 8']) in current visit for if {'taxes': {'allowed': [0]}} in previous visit then {'taxes': {'forbidden': [8]}} in current visit - temporal rule no: 0"]}
+        "('taxes', ['unallowed value 8']) for if {'taxes': {'allowed': [0]}} in previous visit then {'taxes': {'forbidden': [8]}} in current visit - temporal rule no: 0"]}
 
 def test_temporal_check_swap_order(schema):
     """ Test temporal check when the order of evaluation is swapped """
@@ -139,7 +139,7 @@ def test_temporal_check_swap_order(schema):
     nv.reset_record_cache()
     assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'taxes': 1})
     assert nv.errors == {'taxes': [
-        "('taxes', ['unallowed value 8']) in previous visit for if {'taxes': {'forbidden': [8]}} in current visit then {'taxes': {'allowed': [0]}} in previous visit - temporal rule no: 0"]}
+        "('taxes', ['unallowed value 8']) for if {'taxes': {'forbidden': [8]}} in current visit then {'taxes': {'allowed': [0]}} in previous visit - temporal rule no: 0"]}
 
 def test_temporal_check_no_prev_visit(schema):
     """ Temporal test check when there are no previous visits (e.g. before visit 0) """
@@ -305,7 +305,7 @@ def test_temporal_check_with_nested_compare_with_previous_record():
 
     assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyr': 1951})
     assert nv.errors == {'birthyr': [
-        '(\'birthyr\', ["input value doesn\'t satisfy the condition birthyr == birthyr (previous record)"]) in current visit for ' +
+        '(\'birthyr\', ["input value doesn\'t satisfy the condition birthyr == birthyr (previous record)"]) for ' +
         'if {\'birthyr\': {\'forbidden\': [-1]}} in previous visit ' +
         'then {\'birthyr\': {\'compare_with\': {\'comparator\': \'==\', \'base\': \'birthyr\', \'previous_record\': True}}} in current visit ' +
         '- temporal rule no: 0']}
