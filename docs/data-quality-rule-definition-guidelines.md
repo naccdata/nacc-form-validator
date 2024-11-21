@@ -27,11 +27,12 @@ The form validator uses QC rules defined as JSON or YAML data objects to check d
 
 <table>
 <tr>
-<th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
+<th>YAML Rule Definition</th>
+<th>JSON Rule Definition</th>
+<th>When Validating</th>
 <tr>
 <td valign="top">
-
-```yaml
+<pre><code>
 ptid:
   type: integer
   required: true
@@ -41,11 +42,10 @@ birthmo:
   required: true
   min: 1
   max: 12
-```
+</code></pre>
 </td>
 <td valign="top">
-
-```json
+<pre><code>
 {
     "ptid": {
         "type": "integer",
@@ -58,16 +58,16 @@ birthmo:
         "max": 12
     }
 }
-```
+</code></pre>
 </td>
 <td valign="top">
-
-```python
+<pre><code>
 {"ptid": 101, "birthmo": 12}    # passes
 {"ptid": 102, "birthmo": 15}    # fails
 {"ptid": 103}                   # fails
-```
+</code></pre>
 </td>
+</tr>
 </table>
 
 ## Validation Rules
@@ -78,13 +78,15 @@ Keywords frequently used in UDS rules are described in the table below:
 
 <table width="100%">
 <tr>
-<th> Keyword </th> <th> Description </th> <th width="50%"> Example </th>
+<th>Keyword</th>
+<th>Description</th>
+<th width="50%">Example</th>
+</tr>
 <tr>
-<td valign="top"> <code>allowed</code> </td>
-<td valign="top"> Specify the list of allowed values. Validation will fail if any other value is given in the data record. </td>
+<td valign="top"><code>allowed</code></td>
+<td valign="top">Specify the list of allowed values. Validation will fail if any other value is given in the data record.</td>
 <td valign="top">
-
-```python
+<pre><code>
 schema = {
     "limit": {
         "type": "integer",
@@ -94,16 +96,14 @@ schema = {
 
 data = {"limit": 10}    # passes
 data = {"limit": 20}    # fails
-```
-
+</code></pre>
 </td>
 </tr>
 <tr>
-<td valign="top"> <code>forbidden</code> </td>
-<td valign="top"> Specify the list of forbidden values. Validation will fail if values in this list are included in the record. </td>
+<td valign="top"><code>forbidden</code></td>
+<td valign="top">Specify the list of forbidden values. Validation will fail if values in this list are included in the record.</td>
 <td valign="top">
-
-```python
+<pre><code>
 schema = {
     "user": {
         "type": "string",
@@ -113,16 +113,14 @@ schema = {
 
 data = {"user": "admin"}    # passes
 data = {"user": "viewer"}   # fails
-```
-
+</code></pre>
 </td>
 </tr>
 <tr>
-<td valign="top"> <code>min</code>, <code>max</code> </td>
-<td valign="top"> Minimum and maximum value allowed (only applicable to object types which support comparison operations like integers or floats). Each keyword can be used independently. Use together to define a range. </td>
+<td valign="top"><code>min</code>, <code>max</code></td>
+<td valign="top">Minimum and maximum value allowed (only applicable to object types which support comparison operations like integers or floats). Each keyword can be used independently. Use together to define a range.</td>
 <td valign="top">
-
-```python
+<pre><code>
 schema = {
     "length": {
         "type": "float",
@@ -133,16 +131,14 @@ schema = {
 
 data = {"length": 14}       # passes
 data = {"length": 20.8}     # fails
-```
-
+</code></pre>
 </td>
 </tr>
 <tr>
-<td valign="top"> <code>nullable</code> </td>
-<td valign="top"> If set to "true", the field value is allowed to be empty. This rule will be checked on every field, regardless of if it's defined or not. The rule's constraints defaults it to "false". In other words, if neither `nullable` nor `required` are set, the field is required. </td>
+<td valign="top"><code>nullable</code></td>
+<td valign="top">If set to "true", the field value is allowed to be empty. This rule will be checked on every field, regardless of if it's defined or not. The rule's constraints defaults it to "false". In other words, if neither `nullable` nor `required` are set, the field is required.</td>
 <td valign="top">
-
-```python
+<pre><code>
 schema = {
     "country": {
         "type": "string",
@@ -160,16 +156,14 @@ schema = {
 }
 
 data = {"country": ""}      # fails
-```
-
+</code></pre>
 </td>
 </tr>
 <tr>
-<td valign="top"> <code>required</code> </td>
-<td valign="top"> If set to "true", the field is mandatory. Validation will fail when it is missing. </td>
+<td valign="top"><code>required</code></td>
+<td valign="top">If set to "true", the field is mandatory. Validation will fail when it is missing.</td>
 <td valign="top">
-
-```python
+<pre><code>
 schema = {
     "name": {
         "type": "string",
@@ -184,16 +178,14 @@ schema = {
 data = {"name": "Steve", "age": 50}     # passes
 data = {"name": "Debby"}                # passes
 data = {"age": 40}                      # fails
-```
-
+</code></pre>
 </td>
 </tr>
 <tr>
-<td valign="top"> <code>type</code> </td>
-<td valign="top"> Data type allowed for the value. See the <a href="https://docs.python-cerberus.org/validation-rules.html">Cerberus documentation for the list of type names</a>. If multiple types are allowed, you can specify the types as a list. </td>
+<td valign="top"><code>type</code></td>
+<td valign="top">Data type allowed for the value. See the <a href="https://docs.python-cerberus.org/validation-rules.html">Cerberus documentation for the list of type names</a>. If multiple types are allowed, you can specify the types as a list.</td>
 <td valign="top">
-
-```python
+<pre><code>
 schema = {
     "limit": {
         "type": "integer"
@@ -212,16 +204,14 @@ schema = {
 data = {"limit": 10}        # passes
 data = {"limit": 11.5}      # passes
 data = {"limit": "one"}     # fails
-```
-
+</code></pre>
 </td>
 </tr>
 <tr>
-<td valign="top"> <code>anyof</code> </td>
-<td valign="top"> Allows to define different sets of rules to validate against, supplied in a list of dicts. Field will be considered valid if any of the provided constraints validates the field. </td>
+<td valign="top"><code>anyof</code></td>
+<td valign="top">Allows to define different sets of rules to validate against, supplied in a list of dicts. Field will be considered valid if any of the provided constraints validates the field.</td>
 <td valign="top">
-
-```python
+<pre><code>
 schema = {
     "age": {
         "type": "integer",
@@ -240,16 +230,14 @@ schema = {
 data = {"age": 40}      # passes
 data = {"age": 999}     # passes
 data = {"age": 200}     # fails
-```
-
+</code></pre>
 </td>
 </tr>
 <tr>
-<td valign="top"> <code>regex</code> </td>
-<td valign="top"> Regex to validate against; only valid for string values. </td>
+<td valign="top"><code>regex</code></td>
+<td valign="top">Regex to validate against; only valid for string values.</td>
 <td valign="top">
-
-```python
+<pre><code>
 schema = {
     "email": {
         "type": "string",
@@ -259,8 +247,7 @@ schema = {
 
 data = {"email": "john@example.com"}            # passes
 data = {"email": "john_at_example_dot_com"}     # fails
-```
-
+</code></pre>
 </td>
 </tr>
 </table>
@@ -313,11 +300,12 @@ The rule definition for `compare_with` should follow the following format:
 
 <table>
 <tr>
-<th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
+<th>YAML Rule Definition</th>
+<th>JSON Rule Definition</th>
+<th>When Validating</th>
 <tr>
 <td valign="top">
-
-```yaml
+<pre><code>
 birthyr:
   type: integer
   required: true
@@ -326,11 +314,10 @@ birthyr:
     base: current_year
     adjustment: 15
     op: "-"
-```
+</code></pre>
 </td>
 <td valign="top">
-
-```json
+<pre><code>
 {
     "birthyr": {
         "type": "integer",
@@ -343,16 +330,15 @@ birthyr:
         }
     }
 }
-```
+</code></pre>
 </td>
-
 <td valign="top">
-
-```python
+<pre><code>
 {"birthyr": 1995}   # passes
 {"birthyr": 2030}   # fails until 2045
-```
+</code></pre>
 </td>
+</tr>
 </table>
 
 **Absolute Value Example**
@@ -361,12 +347,12 @@ birthyr:
 
 <table>
 <tr>
-<th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
+<th>YAML Rule Definition</th>
+<th>JSON Rule Definition</th>
+<th>When Validating</th>
 <tr>
-
 <td valign="top">
-
-```yaml
+<pre><code>
 waist1:
   type: float
   required: true
@@ -378,11 +364,10 @@ waist1:
 waist2:
     type: float
     required: true
-```
+</code></pre>
 </td>
 <td valign="top">
-
-```json
+<pre><code>
 {
         "waist1": {
             "type": "float",
@@ -399,16 +384,15 @@ waist2:
             "required": true
         }
     }
-```
+</code></pre>
 </td>
-
 <td valign="top">
-
-```python
+<pre><code>
 {'waist1': 5, 'waist2': 5.25}   # passes
 {'waist1': 5, 'waist2': 4.4}    # fails
-```
+</code></pre>
 </td>
+</tr>
 </table>
 
 ### compare_age
@@ -451,11 +435,12 @@ The rule definition for `compare_age` should follow the following format:
 
 <table>
 <tr>
-<th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
+<th>YAML Rule Definition</th>
+<th>JSON Rule Definition</th>
+<th>When Validating</th>
 <tr>
 <td valign="top">
-
-```yaml
+<pre><code>
 frmdate:
   type: string
   formatting: date
@@ -475,11 +460,10 @@ birthyr:
 
 behage:
   type: integer
-```
+</code></pre>
 </td>
 <td valign="top">
-
-```json
+<pre><code>
 {
     "frmdate": {
         "type": "string",
@@ -503,16 +487,15 @@ behage:
         "type": "integer"
     }
 }
-```
+</code></pre>
 </td>
-
 <td valign="top">
-
-```python
+<pre><code>
 {'frmdate': '2024/02/02', 'birthmo': 6, 'birthyr': 1950, 'behage': 50}  # passes
 {'frmdate': '2024/02/02', 'birthmo': 1, 'birthyr': 2024, 'behage': 50}  # fails
-```
+</code></pre>
 </td>
+</tr>
 </table>
 
 
@@ -563,7 +546,7 @@ The rule definition for `compatibility` follows the following format:
 
 One additional nuance is the evaluation against `None`/null values. Because Cerberus always evaluates `"nullable": False` by default, the application of a subschema in this case must explicitly set `"nullable": True` if the attributes evaluate or result in null values. For example
 
-```
+```python
 # if case: If PARENTVAR is blank or 88, then VAR1 must be blank
 "if": {
     "parentvar": {
@@ -614,11 +597,12 @@ If field `incntmod` (primary contact mode with participant) is 6, then field `in
 
 <table>
 <tr>
-<th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
+<th>YAML Rule Definition</th>
+<th>JSON Rule Definition</th>
+<th>When Validating</th>
 <tr>
 <td valign="top">
-
-```yaml
+<pre><code>
 incntmod:
   type: integer
   required: true
@@ -633,11 +617,10 @@ incntmdx:
             - 6
       then:
         nullable: false
-```
+</code></pre>
 </td>
 <td valign="top">
-
-```json
+<pre><code>
 {
     "incntmod": {
         "type": "integer",
@@ -660,29 +643,30 @@ incntmdx:
         ]
     }
 }
-```
+</code></pre>
 </td>
 <td valign="top">
-
-```python
+<pre><code>
 {"incntmod": 1, "incntmdx": None}   # passes
 {"incntmod": 6, "incntmdx": 1}      # passes
 {"incntmod": 6, "incntmdx": None}   # fails
-```
+</code></pre>
 </td>
+</tr>
 </table>
 
 This rule can also be used to define the "if not, then" case. For this, we use `forbidden` instead of `allowed`.
 
 So if field `incntmod` (primary contact mode with participant) is NOT 6, then field `incntmdx` (specify primary contact mode with participant) must be blank.
 
- <table>
+<table>
 <tr>
-<th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
+<th>YAML Rule Definition</th>
+<th>JSON Rule Definition</th>
+<th>When Validating</th>
 <tr>
 <td valign="top">
-
-```yaml
+<pre><code>
 incntmod:
   type: integer
   required: true
@@ -698,11 +682,10 @@ incntmdx:
       then:
         nullable: true
         filled: false
-```
+</code></pre>
 </td>
 <td valign="top">
-
-```json
+<pre><code>
 {
     "incntmod": {
         "type": "integer",
@@ -726,17 +709,17 @@ incntmdx:
         ]
     }
 }
-```
+</code></pre>
 </td>
 <td valign="top">
-
-```python
+<pre><code>
 {"incntmod": 1, "incntmdx": None}   # passes
 {"incntmod": 6, "incntmdx": 1}      # fails
 {"incntmod": 6, "incntmdx": None}   # passes
 {"incntmod": 1, "incntmdx": 1}      # fails
-```
+</code></pre>
 </td>
+</tr>
 </table>
 
 
@@ -767,11 +750,12 @@ One of `var1`, `var2`, or `var3` must be `1`.
 
 <table>
 <tr>
-<th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
+<th>YAML Rule Definition</th>
+<th>JSON Rule Definition</th>
+<th>When Validating</th>
 <tr>
 <td valign="top">
-
-```yaml
+<pre><code>
 var1:
   type: integer
   nullable: true
@@ -795,11 +779,10 @@ var3:
         - ==:
             - 1
             - var: var3
-```
+</code></pre>
 </td>
 <td valign="top">
-
-```json
+<pre><code>
 {
     "var1": {
         "type": "integer",
@@ -829,16 +812,16 @@ var3:
         }
     }
 }
-```
+</code></pre>
 </td>
 <td valign="top">
-
-```python
+<pre><code>
 {"var1": 1, "var2": 1, "var3": 1}            # passes
 {"var1": 1, "var2": None, "var3": None}      # passes
 {"var1": None, "var2": None, "var3": None}   # fails
-```
+</code></pre>
 </td>
+</tr>
 </table>
 
 #### Custom Operations
@@ -911,11 +894,12 @@ If field `taxes` (difficulty with taxes, business, and other papers) is 0 (norma
 
 <table>
 <tr>
-<th> YAML Rule Definition </th> <th> JSON Rule Definition </th> <th> When Validating </th>
+<th>YAML Rule Definition</th>
+<th>JSON Rule Definition</th>
+<th>When Validating</th>
 <tr>
 <td valign="top">
-
-```yaml
+<pre><code>
 taxes:
   type: integer
   temporalrules:
@@ -927,11 +911,10 @@ taxes:
         taxes:
             forbidden:
             - 8
-```
+</code></pre>
 </td>
 <td valign="top">
-
-```json
+<pre><code>
 {
     "taxes": {
         "type": "integer",
@@ -951,18 +934,18 @@ taxes:
         ]
     }
 }
-```
+</code></pre>
 </td>
 <td valign="top">
-
-```python
+<pre><code>
 # assume this record already exists
 # {"visit_date": 1, "taxes": 0}
 
 {"visit_date": 2, "taxes": 1}   # passes
 {"visit_date": 2, "taxes": 8}   # fails
-```
+</code></pre>
 </td>
+</tr>
 </table>
 
 ### compute_gds
@@ -983,7 +966,7 @@ The rule definition for `compute_gds` should follow the following format:
 
 Custom rule defined to check whether a given Drug ID is valid RXCUI code.
 
-This function uses `check_with` rule from Cerberus. Rule definition should be in the following format:
+This function uses the `check_with` rule from Cerberus. Rule definition should be in the following format:
 
 ```json
 {
@@ -992,4 +975,4 @@ This function uses `check_with` rule from Cerberus. Rule definition should be in
     }
 }
 ```
-*To validate `rxnorm`, validator should have a `Datastore` instance which implements `is_valid_rxcui` function which will check whether the given rxnormid value is valid RXCUI code*
+> **NOTE**: To validate `rxnorm`, validator should have a `Datastore` instance which implements the `is_valid_rxcui` function which will check if the given rxnormid value is a valid RXCUI code
