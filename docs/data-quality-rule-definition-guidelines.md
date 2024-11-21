@@ -241,11 +241,11 @@ data = {"age": 200}     # fails
 schema = {
     "email": {
         "type": "string",
-        "regex": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$ "
+        "regex": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
     }
 }
 
-data = {"email": "john@example.com"}            # passes
+data = {"email": "john\@example.com"}            # passes
 data = {"email": "john_at_example_dot_com"}     # fails
 </code></pre>
 </td>
