@@ -362,8 +362,8 @@ waist1:
     adjustment: 0.5
     op: abs
 waist2:
-    type: float
-    required: true
+  type: float
+  required: true
 </code></pre>
 </td>
 <td valign="top">
@@ -449,15 +449,12 @@ frmdate:
     birth_year: birthyr
     birth_month: birthmo
     compare_to: behage
-
 birthmo:
   type: integer
   min: 1
   max: 12
-
 birthyr:
   type: integer
-
 behage:
   type: integer
 </code></pre>
@@ -604,17 +601,16 @@ If field `incntmod` (primary contact mode with participant) is 6, then field `in
 <td valign="top">
 <pre><code>
 incntmod:
-  type: integer
+type: integer
   required: true
-
 incntmdx:
   type: integer
   nullable: true
   compatibility:
     - if:
-        incntmod:
-          allowed:
-            - 6
+      incntmod:
+        allowed:
+          - 6
       then:
         nullable: false
 </code></pre>
@@ -670,15 +666,14 @@ So if field `incntmod` (primary contact mode with participant) is NOT 6, then fi
 incntmod:
   type: integer
   required: true
-
 incntmdx:
   type: string
   nullable: true
   compatibility:
-    - if:
-        incntmod:
-          forbidden:
-            - 6
+    - if: null
+      incntmod:
+        forbidden:
+          - 6
       then:
         nullable: true
         filled: false
@@ -759,11 +754,9 @@ One of `var1`, `var2`, or `var3` must be `1`.
 var1:
   type: integer
   nullable: true
-
 var2:
   type: integer
   nullable: true
-
 var3:
   type: integer
   nullable: true
@@ -771,14 +764,14 @@ var3:
     formula:
       or:
         - ==:
-            - 1
-            - var: var1
+          - 1
+          - var: var1
         - ==:
-            - 1
-            - var: var2
+          - 1
+          - var: var2
         - ==:
-            - 1
-            - var: var3
+          - 1
+          - var: var3
 </code></pre>
 </td>
 <td valign="top">
@@ -904,12 +897,12 @@ taxes:
   type: integer
   temporalrules:
     - previous:
-        taxes:
-            allowed:
-            - 0
+      taxes:
+        allowed:
+          - 0
       current:
         taxes:
-            forbidden:
+          forbidden:
             - 8
 </code></pre>
 </td>
