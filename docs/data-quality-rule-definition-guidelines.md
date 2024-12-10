@@ -919,26 +919,26 @@ If field `taxes` (difficulty with taxes, business, and other papers) is 0 (norma
 
 ### check_adcid
 
-Used to validate an ADCID is valid.
+Used to check whether a specified ADCID is valid.
 
-This function falls under the `function` rule which in turn calls the custom `check_adcid` rule in the NACCValidator. The rule definition should be in the following format:
+This validation is implemented using the `function` rule with custom `check_adcid` function in the NACCValidator. The rule definition should be in the following format:
 
 ```json
 {
     "<adcid_variable>": {
         "function": {
             "name": "check_adcid",
-            "args": {"own": "<bool, whether or not to check own ADCID or another center's ADCID; defaults to True>"}
+            "args": {"own": "<bool, whether to validate against own ADCID or list of current ADCIDs; defaults to True>"}
         }
     }
 }
 ```
 
-> **NOTE**: To validate `check_adcid`, the validator should have a `Datastore` instance which implements the `is_valid_adcid` function which will check if the given ADCID value is valid
+> **NOTE**: To validate `check_adcid`, the validator should have a `Datastore` instance which implements the `is_valid_adcid` function (which should have access to center's ADCID and the list of current ADCIDs).
 
 **Example:**
 
-The `adcid` must match the center's own ADCID, whereas `oldadcid` should be a valid ADCID but _not_ match its own. Which ADCIDs are valid is defined by the `Datastore` instance.
+The `adcid` must match the center's own ADCID, whereas `oldadcid` should be a valid ADCID in the current ADCIDs list. 
 
 <table>
 <tr>
@@ -957,7 +957,7 @@ oldadcid:
   function:
     name: check_adcid
     args:
-      - own: false
+      own: false
 </code></pre>
 </td>
 <td style="vertical-align:top;">
