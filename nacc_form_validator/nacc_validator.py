@@ -10,12 +10,9 @@ from dateutil import parser
 
 from nacc_form_validator import utils
 from nacc_form_validator.datastore import Datastore
-from nacc_form_validator.errors import (
-    CustomErrorHandler,
-    ErrorDefs,
-    SchemaDefs,
-)
+from nacc_form_validator.errors import CustomErrorHandler, ErrorDefs
 from nacc_form_validator.json_logic import jsonLogic
+from nacc_form_validator.quality_check import SchemaDefs
 
 log = logging.getLogger(__name__)
 
@@ -800,11 +797,12 @@ class NACCValidator(Validator):
         except ValueError as error:
             self._error(field, ErrorDefs.FORMULA, str(error))
 
-    def _validate_function(self, function: str, field: str, value: object):
+    def _validate_function(self, function: Dict[str, Any], field: str,
+                           value: object):
         """Validate using a custom defined function.
 
         Args:
-            function: Function name
+            function: Dict specifying function name and arguments
             field: Variable name
             value: Variable value
 
@@ -812,14 +810,23 @@ class NACCValidator(Validator):
         Cerberus uses it to validate the schema definition.
 
         The rule's arguments are validated against this schema:
-            {'type': 'string', 'empty': False}
+            {
+                'type': 'dict',
+                'schema': {
+                    'name': {'type': 'string', 'required': True, 'empty': False},
+                    'args': {'type': 'dict', 'required': False}
+                }
+            }
         """
 
-        func = getattr(self, function, None)
+        function_name = '_' + \
+            function.get(SchemaDefs.FUNCTION_NAME, 'undefined')
+        func = getattr(self, function_name, None)
         if func and callable(func):
-            func(value)
+            kwargs = getattr(self, function.get(SchemaDefs.FUNCTION_ARGS), {})
+            func(field, value, **kwargs)
         else:
-            err_msg = f"{function} not defined in the validator module"
+            err_msg = f"{function_name} not defined in the validator module"
             self.__add_system_error(field, err_msg)
             raise ValidationException(err_msg)
 
@@ -997,6 +1004,9 @@ class NACCValidator(Validator):
         Args:
             field: Variable name
             value: Variable value
+
+        Raises:
+            ValidationException: If Datastore not set
         """
 
         # No need to validate if blank or 0 (No RXCUI code available)
@@ -1106,3 +1116,25 @@ class NACCValidator(Validator):
             except TypeError as error:
                 self._error(field, ErrorDefs.COMPARE_AGE_INVALID_COMPARISON,
                             compare_field, field, age, str(error))
+
+    def _check_adcid(self, field: str, value: int, own: bool = True):
+        """Check whether a given ADCID is valid.
+
+        Args:
+            field: name of ADCID field
+            value: ADCID value
+            own (optional): whether to check own ADCID or another center's ADCID.
+
+        Raises:
+            ValidationException: If Datastore not set
+        """
+
+        if not self.datastore:
+            err_msg = "Datastore not set, cannot validate ADCID"
+            self.__add_system_error(field, err_msg)
+            raise ValidationException(err_msg)
+
+        if not self.datastore.is_valid_adcid(value, own):
+            self._error(
+                field, ErrorDefs.ADCID_NOT_MATCH
+                if own else ErrorDefs.ADCID_NOT_VALID, value)

@@ -84,3 +84,17 @@ class Datastore(ABC):
             bool: True if provided drug ID is valid, else False
         """
         return False
+
+    @abstractmethod
+    def is_valid_adcid(self, adcid: int, own: bool) -> bool:
+        """Abstract method to check whether a given ADCID is valid. Override
+        this method to implement ADCID validation.
+
+        Args:
+            adcid: provided ADCID
+            own: whether to check own ADCID or another center's ADCID
+
+        Returns:
+            bool: True if provided ADCID is valid, else False
+        """
+        return False
