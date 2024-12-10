@@ -4,6 +4,7 @@ Documentation of release versions of `nacc-form-validator`
 
 ## 0.4.0
 
+* Adds `_check_adcid` method to validate a provided ADCID against current list of ADCIDs. (Actual validation should be implemented by overriding the `is_valid_adcid` method in Datastore class)
 * Adds `get_previous_record` method to grab previous record from Datastore, which can grab the previous record or the previous record where a specific field is non-empty
 * Adds support for comparing against the previous record in `compare_with`
 * Adds new rule `compare_age` to handle rules that need to compare ages relative to a date
@@ -19,7 +20,7 @@ Documentation of release versions of `nacc-form-validator`
 
 ## 0.3.0
 
-* Adds `_check_with_rxnorm` function to check whether a given Drug ID is valid RXCUI code
+* Adds `_check_with_rxnorm` function to check whether a given Drug ID is valid RXCUI code. (Actual validation should be implemented by overriding the `is_valid_rxcui` method in Datastore class)
 * Updates `_validate_compare_with` to allow adjustments to be another field, and for base values to be hardcoded values
 * Updates json_logic `less` function to handle None
 * Updates `_validate_temporalrules` to iterate on multiple fields for `previous` and `current` clauses, remove `orderby` attribute
