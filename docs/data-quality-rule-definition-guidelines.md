@@ -12,6 +12,7 @@
     - [compatibility](#compatibility)
     - [logic](#logic)
     - [temporalrules](#temporalrules)
+    - [check\_adcid](#check_adcid)
     - [compute\_gds](#compute_gds)
     - [rxnorm](#rxnorm)
 
@@ -916,6 +917,77 @@ If field `taxes` (difficulty with taxes, business, and other papers) is 0 (norma
 </tr>
 </table>
 
+### check_adcid
+
+Used to check whether a specified ADCID is valid.
+
+This validation is implemented using the `function` rule with custom `check_adcid` function in the NACCValidator. The rule definition should be in the following format:
+
+```json
+{
+    "<adcid_variable>": {
+        "function": {
+            "name": "check_adcid",
+            "args": {"own": "<bool, whether to validate against own ADCID or list of current ADCIDs; defaults to True>"}
+        }
+    }
+}
+```
+
+> **NOTE**: To validate `check_adcid`, the validator should have a `Datastore` instance which implements the `is_valid_adcid` function (which should have access to center's ADCID and the list of current ADCIDs).
+
+**Example:**
+
+The `adcid` must match the center's own ADCID, whereas `oldadcid` should be a valid ADCID in the current ADCIDs list. 
+
+<table>
+<tr>
+<th>YAML Rule Definition</th>
+<th>JSON Rule Definition</th>
+<th>When Validating</th>
+</tr>
+<tr>
+<td style="vertical-align:top;">
+<pre><code>adcid:
+  type: integer
+  function:
+    name: check_adcid
+oldadcid:
+  type: integer
+  function:
+    name: check_adcid
+    args:
+      own: false
+</code></pre>
+</td>
+<td style="vertical-align:top;">
+<pre><code>{
+    "adcid": {
+        "type": "integer",
+        "function": {
+            "name": "check_adcid"
+        }
+    },
+    "oldadcid": {
+        "type": "integer",
+        "function": {
+            "name": "check_adcid",
+            "args": {"own": False}
+    }
+}
+</code></pre>
+</td>
+<td style="vertical-align:top;">
+<pre><code># assume the center's own ADCID is 0, and ADCIDs 0-5 inclusive are valid
+
+{"adcid": 0, "oldadcid": 5}   # passes
+{"adcid": 2, "oldadcid": 5}   # fails
+{"adcid": 0, "oldadcid": 9}   # fails
+</code></pre>
+</td>
+</tr>
+</table>
+
 ### compute_gds
 
 Custom rule defined to validate the Geriatric Depression Scale (GDS) score computation. Only be used for validating the `gds` field in UDS Form B6.
@@ -934,7 +1006,7 @@ The rule definition for `compute_gds` should follow the following format:
 
 Custom rule defined to check whether a given Drug ID is valid RXCUI code.
 
-This function uses the `check_with` rule from Cerberus. Rule definition should be in the following format:
+This function uses the `check_with` rule from Cerberus. The rule definition should be in the following format:
 
 ```json
 {

@@ -3,8 +3,8 @@ Utility/helper methods and fixtures used for testing.
 """
 import pytest
 
-from dateutil import parser
-from nacc_form_validator.nacc_validator import NACCValidator, CustomErrorHandler
+from nacc_form_validator.nacc_validator import NACCValidator
+from nacc_form_validator. errors import CustomErrorHandler
 
 
 @pytest.fixture(scope="session")
@@ -15,6 +15,7 @@ def create_nacc_validator():
                              allow_unknown=False,
                              error_handler=CustomErrorHandler(schema))
     return _create_nacc_validator
+
 
 @pytest.fixture
 def nv(create_nacc_validator):
@@ -48,6 +49,7 @@ def nv(create_nacc_validator):
     }
 
     return create_nacc_validator(schema)
+
 
 @pytest.fixture(scope="session")
 def date_constraint():

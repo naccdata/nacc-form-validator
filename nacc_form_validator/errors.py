@@ -9,8 +9,11 @@ from cerberus.errors import (
     ValidationError,
 )
 
+from nacc_form_validator.keys import SchemaDefs
 
 # pylint: disable=(too-few-public-methods)
+
+
 class ErrorDefs:
     """Class to define custom errors."""
 
@@ -43,6 +46,8 @@ class ErrorDefs:
     COMPARE_AGE = ErrorDefinition(0x3002, 'compare_age')
     COMPARE_AGE_INVALID_COMPARISON = ErrorDefinition(0x3003, 'compare_age')
     TEMPORAL_SWAPPED = ErrorDefinition(0x3004, 'temporalrules')
+    ADCID_NOT_MATCH = ErrorDefinition(0x3005, "function")
+    ADCID_NOT_VALID = ErrorDefinition(0x3006, "function")
 
 
 class CustomErrorHandler(BasicErrorHandler):
@@ -124,6 +129,10 @@ class CustomErrorHandler(BasicErrorHandler):
             0x3004:
             "{1} for if {3} in current visit then {2} " +
             "in previous visit - temporal rule no: {0}",
+            0x3005:
+            "Provided ADCID {0} does not match your center's ADCID",
+            0x3006:
+            "Provided ADCID {0} is not in the valid list of ADCIDs",
         }
 
         self.messages.update(custom_errors)
@@ -145,41 +154,3 @@ class CustomErrorHandler(BasicErrorHandler):
                 return field + ": " + error_msg
 
         return super()._format_message(field, error)
-
-
-class SchemaDefs:
-    """Class to store schema attribute labels."""
-
-    TYPE = "type"
-    OP = "op"
-    IF_OP = "if_op"
-    THEN_OP = "then_op"
-    ELSE_OP = "else_op"
-    IF = "if"
-    THEN = "then"
-    ELSE = "else"
-    META = "meta"
-    ERRMSG = "errmsg"
-    ORDERBY = "orderby"
-    CONSTRAINTS = "constraints"
-    PREV_OP = "prev_op"
-    CURR_OP = "curr_op"
-    CURRENT = "current"
-    PREVIOUS = "previous"
-    CRR_DATE = "current_date"
-    CRR_YEAR = "current_year"
-    CRR_MONTH = "current_month"
-    CRR_DAY = "current_day"
-    PREV_RECORD = "previous_record"
-    FORMULA = "formula"
-    INDEX = "index"
-    FORMATTING = "formatting"
-    COMPARATOR = "comparator"
-    BASE = "base"
-    ADJUST = "adjustment"
-    IGNORE_EMPTY = "ignore_empty"
-    BIRTH_MONTH = 'birth_month'
-    BIRTH_DAY = 'birth_day'
-    BIRTH_YEAR = 'birth_year'
-    COMPARE_TO = "compare_to"
-    SWAP_ORDER = "swap_order"

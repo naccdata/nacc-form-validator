@@ -10,7 +10,8 @@ import json
 import logging
 
 from pathlib import Path
-from nacc_form_validator import QualityCheck
+
+from nacc_form_validator.quality_check import QualityCheck
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -38,9 +39,11 @@ if __name__ == "__main__":
     log.info(f"strict mode::\t{not args.disable_strict}")
 
     if not args.rules_json.is_file():
-        raise FileNotFoundError(f"Cannot find specified rules JSON: {args.rules_json}")
+        raise FileNotFoundError(
+            f"Cannot find specified rules JSON: {args.rules_json}")
     if not args.input_records_csv.is_file():
-        raise FileNotFoundError(f"Cannot find specified input records CSV: {args.input_records_csv}")
+        raise FileNotFoundError(
+            f"Cannot find specified input records CSV: {args.input_records_csv}")
 
     """
     Instantiate the quality check object from rules JSON. This script assumes no datastore, and therefor
@@ -70,7 +73,8 @@ if __name__ == "__main__":
                 errors['row'] = i
                 all_errors.append(errors)
                 error_headers.update(set(errors.keys()))
-                log.warning(f"Row {i} in the input records CSV failed validation")
+                log.warning(
+                    f"Row {i} in the input records CSV failed validation")
 
     """
     Convert all_errors and error_headers to a "csv-like" dict for writing/printing out
