@@ -5,8 +5,10 @@ Creates a dummy datastore for simple testing
 import copy
 import pytest
 
-from nacc_form_validator.nacc_validator import NACCValidator, CustomErrorHandler
+
 from nacc_form_validator.datastore import Datastore
+from nacc_form_validator.errors import CustomErrorHandler
+from nacc_form_validator.nacc_validator import NACCValidator
 
 
 class CustomDatastore(Datastore):
@@ -36,6 +38,10 @@ class CustomDatastore(Datastore):
 
         # dummy rxcui mapping for testing
         self.__valid_rxcui = list(range(50))
+
+        # dummy ADCIDs for testing
+        self.__adcid = 0
+        self.__valid_adcids = [0, 2, 5, 8, 10]
 
         super().__init__(pk_field, orderby)
 
@@ -86,6 +92,13 @@ class CustomDatastore(Datastore):
         """ For RXCUI testing """
         return drugid in self.__valid_rxcui
 
+    def is_valid_adcid(self, adcid: int, own: bool) -> bool:
+        """ For ADCID testing """
+        if own:
+            return adcid == self.__adcid
+
+        return adcid in self.__valid_adcids
+
 
 def create_nacc_validator_with_ds(schema: dict[str, object], pk_field: str, orderby: str) -> NACCValidator:
     """ Creates a generic NACCValidtor with the above CustomDataStore """
@@ -96,6 +109,7 @@ def create_nacc_validator_with_ds(schema: dict[str, object], pk_field: str, orde
     nv.primary_key = pk_field
     nv.datastore = CustomDatastore(pk_field, orderby)
     return nv
+
 
 @pytest.fixture
 def schema():
@@ -118,28 +132,37 @@ def schema():
         }
     }
 
+
 def test_temporal_check(schema):
     """ Temporal test check - this is basically a more involved version of the example provided in docs/index.md """
     nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
 
-    assert nv.validate({'patient_id': 'PatientID1','visit_num': 4, 'taxes': 1})
+    assert nv.validate({'patient_id': 'PatientID1',
+                       'visit_num': 4, 'taxes': 1})
 
-    assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'taxes': 8})
+    assert not nv.validate(
+        {'patient_id': 'PatientID1', 'visit_num': 4, 'taxes': 8})
     assert nv.errors == {'taxes': [
         "('taxes', ['unallowed value 8']) for if {'taxes': {'allowed': [0]}} in previous visit then {'taxes': {'forbidden': [8]}} in current visit - temporal rule no: 0"]}
+
 
 def test_temporal_check_swap_order(schema):
     """ Test temporal check when the order of evaluation is swapped """
     schema['taxes']['temporalrules'][0]['swap_order'] = True
     nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
 
-    assert nv.validate({'patient_id': 'PatientID1','visit_num': 4, 'taxes': 1})
-    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'taxes': 8})  # since 8 fails the current condition, validation skipped
+    assert nv.validate({'patient_id': 'PatientID1',
+                       'visit_num': 4, 'taxes': 1})
+    # since 8 fails the current condition, validation skipped
+    assert nv.validate({'patient_id': 'PatientID1',
+                       'visit_num': 4, 'taxes': 8})
 
     nv.reset_record_cache()
-    assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'taxes': 1})
+    assert not nv.validate(
+        {'patient_id': 'PatientID1', 'visit_num': 2, 'taxes': 1})
     assert nv.errors == {'taxes': [
         "('taxes', ['unallowed value 8']) for if {'taxes': {'forbidden': [8]}} in current visit then {'taxes': {'allowed': [0]}} in previous visit - temporal rule no: 0"]}
+
 
 def test_temporal_check_no_prev_visit(schema):
     """ Temporal test check when there are no previous visits (e.g. before visit 0) """
@@ -149,6 +172,7 @@ def test_temporal_check_no_prev_visit(schema):
         {'patient_id': 'PatientID1', 'visit_num': 0, 'taxes': 1})
     assert nv.errors == {'taxes': [
         'failed to retrieve the previous visit, cannot proceed with validation']}
+
 
 def test_temporal_check_previous_nonempty():
     """ Temporal check where previous record is nonempty """
@@ -173,11 +197,14 @@ def test_temporal_check_previous_nonempty():
         }
     }
     nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
-    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthmo': 6})
+    assert nv.validate({'patient_id': 'PatientID1',
+                       'visit_num': 4, 'birthmo': 6})
 
     # if ignore_empty is set and we cannot find a record, pass through the validation
     nv.reset_record_cache()
-    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
+    assert nv.validate({'patient_id': 'PatientID1',
+                       'visit_num': 2, 'birthmo': 6})
+
 
 def test_compare_with_previous_record():
     """ Test compare_with previous record """
@@ -195,13 +222,18 @@ def test_compare_with_previous_record():
     }
 
     nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
-    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyr': 1950})
+    assert nv.validate({'patient_id': 'PatientID1',
+                       'visit_num': 4, 'birthyr': 1950})
 
-    assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyr': 2000})
-    assert nv.errors == {'birthyr': ["input value doesn't satisfy the condition birthyr == birthyr (previous record)"]}
+    assert not nv.validate(
+        {'patient_id': 'PatientID1', 'visit_num': 4, 'birthyr': 2000})
+    assert nv.errors == {'birthyr': [
+        "input value doesn't satisfy the condition birthyr == birthyr (previous record)"]}
 
     nv.reset_record_cache()
-    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthyr': 1950})
+    assert nv.validate({'patient_id': 'PatientID1',
+                       'visit_num': 2, 'birthyr': 1950})
+
 
 def test_compare_with_previous_nonempty_record():
     """ Test compare_with previous nonempty record """
@@ -220,11 +252,14 @@ def test_compare_with_previous_nonempty_record():
     }
 
     nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
-    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthmo': 6})
+    assert nv.validate({'patient_id': 'PatientID1',
+                       'visit_num': 4, 'birthmo': 6})
 
     # since ignore_empty = True, this will skip over validation in the previous record not found
     nv.reset_record_cache()
-    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
+    assert nv.validate({'patient_id': 'PatientID1',
+                       'visit_num': 2, 'birthmo': 6})
+
 
 def test_compare_with_previous_nonempty_record_not_allowed():
     """ Test compare_with previous nonempty record but not ignoring empty """
@@ -242,12 +277,16 @@ def test_compare_with_previous_nonempty_record_not_allowed():
     }
 
     nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
-    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthmo': 6})
+    assert nv.validate({'patient_id': 'PatientID1',
+                       'visit_num': 4, 'birthmo': 6})
 
     # since ignore_empty = False, this is not allowed
     nv.reset_record_cache()
-    assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
-    assert nv.errors == {'birthmo': ['failed to retrieve record for previous visit, cannot proceed with validation birthmo == birthmo (previous record)']}
+    assert not nv.validate(
+        {'patient_id': 'PatientID1', 'visit_num': 2, 'birthmo': 6})
+    assert nv.errors == {'birthmo': [
+        'failed to retrieve record for previous visit, cannot proceed with validation birthmo == birthmo (previous record)']}
+
 
 def test_compare_with_previous_different_variable():
     """ Test compare_with previous record and a different variable name.
@@ -268,13 +307,18 @@ def test_compare_with_previous_different_variable():
     }
 
     nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
-    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyear': 1950})
+    assert nv.validate({'patient_id': 'PatientID1',
+                       'visit_num': 4, 'birthyear': 1950})
 
-    assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyear': 2000})
-    assert nv.errors == {'birthyear': ["input value doesn't satisfy the condition birthyear == birthyr (previous record)"]}
+    assert not nv.validate(
+        {'patient_id': 'PatientID1', 'visit_num': 4, 'birthyear': 2000})
+    assert nv.errors == {'birthyear': [
+        "input value doesn't satisfy the condition birthyear == birthyr (previous record)"]}
 
     nv.reset_record_cache()
-    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 2, 'birthyear': 1950})
+    assert nv.validate({'patient_id': 'PatientID1',
+                       'visit_num': 2, 'birthyear': 1950})
+
 
 def test_temporal_check_with_nested_compare_with_previous_record():
     """ Test when compare_with previous_record nested inside a temporalrules """
@@ -301,14 +345,17 @@ def test_temporal_check_with_nested_compare_with_previous_record():
         }
     }
     nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
-    assert nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyr': 1950})
+    assert nv.validate({'patient_id': 'PatientID1',
+                       'visit_num': 4, 'birthyr': 1950})
 
-    assert not nv.validate({'patient_id': 'PatientID1', 'visit_num': 4, 'birthyr': 1951})
+    assert not nv.validate(
+        {'patient_id': 'PatientID1', 'visit_num': 4, 'birthyr': 1951})
     assert nv.errors == {'birthyr': [
         '(\'birthyr\', ["input value doesn\'t satisfy the condition birthyr == birthyr (previous record)"]) for ' +
         'if {\'birthyr\': {\'forbidden\': [-1]}} in previous visit ' +
         'then {\'birthyr\': {\'compare_with\': {\'comparator\': \'==\', \'base\': \'birthyr\', \'previous_record\': True}}} in current visit ' +
         '- temporal rule no: 0']}
+
 
 def test_check_with_rxnorm():
     """ Test checking drugID is a valid RXCUI """
@@ -328,3 +375,34 @@ def test_check_with_rxnorm():
     assert nv.errors == {'drug': ['Drug ID -1 is not a valid RXCUI']}
     assert not nv.validate({"drug": 100})
     assert nv.errors == {'drug': ['Drug ID 100 is not a valid RXCUI']}
+
+
+def test_check_adcid():
+    """ Test checking provided ADCID is valid """
+
+    schema = {
+        "adcid": {
+            "type": "integer",
+            "function": {
+                "name": "check_adcid"
+            }
+        },
+        "oldadcid": {
+            "type": "integer",
+            "function": {
+                "name": "check_adcid",
+                "args": {"own": False}
+            }
+        }
+    }
+
+    nv = create_nacc_validator_with_ds(schema, 'patient_id', 'visit_num')
+
+    assert nv.validate({"adcid": 0})
+    assert nv.validate({"oldadcid": 10})
+    assert not nv.validate({"adcid": 1})
+    assert nv.errors == {
+        'adcid': ["Provided ADCID 1 is not matching to your center's ADCID"]}
+    assert not nv.validate({"oldadcid": 20})
+    assert nv.errors == {
+        'oldadcid': ["Provided ADCID 20 is not in the valid list of ADCIDs"]}
