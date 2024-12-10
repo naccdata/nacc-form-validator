@@ -9,7 +9,7 @@ from cerberus.errors import (
     ValidationError,
 )
 
-from nacc_form_validator.quality_check import SchemaDefs
+from nacc_form_validator.keys import SchemaDefs
 
 # pylint: disable=(too-few-public-methods)
 

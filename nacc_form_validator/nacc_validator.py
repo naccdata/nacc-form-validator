@@ -12,7 +12,7 @@ from nacc_form_validator import utils
 from nacc_form_validator.datastore import Datastore
 from nacc_form_validator.errors import CustomErrorHandler, ErrorDefs
 from nacc_form_validator.json_logic import jsonLogic
-from nacc_form_validator.quality_check import SchemaDefs
+from nacc_form_validator.keys import SchemaDefs
 
 log = logging.getLogger(__name__)
 
@@ -823,7 +823,7 @@ class NACCValidator(Validator):
             function.get(SchemaDefs.FUNCTION_NAME, 'undefined')
         func = getattr(self, function_name, None)
         if func and callable(func):
-            kwargs = getattr(self, function.get(SchemaDefs.FUNCTION_ARGS), {})
+            kwargs = function.get(SchemaDefs.FUNCTION_ARGS, {})
             func(field, value, **kwargs)
         else:
             err_msg = f"{function_name} not defined in the validator module"
