@@ -402,7 +402,7 @@ def test_check_adcid():
     assert nv.validate({"oldadcid": 10})
     assert not nv.validate({"adcid": 1})
     assert nv.errors == {
-        'adcid': ["Provided ADCID 1 is not matching to your center's ADCID"]}
+        'adcid': ["Provided ADCID 1 does not match your center's ADCID"]}
     assert not nv.validate({"oldadcid": 20})
     assert nv.errors == {
         'oldadcid': ["Provided ADCID 20 is not in the valid list of ADCIDs"]}

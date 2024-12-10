@@ -130,7 +130,7 @@ class CustomErrorHandler(BasicErrorHandler):
             "{1} for if {3} in current visit then {2} " +
             "in previous visit - temporal rule no: {0}",
             0x3005:
-            "Provided ADCID {0} is not matching to your center's ADCID",
+            "Provided ADCID {0} does not match your center's ADCID",
             0x3006:
             "Provided ADCID {0} is not in the valid list of ADCIDs",
         }

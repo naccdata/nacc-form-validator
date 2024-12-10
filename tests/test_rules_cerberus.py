@@ -136,3 +136,27 @@ def test_date_format(date_constraint, create_nacc_validator):
     assert nv.errors == {'frmdate': [f"value does not match regex '{date_constraint}'"]}
     assert not nv.validate({'frmdate': 'hello world'})
     assert nv.errors == {'frmdate': [f"value does not match regex '{date_constraint}'"]}
+
+
+def test_allowed(create_nacc_validator):
+    """ Test allowed with strings. """
+    schema = {
+        "testvar": {
+            "allowed": [
+                1,
+                'hello'
+            ]
+        }
+    }
+
+    nv = create_nacc_validator(schema)
+
+    assert nv.validate({'testvar': 1})
+    assert nv.validate({'testvar': 'hello'})
+
+    assert not nv.validate({'testvar': 2})
+    assert nv.errors == {'testvar': ['unallowed value 2']}
+    assert not nv.validate({'testvar': '1'})
+    assert nv.errors == {'testvar': ['unallowed value 1']}
+    assert not nv.validate({'testvar': 'hell0'})
+    assert nv.errors == {'testvar': ['unallowed value hell0']}
