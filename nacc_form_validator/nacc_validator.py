@@ -212,18 +212,18 @@ class NACCValidator(Validator):
 
         return record
 
-    def get_previous_record(
-            self,
-            field: Tuple[str, List[str]] = None,
-            ignore_empty: bool = False) -> Optional[Dict[str, Mapping]]:
+    def __get_previous_record(
+        self,
+        field: str,
+        ignore_empty_fields: Optional[List[str]] = None
+    ) -> Optional[Dict[str, Mapping]]:
         """Get the previous record from the Datastore; if not skipping empty
         records, stores it in the prev_records cache.
 
         Args:
-            field: If provided and ignore_empty is True, will only grab the first
-                   previous record where this field is not empty.
-            ignore_empty: Whether or not to only grab the last record where
-                          field is non-empty
+            field: Variable name
+            ignore_empty_fields (optional): If provided, will only grab the first
+                   previous record where ignore_empty_fields are not empty.
 
         Returns:
             Dict[str, object]: Casted record Dict[field, value]
@@ -245,13 +245,14 @@ class NACCValidator(Validator):
 
         record_id = self.document[self.primary_key]
 
+        ignore_empty = bool(ignore_empty_fields)
         # If the previous record was already retrieved and not ignore_empty, use it
         # Similarly only save into cache if ignore_empty is false
         if not ignore_empty and record_id in self.__prev_records:
             prev_ins = self.__prev_records[record_id]
         else:
             prev_ins = (self.__datastore.get_previous_nonempty_record(
-                self.document, field) if ignore_empty else
+                self.document, ignore_empty_fields) if ignore_empty else
                         self.__datastore.get_previous_record(self.document))
 
             if prev_ins:
@@ -704,9 +705,11 @@ class NACCValidator(Validator):
             swap_order = temporalrule.get(SchemaDefs.SWAP_ORDER, False)
             ignore_empty_fields = temporalrule.get(SchemaDefs.IGNORE_EMPTY,
                                                    None)
-            prev_ins = self.get_previous_record(
-                field=ignore_empty_fields,
-                ignore_empty=True if ignore_empty_fields else False)
+            if isinstance(ignore_empty_fields, str):
+                ignore_empty_fields = [ignore_empty_fields]
+
+            prev_ins = self.__get_previous_record(
+                field=field, ignore_empty_fields=ignore_empty_fields)
 
             # If previous record was not found, return an error unless
             # ignore_empty_fields was set. If it was set, then no record
@@ -958,8 +961,9 @@ class NACCValidator(Validator):
                 comparison_str += f' {operator} {adjustment}'
 
         if prev_record:
-            record = self.get_previous_record(field=base,
-                                              ignore_empty=ignore_empty)
+            ignore_empty_fields = [base] if ignore_empty else None
+            record = self.__get_previous_record(
+                field=base, ignore_empty_fields=ignore_empty_fields)
             # pass through validation if no records found and ignore_empty is True
             if not record and ignore_empty:
                 return

@@ -62,7 +62,7 @@ class CustomDatastore(Datastore):
         index = sorted_record.index(current_record)
         return sorted_record[index - 1] if index != 0 else None
 
-    def get_previous_nonempty_record(self, current_record: dict[str, str], field: tuple[str, list[str]]) -> dict[str, str] | None:
+    def get_previous_nonempty_record(self, current_record: dict[str, str], fields: list[str]) -> dict[str, str] | None:
         """
         Grabs the previous record where field is not empty
         """
@@ -70,13 +70,10 @@ class CustomDatastore(Datastore):
         if key not in self.__db:
             return None
 
-        if isinstance(field, str):
-            field = [field]
-
         sorted_record = []
         for x in self.__db[key]:
             nonempty = True
-            for f in field:
+            for f in fields:
                 if x.get(f, None) is None:
                     nonempty = False
             if nonempty:
