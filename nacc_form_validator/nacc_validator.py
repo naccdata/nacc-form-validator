@@ -320,6 +320,16 @@ class NACCValidator(Validator):
             self.__add_system_error(field, err_msg)
             raise ValidationException(err_msg)
 
+    def _validate_nullable(self, nullable, field, value):
+        """Override nullable rule to drop custom defined rules.
+
+        The rule's arguments are validated against this schema:
+            {'type': 'boolean'}
+        """
+        super()._validate_nullable(nullable, field, value)
+        if value is None:
+            super()._drop_remaining_rules('compare_age')
+
     def _validate_max(self, max_value: object, field: str, value: object):
         """Override max rule to support validations wrt current date/year.
 
@@ -1088,7 +1098,7 @@ class NACCValidator(Validator):
 
         try:
             value = utils.convert_to_date(value)
-        except parser.ParserError as error:
+        except (ValueError, TypeError, parser.ParserError) as error:
             self._error(field, ErrorDefs.DATE_CONVERSION, value, error)
             return
 
