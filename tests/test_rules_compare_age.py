@@ -185,5 +185,4 @@ def test_compare_age_null_base(create_nacc_validator):
     nv = create_nacc_validator(schema)
     assert not nv.validate(
         nv.cast_record({'frmdate': '', 'birthyr': 2024, 'behage': 50}))
-    print(nv.errors)
     assert nv.errors == {'frmdate': ['null value not allowed']}

@@ -17,6 +17,7 @@ Documentation of release versions of `nacc-form-validator`
 * Refactors the tests to be more modularized so that they're more manageable
 * Refactors logic for `compare_values` by moving it to its own utility method and allows comparing to null values
 * Fixes issue where `datastore` was not being set for the temp validator in `_check_subschema_valid`, causing nested conditions with previous records to not evaluate correctly
+* Overrides `_validate_nullable` method to drop custom rule definitions that cannot be evaluated for null values
 
 ## 0.3.0
 
