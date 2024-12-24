@@ -71,7 +71,8 @@ def compare_values(comparator: str, value: object, base_value: object) -> bool:
     """
     # try close enough equality if both are floats first
     both_floats = False
-    if isinstance(value, (str, int, float)) and isinstance(base_value, (str, int, float)):
+    if isinstance(value, (str, int, float)) \
+        and isinstance(base_value, (str, int, float)):
         try:
             float(value)  # don't actually set it to a in case we die at b
             float(base_value)
