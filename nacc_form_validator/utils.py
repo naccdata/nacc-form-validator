@@ -1,6 +1,7 @@
 """Utility functions."""
 
 import logging
+import math
 import re
 from typing import Any
 
@@ -68,12 +69,24 @@ def compare_values(comparator: str, value: object, base_value: object) -> bool:
     Returns:
         bool: True if the formula is satisfied, else False
     """
+    # try close enough equality if both are floats first
+    both_floats = False
+    if isinstance(value, (str, int, float)) and isinstance(base_value, (str, int, float)):
+        try:
+            float(value)  # don't actually set it to a in case we die at b
+            float(base_value)
+            both_floats = True
+        except ValueError:
+            pass
+
     # test these first as they don't care about null values
     if comparator == "==":
-        return value == base_value
+        return value == base_value if not both_floats else \
+            math.isclose(float(value), float(base_value), abs_tol=1e-2)
 
     if comparator == "!=":
-        return value != base_value
+        return value != base_value if not both_floats else \
+            not math.isclose(float(value), float(base_value), abs_tol=1e-2)
 
     if comparator not in ["<=", ">=", "<", ">"]:
         raise TypeError(f"Unrecognized comparator: {comparator}")

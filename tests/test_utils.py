@@ -148,3 +148,22 @@ def test_compare_values_null_values_valid():
     assert not compare_values(">", None, None)
     assert compare_values("<=", None, None)
     assert compare_values(">=", None, None)
+
+def test_compare_values_precision_tolerance():
+    """ Test comparing values with precision tolerance """
+    assert compare_values("==", 1.33, 1.333333)
+    assert not compare_values("==", 1.3, "1.333333")
+    assert not compare_values("==", 1.33, 1.4)
+    assert not compare_values("==", "1.33", "1.2")
+    assert not compare_values("==", 1.33, 1.34)
+    assert not compare_values("==", "3", 1.0)
+
+    assert not compare_values("!=", 1.33, 1.333333)
+    assert compare_values("!=", 1.3, "1.333333")
+    assert compare_values("!=", 1.33, 1.4)
+    assert compare_values("!=", "1.33", "1.2")
+    assert compare_values("!=", 1.33, 1.34)
+    assert compare_values("!=", "3", 1.0)
+
+    assert compare_values("!=", "3", "hello")
+    assert not compare_values("==", 2.5, "hello")

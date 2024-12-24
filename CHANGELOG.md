@@ -2,6 +2,11 @@
 
 Documentation of release versions of `nacc-form-validator`
 
+## 0.4.1
+
+* Updates JSON logic's `soft_equals` and util's `compare_values` to compare two floats for equality with a precision tolerance of 0.01
+	* Note this only compares with precision tolerance on explicit equals, e.g. `==` or `!=` and not `<=` and `>=`
+
 ## 0.4.0
 
 * Adds `_check_adcid` method to validate a provided ADCID against current list of ADCIDs. (Actual validation should be implemented by overriding the `is_valid_adcid` method in Datastore class)
