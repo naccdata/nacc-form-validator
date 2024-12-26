@@ -26,6 +26,7 @@ SOFTWARE.
 """
 
 import logging
+import math
 from functools import reduce
 
 logger = logging.getLogger(__name__)
@@ -48,6 +49,16 @@ def soft_equals(a, b):
         return str(a) == str(b)
     if isinstance(a, bool) or isinstance(b, bool):
         return bool(a) is bool(b)
+
+    # compare floats with a precision of 0.01
+    if isinstance(a, (str, int, float)) and isinstance(b, (str, int, float)):
+        try:
+            float(a)  # don't actually set it to a in case we die at b
+            float(b)
+            return math.isclose(float(a), float(b), abs_tol=1e-2)
+        except ValueError:
+            pass
+
     return a == b
 
 
