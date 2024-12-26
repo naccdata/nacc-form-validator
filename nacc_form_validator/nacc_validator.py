@@ -715,6 +715,8 @@ class NACCValidator(Validator):
             swap_order = temporalrule.get(SchemaDefs.SWAP_ORDER, False)
             ignore_empty_fields = temporalrule.get(SchemaDefs.IGNORE_EMPTY,
                                                    None)
+            rule_no = temporalrule.get(SchemaDefs.INDEX, rule_no + 1)
+
             if isinstance(ignore_empty_fields, str):
                 ignore_empty_fields = [ignore_empty_fields]
 
@@ -727,14 +729,13 @@ class NACCValidator(Validator):
             if not prev_ins:
                 if ignore_empty_fields:
                     continue
-                self._error(field, ErrorDefs.NO_PREV_VISIT)
+                self._error(field, ErrorDefs.NO_PREV_VISIT, rule_no)
                 return
 
             # Extract operators if specified, default is AND
             prev_operator = temporalrule.get(SchemaDefs.PREV_OP, "AND").upper()
             curr_operator = temporalrule.get(SchemaDefs.CURR_OP, "AND").upper()
 
-            rule_no = temporalrule.get(SchemaDefs.INDEX, rule_no + 1)
             prev_conds = temporalrule[SchemaDefs.PREVIOUS]
             curr_conds = temporalrule[SchemaDefs.CURRENT]
 
