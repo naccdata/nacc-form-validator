@@ -6,6 +6,7 @@ Documentation of release versions of `nacc-form-validator`
 
 * Updates JSON logic's `soft_equals` and util's `compare_values` to compare two floats for equality with a precision tolerance of 0.01
 	* Note this only compares with precision tolerance on explicit equals, e.g. `==` or `!=` and not `<=` and `>=`
+* Fixes bug where the rule index was not being passed for a `temporalrules` error if no previous record was found
 
 ## 0.4.0
 
