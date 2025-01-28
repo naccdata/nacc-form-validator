@@ -2,6 +2,10 @@
 
 Documentation of release versions of `nacc-form-validator`
 
+## 0.5.0
+
+* Adds new `function` rule `_score_variables` to handle scoring-related rules (e.g. C2F plausibility)
+
 ## 0.4.1
 
 * Updates JSON logic's `soft_equals` and util's `compare_values` to compare two floats for equality with a precision tolerance of 0.01

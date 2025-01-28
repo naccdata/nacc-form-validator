@@ -1,6 +1,7 @@
 """Module for defining NACC specific data validation rules (extending cerberus
 library)."""
 
+import copy
 import logging
 from datetime import datetime as dt
 from typing import Any, Dict, List, Mapping, Optional, Tuple
@@ -1153,3 +1154,63 @@ class NACCValidator(Validator):
             self._error(
                 field, ErrorDefs.ADCID_NOT_MATCH
                 if own else ErrorDefs.ADCID_NOT_VALID, value)
+
+    def _score_variables(self, field: str, value: int, mode: str,
+                         scoring_key: Dict[str, Any],
+                         logic: Dict[str, Any]) -> None:
+        """Sums all the variables that are correct or incorrect depending on
+        the mode based on scoring_key. Stores the result a special variable
+        called '__total_sum' (double underscore to ensure uniqueness) and runs
+        the defined logic formula against it in a subschema. `logic` field MUST
+        specify __total_sum.
+
+        If any of the keys in the scoring_key are missing/blank/non-integer value,
+        this validation is skipped.
+
+        'function': {
+            'name': 'score_variables',
+            'args': {
+                'mode': 'correct' or 'incorrect',
+                'scoring_key': {
+                    'key1': correct_val,
+                    'key2': correct_val,
+                    ...
+                },
+                'logic': {
+                    ... same schema as logic ...
+                }
+            }
+        }
+
+        Args:
+            field: Name of the scored field
+            value: Value of the scored field
+            mode: Whether to count all correct or all incorrect variables
+            scoring_key: Scoring key for all variables
+            logic: Logic formula to run result on
+        """
+        total_sum = 0
+        for key, correct_value in scoring_key.items():
+            if self.document.get(key, None) is None:
+                log.warning(
+                    f"Key {key} not found or invalid, skipping validation")
+                return
+
+            correct = self.document[key] == correct_value
+            if (correct and mode == 'correct') or \
+               (not correct and mode == 'incorrect'):
+                total_sum += 1
+
+        condition = {field: {'nullable': True, 'logic': logic}}
+
+        record = copy.deepcopy(self.document)
+        record['__total_sum'] = total_sum
+
+        valid, errors = self._check_subschema_valid(all_conditions=condition,
+                                                    operator='AND',
+                                                    record=record)
+
+        # Logic formula failed, report errors
+        if errors:
+            for error in errors.items():
+                self._error(field, ErrorDefs.SCORING_INVALID, value)
