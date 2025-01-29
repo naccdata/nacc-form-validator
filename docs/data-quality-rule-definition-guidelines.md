@@ -15,6 +15,7 @@
     - [check\_adcid](#check_adcid)
     - [compute\_gds](#compute_gds)
     - [rxnorm](#rxnorm)
+    - [score\_variables](#score_variables)
 
 ## Introduction
 
@@ -1016,3 +1017,131 @@ This function uses the `check_with` rule from Cerberus. The rule definition shou
 }
 ```
 > **NOTE**: To validate `rxnorm`, the validator should have a `Datastore` instance which implements the `is_valid_rxcui` function which will check if the given rxnormid value is a valid RXCUI code
+
+### score_variables
+
+Custom rule that scores the number of correct or incorrect variables based on a mode and scoring key.
+
+This validation is implemented using the `function` rule with custom `score_variables` function in the NACCValidator. The rule definition should be in the following format:
+
+```json
+{
+    "<score_variable>": {
+        "function": {
+            "name": "score_variables",
+            "args": {
+                "mode": "'correct' or 'incorrect'",
+                "scoring_key": {
+                    "var1": "correct_value_1",
+                    "var2": "correct_value_2",
+                    "...etc"
+                },
+                "logic": {
+                    "...same as logic formula"
+                }
+            }
+        }
+    }
+}
+```
+
+* `mode`: Either `correct` or `incorrect`; if `correct`, will count the number of _correct_ variables, and if `incorrect` will count the number of _incorrect_ variables
+* `scoring_key`: Dict representing the scoring key; maps each variable involved in the scoring function to its correct value
+* `logic`: Logic to perform on the `__total_sum` once calculated; same schema as the [logic](#logic) rule defined earlier
+
+This function looks at all variables defined in the `scoring_key` and counts the number that are correct if the mode is `correct` or incorrect if the mode is `incorrect`. It stores this result in a special variable called `__total_sum` (note the double underscore for uniqueness) that can then be used inside the `logic` formula to compare against.
+
+If any of the fields in `scoring_key` are missing or invalid, then validation is skipped and this rule "passes" by default. Otherwise validation succeeds if `__total_sum` satisfies the given formula, else it fails.
+
+**Example:**
+
+`total` must match the total number of correct variables defined under `scoring_key`.
+
+<table>
+<tr>
+<th>YAML Rule Definition</th>
+<th>JSON Rule Definition</th>
+<th>When Validating</th>
+</tr>
+<tr>
+<td style="vertical-align:top;">
+<pre><code>total:
+  type: integer
+  required: true
+  function:
+    name: score_variables
+    args:
+      mode: correct
+      scoring_key:
+        val1: 1
+        val2: 2
+        val3: 3
+      logic:
+        formula:
+          "==":
+          - var: total
+          - var: __total_sum
+val1:
+  type: integer
+  nullable: true
+val2:
+  type: integer
+  nullable: true
+val3:
+  type: integer
+  nullable: true
+</code></pre>
+</td>
+<td style="vertical-align:top;">
+<pre><code>{
+    "total": {
+        "type": "integer",
+        "required": true,
+        "function": {
+            "name": "score_variables",
+            "args": {
+                "mode": "correct",
+                "scoring_key": {
+                    "val1": 1,
+                    "val2": 2,
+                    "val3": 3
+                },
+                "logic": {
+                    "formula": {
+                        "==": [
+                            {
+                                "var": "total"
+                            },
+                            {
+                                "var": "__total_sum"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "val1": {
+        "type": "integer",
+        "nullable": true
+    },
+    "val2": {
+        "type": "integer",
+        "nullable": true
+    },
+    "val3": {
+        "type": "integer",
+        "nullable": true
+    }
+}
+</code></pre>
+</td>
+<td style="vertical-align:top;">
+<pre><code>
+{'total': 3, 'val1': 1, 'val2': 2, 'val3': 3}   # passes
+{'total': 5}                                    # passes
+{'total': 10, 'val1': 1, 'val2': 2, 'val3': 3}  # fails
+</code></pre>
+</td>
+</tr>
+</table>

@@ -48,6 +48,7 @@ class ErrorDefs:
     TEMPORAL_SWAPPED = ErrorDefinition(0x3004, 'temporalrules')
     ADCID_NOT_MATCH = ErrorDefinition(0x3005, "function")
     ADCID_NOT_VALID = ErrorDefinition(0x3006, "function")
+    SCORING_INVALID = ErrorDefinition(0x3007, "function")
 
 
 class CustomErrorHandler(BasicErrorHandler):
@@ -133,6 +134,8 @@ class CustomErrorHandler(BasicErrorHandler):
             "Provided ADCID {0} does not match your center's ADCID",
             0x3006:
             "Provided ADCID {0} is not in the valid list of ADCIDs",
+            0x3007:
+            "Provided value {0} does not match the expected score"
         }
 
         self.messages.update(custom_errors)
