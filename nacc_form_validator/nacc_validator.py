@@ -1193,7 +1193,7 @@ class NACCValidator(Validator):
         for key, correct_value in scoring_key.items():
             if self.document.get(key, None) is None:
                 log.warning(
-                    f"Key {key} not found or invalid, skipping validation")
+                    f"Field {key} not present or blank, skipping validation")
                 return
 
             correct = self.document[key] == correct_value

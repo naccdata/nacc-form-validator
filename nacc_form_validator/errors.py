@@ -135,7 +135,7 @@ class CustomErrorHandler(BasicErrorHandler):
             0x3006:
             "Provided ADCID {0} is not in the valid list of ADCIDs",
             0x3007:
-            "Field does not match expected score: {0}"
+            "Provided value {0} does not match the expected score"
         }
 
         self.messages.update(custom_errors)

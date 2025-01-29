@@ -61,11 +61,11 @@ def test_score_variables_total_correct(create_nacc_validator, base_schema):
 
     # invalid cases
     assert not nv.validate({'total': 10, 'val1': 1, 'val2': 2, 'val3': 3})
-    assert nv.errors == {'total': ["Field does not match expected score: 10"]}
+    assert nv.errors == {'total': ["Provided value 10 does not match the expected score"]}
     assert not nv.validate({'total': 9, 'val1': 5, 'val2': 2, 'val3': -7})
-    assert nv.errors == {'total': ["Field does not match expected score: 9"]}
+    assert nv.errors == {'total': ["Provided value 9 does not match the expected score"]}
     assert not nv.validate({'total': 8, 'val1': 5, 'val2': 0, 'val3': -7})
-    assert nv.errors == {'total': ["Field does not match expected score: 8"]}
+    assert nv.errors == {'total': ["Provided value 8 does not match the expected score"]}
 
 
 def test_score_variables_total_incorrect(create_nacc_validator, base_schema):
@@ -85,11 +85,11 @@ def test_score_variables_total_incorrect(create_nacc_validator, base_schema):
 
     # invalid cases
     assert not nv.validate({'total': 3, 'val1': 1, 'val2': 2, 'val3': 3})
-    assert nv.errors == {'total': ["Field does not match expected score: 3"]}
+    assert nv.errors == {'total': ["Provided value 3 does not match the expected score"]}
     assert not nv.validate({'total': 1, 'val1': 5, 'val2': 2, 'val3': -7})
-    assert nv.errors == {'total': ["Field does not match expected score: 1"]}
+    assert nv.errors == {'total': ["Provided value 1 does not match the expected score"]}
     assert not nv.validate({'total': 0, 'val1': 5, 'val2': 0, 'val3': -7})
-    assert nv.errors == {'total': ["Field does not match expected score: 0"]}
+    assert nv.errors == {'total': ["Provided value 0 does not match the expected score"]}
 
 
 def test_score_variables_total_incorrect_subtraction(create_nacc_validator,
@@ -121,8 +121,8 @@ def test_score_variables_total_incorrect_subtraction(create_nacc_validator,
 
     # invalid cases
     assert not nv.validate({'total': 3, 'val1': 1, 'val2': 2, 'val3': 3})
-    assert nv.errors == {'total': ["Field does not match expected score: 3"]}
+    assert nv.errors == {'total': ["Provided value 3 does not match the expected score"]}
     assert not nv.validate({'total': 1, 'val1': 5, 'val2': 2, 'val3': -7})
-    assert nv.errors == {'total': ["Field does not match expected score: 1"]}
+    assert nv.errors == {'total': ["Provided value 1 does not match the expected score"]}
     assert not nv.validate({'total': 0, 'val1': 5, 'val2': 0, 'val3': -7})
-    assert nv.errors == {'total': ["Field does not match expected score: 0"]}
+    assert nv.errors == {'total': ["Provided value 0 does not match the expected score"]}
