@@ -1039,7 +1039,7 @@ This validation is implemented using the `function` rule with custom `score_vari
                 "logic": {
                     "...same as logic formula"
                 },
-                "sum_key": "(optional) name of the variable to store calculation under; defaults to __total_sum"
+                "calc_var_name": "(optional) name of the variable to store calculation under; defaults to __total_sum"
             }
         }
     }
@@ -1048,12 +1048,12 @@ This validation is implemented using the `function` rule with custom `score_vari
 
 * `mode`: Either `correct` or `incorrect`; if `correct`, will count the number of _correct_ variables, and if `incorrect` will count the number of _incorrect_ variables
 * `scoring_key`: Dict representing the scoring key; maps each variable involved in the scoring function to its correct value
-* `logic`: Logic to perform on the `sum_key` once calculated; same schema as the [logic](#logic) rule defined earlier
-* `sum_key`: (Optional) Name of the variable to store the calculation under; defaults to `__total_sum`. This variable MUST be unique to your record or else the validator will throw an error
+* `logic`: Logic to perform on the `calc_var_name` once calculated; same schema as the [logic](#logic) rule defined earlier
+* `calc_var_name`: (Optional) Name of the variable to store the calculation under; defaults to `__total_sum`. This variable MUST be unique to your record or else the validator will throw an error
 
-This function looks at all variables defined in the `scoring_key` and counts the number that are correct if the mode is `correct` or incorrect if the mode is `incorrect`. It stores this result in the variable defined by `sum_key` (defaults to `__total_sum`, note the double underscore for uniqueness) that can then be used inside the `logic` formula to compare against.
+This function looks at all variables defined in the `scoring_key` and counts the number that are correct if the mode is `correct` or incorrect if the mode is `incorrect`. It stores this result in the variable defined by `calc_var_name` (defaults to `__total_sum`, note the double underscore for uniqueness) that can then be used inside the `logic` formula to compare against.
 
-If any of the fields in `scoring_key` are missing or invalid, then validation is skipped and this rule "passes" by default. Otherwise validation succeeds if `sum_key` satisfies the given formula, else it fails.
+If any of the fields in `scoring_key` are missing or invalid, then validation is skipped and this rule "passes" by default. Otherwise validation succeeds if `calc_var_name` satisfies the given formula, else it fails.
 
 **Example:**
 
