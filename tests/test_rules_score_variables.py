@@ -95,7 +95,8 @@ def test_score_variables_total_incorrect(create_nacc_validator, base_schema):
 def test_score_variables_total_incorrect_subtraction(create_nacc_validator,
                                                      base_schema):
     """Test score variables with comparison involving more involved logic
-    formula counting incorrect values."""
+    formula counting incorrect values; also use custom key."""
+    base_schema['total']['function']['args']['sum_key'] = 'subtractor'
     base_schema['total']['function']['args']['mode'] = 'incorrect'
     base_schema['total']['function']['args']['logic'] = {
         'formula': {
@@ -103,7 +104,7 @@ def test_score_variables_total_incorrect_subtraction(create_nacc_validator,
                 'var': 'total'
             }, {
                 '-': [5, {
-                    'var': '__total_sum'
+                    'var': 'subtractor'
                 }]
             }]
         }
