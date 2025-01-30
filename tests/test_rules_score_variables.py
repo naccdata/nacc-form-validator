@@ -95,7 +95,8 @@ def test_score_variables_total_incorrect(create_nacc_validator, base_schema):
 def test_score_variables_total_incorrect_subtraction(create_nacc_validator,
                                                      base_schema):
     """Test score variables with comparison involving more involved logic
-    formula counting incorrect values."""
+    formula counting incorrect values; also use custom key."""
+    base_schema['total']['function']['args']['calc_var_name'] = 'subtractor'
     base_schema['total']['function']['args']['mode'] = 'incorrect'
     base_schema['total']['function']['args']['logic'] = {
         'formula': {
@@ -103,7 +104,7 @@ def test_score_variables_total_incorrect_subtraction(create_nacc_validator,
                 'var': 'total'
             }, {
                 '-': [5, {
-                    'var': '__total_sum'
+                    'var': 'subtractor'
                 }]
             }]
         }
@@ -126,3 +127,13 @@ def test_score_variables_total_incorrect_subtraction(create_nacc_validator,
     assert nv.errors == {'total': ["Provided value 1 does not match the expected score"]}
     assert not nv.validate({'total': 0, 'val1': 5, 'val2': 0, 'val3': -7})
     assert nv.errors == {'total': ["Provided value 0 does not match the expected score"]}
+
+
+def test_bad_calculation_variable_name(create_nacc_validator, base_schema):
+    """Test that an error is thrown if a bad calc_var_name is used."""
+    base_schema['total']['function']['args']['calc_var_name'] = 'total'
+    nv = create_nacc_validator(base_schema)
+
+    with pytest.raises(ValueError) as e:
+        nv.validate({'total': 3, 'val1': 1, 'val2': 2, 'val3': 3})
+    assert str(e.value) == 'total already exists in record, cannot use as calc_var_name'

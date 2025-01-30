@@ -1155,14 +1155,19 @@ class NACCValidator(Validator):
                 field, ErrorDefs.ADCID_NOT_MATCH
                 if own else ErrorDefs.ADCID_NOT_VALID, value)
 
-    def _score_variables(self, field: str, value: int, mode: str,
+    def _score_variables(self,
+                         field: str,
+                         value: int,
+                         mode: str,
                          scoring_key: Dict[str, Any],
-                         logic: Dict[str, Any]) -> None:
+                         logic: Dict[str, Any],
+                         calc_var_name: str = '__total_sum') -> None:
         """Sums all the variables that are correct or incorrect depending on
         the mode based on scoring_key. Stores the result a special variable
-        called '__total_sum' (double underscore to ensure uniqueness) and runs
-        the defined logic formula against it in a subschema. `logic` field MUST
-        specify __total_sum.
+        defined by calc_var_name (defaults to __total_sum, note double
+        underscore to ensure uniqueness) and runs the defined logic formula
+        against it in a subschema. `logic` field MUST specify the
+        calc_var_name.
 
         If any of the keys in the scoring_key are missing/blank/non-integer value,
         this validation is skipped.
@@ -1188,6 +1193,8 @@ class NACCValidator(Validator):
             mode: Whether to count all correct or all incorrect variables
             scoring_key: Scoring key for all variables
             logic: Logic formula to run result on
+            calc_var_name: The name of the variable to store the calculation
+                under. Should be unique to the record.
         """
         total_sum = 0
         for key, correct_value in scoring_key.items():
@@ -1203,8 +1210,13 @@ class NACCValidator(Validator):
 
         condition = {field: {'nullable': True, 'logic': logic}}
 
+        if calc_var_name in self.document:
+            raise ValueError(
+                f"{calc_var_name} already exists in record, cannot use " +
+                "as calc_var_name")
+
         record = copy.deepcopy(self.document)
-        record['__total_sum'] = total_sum
+        record[calc_var_name] = total_sum
 
         valid, errors = self._check_subschema_valid(all_conditions=condition,
                                                     operator='AND',
