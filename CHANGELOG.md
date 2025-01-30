@@ -4,7 +4,7 @@ Documentation of release versions of `nacc-form-validator`
 
 ## 0.5.1 (Unreleased)
 
-* Updates `_score_variables` to accept a `sum_key` variable to define the key to store the calculation under
+* Updates `_score_variables` to accept a `calc_var_name` variable to define the key to store the calculation under
 
 ## 0.5.0
 
