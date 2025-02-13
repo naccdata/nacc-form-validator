@@ -39,16 +39,17 @@ class ErrorDefs:
     CHECK_GDS_2 = ErrorDefinition(0x2005, "compute_gds")
     CHECK_GDS_3 = ErrorDefinition(0x2006, "compute_gds")
     CHECK_GDS_4 = ErrorDefinition(0x2007, "compute_gds")
-    COMPARE_WITH = ErrorDefinition(0x2008, "compare_with")
-    COMPARE_WITH_PREV = ErrorDefinition(0x2009, "compare_with")
-    RXNORM = ErrorDefinition(0x3000, "check_with")
-    DATE_CONVERSION = ErrorDefinition(0x3001, 'compare_age')
-    COMPARE_AGE = ErrorDefinition(0x3002, 'compare_age')
-    COMPARE_AGE_INVALID_COMPARISON = ErrorDefinition(0x3003, 'compare_age')
-    TEMPORAL_SWAPPED = ErrorDefinition(0x3004, 'temporalrules')
-    ADCID_NOT_MATCH = ErrorDefinition(0x3005, "function")
-    ADCID_NOT_VALID = ErrorDefinition(0x3006, "function")
-    SCORING_INVALID = ErrorDefinition(0x3007, "function")
+    CHECK_GDS_5 = ErrorDefinition(0x2008, "compute_gds")
+    COMPARE_WITH = ErrorDefinition(0x2009, "compare_with")
+    COMPARE_WITH_PREV = ErrorDefinition(0x3000, "compare_with")
+    RXNORM = ErrorDefinition(0x3001, "check_with")
+    DATE_CONVERSION = ErrorDefinition(0x3002, 'compare_age')
+    COMPARE_AGE = ErrorDefinition(0x3003, 'compare_age')
+    COMPARE_AGE_INVALID_COMPARISON = ErrorDefinition(0x3004, 'compare_age')
+    TEMPORAL_SWAPPED = ErrorDefinition(0x3005, 'temporalrules')
+    ADCID_NOT_MATCH = ErrorDefinition(0x3006, "function")
+    ADCID_NOT_VALID = ErrorDefinition(0x3007, "function")
+    SCORING_INVALID = ErrorDefinition(0x3008, "function")
 
 
 class CustomErrorHandler(BasicErrorHandler):
@@ -112,29 +113,31 @@ class CustomErrorHandler(BasicErrorHandler):
             0x2006:
             "incorrect GDS score {1}, expected value {2} - GDS rule no: {0}",
             0x2007:
+            "incorrect prorated GDS score {1}, expected value {2} - GDS rule no: {0}",
+            0x2008:
             "If GDS attempted (nogds=blank), at least 12 questions need to have "
             + "valid scores - GDS rule no: {0}",
-            0x2008:
-            "input value doesn't satisfy the condition {0}",
             0x2009:
+            "input value doesn't satisfy the condition {0}",
+            0x3000:
             "failed to retrieve record for previous visit, cannot proceed with "
             + "validation {0}",
-            0x3000:
-            "Drug ID {0} is not a valid RXCUI",
             0x3001:
-            "failed to convert value {0} to a date: {1}",
+            "Drug ID {0} is not a valid RXCUI",
             0x3002:
-            "input value {0} doesn't satisfy the condition: {1}",
+            "failed to convert value {0} to a date: {1}",
             0x3003:
-            "Error in comparing {0} to age at {1} ({2}): {3}",
+            "input value {0} doesn't satisfy the condition: {1}",
             0x3004:
+            "Error in comparing {0} to age at {1} ({2}): {3}",
+            0x3005:
             "{1} for if {3} in current visit then {2} " +
             "in previous visit - temporal rule no: {0}",
-            0x3005:
-            "Provided ADCID {0} does not match your center's ADCID",
             0x3006:
-            "Provided ADCID {0} is not in the valid list of ADCIDs",
+            "Provided ADCID {0} does not match your center's ADCID",
             0x3007:
+            "Provided ADCID {0} is not in the valid list of ADCIDs",
+            0x3008:
             "Provided value {0} does not match the expected score"
         }
 

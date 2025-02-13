@@ -189,26 +189,28 @@ def test_compute_gds_nogds_is_1(gds_nv, gds_record):
 def test_compute_gds_nogds_is_blank(gds_nv, gds_record):
     """ Test compute_gds when `nogds` is blank """
     # if NOGDS is blank then there must be at least 12 questions with valid scores
-    # if up to 3 of the 15 items are unanswered, then GDS is equal to the scoring algorithm
+    # if up to 3 of the 15 items are unanswered, then GDS is equal to a prorated score;
+    # since in this case all answers are 1, we can easily calculate on the fly
     count = 0
     for k in gds_record:
         if k not in ['nogds', 'gds']:
             gds_record[k] = 9
             count += 1
-            gds_record['gds'] -= 1
             if count <= 3:
+                gds_record['gds'] = (15 - count) + count
                 assert gds_nv.validate(gds_record)
             else:
+                gds_record['gds'] -= 1
                 assert not gds_nv.validate(gds_record)
-                assert gds_nv.errors == {'gds': ['If GDS attempted (nogds=blank), at least 12 questions need to have valid scores - GDS rule no: 3']}
+                assert gds_nv.errors == {'gds': ['If GDS attempted (nogds=blank), at least 12 questions need to have valid scores - GDS rule no: 4']}
 
-def test_compute_gds_scoring_algorithm(gds_nv):
-    """ Test the GDS scoring algorithm specifically """
-    # this record has 2 unanswered (=9) and a total score of 5, so expected value of GDS is 6.25 (rounded down to 6)
+def test_compute_gds_prorated_score(gds_nv):
+    """ Test the GDS prorated scoring algorithm """
+    # this record has 3 unanswered (=9) and a total score of 5, so expected value of GDS is 6.25 (rounded down to 6)
     record = {
         "satis": 9,
         "dropact": 9,
-        "empty": 1,
+        "empty": 9,
         "bored": 1,
         "spirits": 1,
         "afraid": 1,
@@ -217,11 +219,11 @@ def test_compute_gds_scoring_algorithm(gds_nv):
         "stayhome": 0,
         "memprob": 0,
         "wondrful": 0,
-        "wrthless": 0,
+        "wrthless": 1,
         "energy": 0,
         "hopeless": 0,
         "better": 0,
-        "gds": 5,
+        "gds": 6,
         "nogds": None
     }
 
@@ -229,4 +231,30 @@ def test_compute_gds_scoring_algorithm(gds_nv):
 
     record['gds'] = 13
     assert not gds_nv.validate(record)
-    assert gds_nv.errors ==  {'gds': ['incorrect GDS score 13, expected value 5 - GDS rule no: 2']}
+    assert gds_nv.errors ==  {'gds': ['incorrect prorated GDS score 13, expected value 6 - GDS rule no: 3']}
+
+    # ensure 0 case doesn't cause issues, gds should always be 0
+    record = {
+        "satis": 0,
+        "dropact": 0,
+        "empty": 0,
+        "bored": 0,
+        "spirits": 0,
+        "afraid": 0,
+        "happy": 0,
+        "helpless": 0,
+        "stayhome": 0,
+        "memprob": 0,
+        "wondrful": 0,
+        "wrthless": 0,
+        "energy": 0,
+        "hopeless": 0,
+        "better": 0,
+        "gds": 0,
+        "nogds": None
+    }
+    assert gds_nv.validate(record)
+
+    for field in ['satis', 'dropact', 'empty']:
+        record[field] = 9
+        assert gds_nv.validate(record)
