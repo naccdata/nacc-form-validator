@@ -885,22 +885,19 @@ class NACCValidator(Validator):
 
             return
 
-        # commenting this out for now in case we revert back
-        # if num_valid == 15 and gds != value:
-        #     self._error(field, ErrorDefs.CHECK_GDS_3, 2, value, gds)
-        #     return
-
-        # if (15 - num_valid) <= 3:
-        #     gds = round(gds + (gds / num_valid) * (15 - num_valid))
-        #     if gds != value:
-        #         self._error(field, ErrorDefs.CHECK_GDS_4, 3, value, gds)
-
-        if num_valid >= 12 and gds != value:
+        if num_valid == 15 and gds != value:
             self._error(field, ErrorDefs.CHECK_GDS_3, 2, value, gds)
             return
 
+        # calculate prorated GDS
+        num_unanswered = 15 - num_valid
+        if num_unanswered <= 3:
+            gds = round(gds + (gds / num_valid) * (num_unanswered))
+            if gds != value:
+                self._error(field, ErrorDefs.CHECK_GDS_4, 3, value, gds)
+
         if not nogds and num_valid < 12:
-            self._error(field, ErrorDefs.CHECK_GDS_4, 3)
+            self._error(field, ErrorDefs.CHECK_GDS_5, 4)
             return
 
     def _validate_compare_with(self, comparison: Dict[str, Any], field: str,
