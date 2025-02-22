@@ -1095,12 +1095,6 @@ class NACCValidator(Validator):
         if isinstance(ages_to_compare, (str, int)):
             ages_to_compare = [ages_to_compare]
 
-        try:
-            value = utils.convert_to_date(value)
-        except (ValueError, TypeError, parser.ParserError) as error:
-            self._error(field, ErrorDefs.DATE_CONVERSION, value, error)
-            return
-
         comparison_str = \
             f'age at {field} {comparator} {", ".join(map(str, ages_to_compare))}'
 
@@ -1113,11 +1107,15 @@ class NACCValidator(Validator):
         birth_year = self.__get_value_for_key(
             comparison[SchemaDefs.BIRTH_YEAR])
 
-        birth_date = utils.convert_to_date(f"{birth_month:02d} \
-                                           /{birth_day:02d} \
-                                           /{birth_year:04d}")
-        # age calculation is based off of how RT has defined it in A1
-        age = (value - birth_date).days / 365.25
+        try:
+            # age calculation is based off of how RT has defined it in A1
+            age = utils.calculate_age(birth_year=birth_year,
+                                      birth_month=birth_month,
+                                      birth_day=birth_day,
+                                      target_date=value)
+        except (ValueError, TypeError, parser.ParserError) as error:
+            self._error(field, ErrorDefs.DATE_CONVERSION, value, error)
+            return
 
         for compare_field in ages_to_compare:
             compare_value = self.__get_value_for_key(compare_field)

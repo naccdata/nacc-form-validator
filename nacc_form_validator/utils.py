@@ -3,7 +3,8 @@
 import logging
 import math
 import re
-from typing import Any
+from datetime import datetime
+from typing import Any, Union
 
 from dateutil import parser
 
@@ -115,3 +116,35 @@ def compare_values(comparator: str, value: object, base_value: object) -> bool:
         return value < base_value
 
     raise TypeError(f"Unrecognized comparator: {comparator}")
+
+
+def calculate_age(birth_year: int,
+                  birth_month: int = 1,
+                  birth_day: int = 1,
+                  target_date: Union[datetime, str] = None,
+                  in_years: bool = False) -> float:
+    """Calculate age based on the given dates.
+
+    Args:
+        birth_year: Birth year
+        birth_month: Birth month; defaults to 1
+        birth_day: Birth day, defaults to 1
+        target_date: The target date to calculate age from; defaults
+            to now if not specified
+        in_years: Whether or not to get the date in years
+    """
+    if not target_date:
+        target_date = dt.now().date()
+    else:
+        target_date = convert_to_date(target_date)
+
+    birth_date = convert_to_date(f"{birth_month:02d} \
+                                 /{birth_day:02d} \
+                                 /{birth_year:04d}")
+
+    age = (target_date - birth_date).days / 365.25
+
+    if in_years:
+        return math.floor(age)
+
+    return age
