@@ -136,11 +136,15 @@ def merge(*args):
 def get_var(data, var_name, not_found=None):
     """Gets variable value from data dictionary."""
     try:
-        for key in str(var_name).split("."):
-            try:
-                data = data[key]
-            except TypeError:
-                data = data[int(key)]
+        # TODO: this shouldn't break any of our own
+        # functionality, but needs to be removed for
+        # the derivation script to be able to use logic rules
+        #for key in str(var_name).split("."):
+        key = str(var_name)
+        try:
+            data = data[key]
+        except TypeError:
+            data = data[int(key)]
     except (KeyError, TypeError, ValueError):
         return not_found
     else:
