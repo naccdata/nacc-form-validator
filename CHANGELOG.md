@@ -2,6 +2,13 @@
 
 Documentation of release versions of `nacc-form-validator`
 
+## 0.6.0
+
+* Updates to support `nacc_form_deriver`
+	* Adds `utils.calculate_age` and refactor `_validate_compare_age` to use it
+	* Updates `json_logic.get_var` to not evaluate dict dot-notation
+	* Updates `cast_record` to always set missing fields to None
+
 ## 0.5.1
 
 * Adds prorated scoring back to `_check_with_gds` 
