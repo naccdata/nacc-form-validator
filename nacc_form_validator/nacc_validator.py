@@ -171,6 +171,10 @@ class NACCValidator(Validator):
             Dict[str, object]: Casted record Dict[field, value]
         """
 
+        for key in self.schema:
+            if key not in record:
+                record[key] = None
+
         if not self.dtypes:
             return record
 
@@ -206,10 +210,6 @@ class NACCValidator(Validator):
                         error,
                     )
                     record[key] = value
-
-        for key in self.schema:
-            if key not in record:
-                record[key] = None
 
         return record
 
