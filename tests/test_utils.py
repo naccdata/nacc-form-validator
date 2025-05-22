@@ -2,7 +2,11 @@
 import pytest
 from dateutil import parser
 
-from nacc_form_validator.utils import *
+from nacc_form_validator.utils import (
+    compare_values,
+    convert_to_date,
+    convert_to_datetime,
+)
 
 
 def test_convert_to_date():

@@ -140,7 +140,7 @@ def test_lots_of_rules(create_nacc_validator):
         }
     }
 
-    nv = create_nacc_validator(schema)
+    nv = create_nacc_validator(schema)  # type: ignore
 
     # valid cases
     assert nv.validate({'adcid': 0, 'prevenrl': 1, 'oldadcid': -1})
@@ -151,15 +151,18 @@ def test_lots_of_rules(create_nacc_validator):
     # invalid cases - compatibility
     assert not nv.validate({'adcid': 0, 'prevenrl': 1, 'oldadcid': None})
     assert nv.errors == {
-        'oldadcid': [
-            "('oldadcid', ['null value not allowed']) for if {'prevenrl': {'allowed': [1]}} then {'oldadcid': {'nullable': False}} - compatibility rule no: 0"
-        ]
+        'oldadcid': [("('oldadcid', ['null value not allowed']) "
+                      "for if {'prevenrl': {'allowed': [1]}} "
+                      "then {'oldadcid': {'nullable': False}} - "
+                      "compatibility rule no: 0")]
     }
     assert not nv.validate({'adcid': 0, 'prevenrl': 0, 'oldadcid': 1})
     assert nv.errors == {
-        'oldadcid': [
-            "('oldadcid', ['must be empty']) for if {'prevenrl': {'allowed': [0, 9]}} then {'oldadcid': {'nullable': True, 'filled': False}} - compatibility rule no: 1"
-        ]
+        'oldadcid':
+        [("('oldadcid', ['must be empty']) "
+          "for if {'prevenrl': {'allowed': [0, 9]}} "
+          "then {'oldadcid': {'nullable': True, 'filled': False}} - "
+          "compatibility rule no: 1")]
     }
 
     # invalid cases, logic (adcid != oldadcid)
