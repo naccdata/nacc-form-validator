@@ -1,25 +1,27 @@
-"""
-Utility/helper methods and fixtures used for testing.
-"""
+"""Utility/helper methods and fixtures used for testing."""
 import pytest
 
+from nacc_form_validator.errors import CustomErrorHandler
 from nacc_form_validator.nacc_validator import NACCValidator
-from nacc_form_validator. errors import CustomErrorHandler
 
 
 @pytest.fixture(scope="session")
 def create_nacc_validator():
+
     def _create_nacc_validator(schema: dict[str, object]) -> NACCValidator:
-        """ Creates a NACCValidator with the provided schema (and no datastore) """
+        """Creates a NACCValidator with the provided schema (and no
+        datastore)"""
         return NACCValidator(schema,
                              allow_unknown=False,
                              error_handler=CustomErrorHandler(schema))
+
     return _create_nacc_validator
 
 
 @pytest.fixture
 def nv(create_nacc_validator):
-    """ Returns a dummy QC with all data kinds of data types/rules to use for general testing """
+    """Returns a dummy QC with all data kinds of data types/rules to use for
+    general testing."""
     schema = {
         'dummy_int': {
             'nullable': True,
@@ -53,5 +55,5 @@ def nv(create_nacc_validator):
 
 @pytest.fixture(scope="session")
 def date_constraint():
-    """ MM/DD/YYYY or YYYY/MM/DD """
+    """MM/DD/YYYY or YYYY/MM/DD."""
     return "(^(0[1-9]|1[0-2])[-/](0[1-9]|[12][0-9]|3[01])[-/](\\d{4})$)|(^(\\d{4})[-/](0[1-9]|1[0-2])[-/](0[1-9]|[12][0-9]|3[01])$)"
