@@ -36,7 +36,7 @@ jobs:
         cat nacc_form_validator/BUILD
     - name: Lint
       run: |
-        pants lint ::
+        pants lint nacc_form_validator ::
         pants check ::
     - name: Test
       run: |
