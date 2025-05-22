@@ -5,3 +5,6 @@ target-version = "py311"
 
 [lint]
 select = ["E", "F", "I", "PLW0406"]
+
+[lint.per-file-ignores]
+"tests/*" = ["E501"]
