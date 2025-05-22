@@ -51,6 +51,5 @@ jobs:
       with:
         generate_release_notes: true
         files: |
-          .pants.d/workdir/pants.log
           dist/*
       if: always() # We want the log even on failures.
