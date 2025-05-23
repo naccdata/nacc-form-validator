@@ -1,8 +1,9 @@
-"""
-Tests rules that are mainly handled by the Cerberus library (e.g. non-custom rules).
-"""
+"""Tests rules that are mainly handled by the Cerberus library (e.g. non-custom
+rules)."""
+
+
 def test_required(create_nacc_validator):
-    """ Test required case """
+    """Test required case."""
     schema = {'dummy_var': {'required': True, 'type': 'string'}}
     nv = create_nacc_validator(schema)
 
@@ -10,8 +11,9 @@ def test_required(create_nacc_validator):
     assert not nv.validate({})
     assert nv.errors == {'dummy_var': ['required field']}
 
+
 def test_nullable(create_nacc_validator):
-    """ Test nullable case """
+    """Test nullable case."""
     schema = {'dummy_var': {'nullable': True, 'type': 'string'}}
     nv = create_nacc_validator(schema)
 
@@ -19,15 +21,16 @@ def test_nullable(create_nacc_validator):
     assert nv.validate({'dummy_var': ''})
     assert nv.validate({})
 
+
 def test_minmax(create_nacc_validator):
-    """ Test min/max case """
+    """Test min/max case."""
     schema = {
         "dummy_var": {
-                "type": "integer",
-                "required": True,
-                "min": 0,
-                "max": 10
-            }
+            "type": "integer",
+            "required": True,
+            "min": 0,
+            "max": 10
+        }
     }
     nv = create_nacc_validator(schema)
 
@@ -41,8 +44,9 @@ def test_minmax(create_nacc_validator):
     assert not nv.validate({'dummy_var': None})
     assert nv.errors == {'dummy_var': ['null value not allowed']}
 
+
 def test_minmax_date(date_constraint, create_nacc_validator):
-    """ Tests min/max when dates are involved """
+    """Tests min/max when dates are involved."""
     schema = {
         "frmdate": {
             "type": "string",
@@ -62,14 +66,15 @@ def test_minmax_date(date_constraint, create_nacc_validator):
 
     # invalid cases
     assert not nv.validate({'frmdate': "2011/12/31"})
-    assert nv.errors ==  {'frmdate': ['min value is 2012/01/01']}
+    assert nv.errors == {'frmdate': ['min value is 2012/01/01']}
     assert not nv.validate({'frmdate': "01/01/2011"})
-    assert nv.errors ==  {'frmdate': ['min value is 2012/01/01']}
+    assert nv.errors == {'frmdate': ['min value is 2012/01/01']}
     assert not nv.validate({'frmdate': "2024/03/03"})
-    assert nv.errors ==  {'frmdate': ['max value is 02/02/2024']}
+    assert nv.errors == {'frmdate': ['max value is 02/02/2024']}
+
 
 def test_regex(create_nacc_validator):
-    """ Test regex """
+    """Test regex."""
     schema = {
         "zip": {
             "type": "string",
@@ -84,27 +89,34 @@ def test_regex(create_nacc_validator):
     assert nv.validate({'zip': "999"})
 
     assert not nv.validate({'zip': "6"})
-    assert nv.errors == {'zip': ["value does not match regex '^(00[6-9]|0[1-9]\\d|[1-9]\\d{2})$'"]}
+    assert nv.errors == {
+        'zip':
+        ["value does not match regex '^(00[6-9]|0[1-9]\\d|[1-9]\\d{2})$'"]
+    }
     assert not nv.validate({'zip': "12"})
-    assert nv.errors == {'zip': ["value does not match regex '^(00[6-9]|0[1-9]\\d|[1-9]\\d{2})$'"]}
+    assert nv.errors == {
+        'zip':
+        ["value does not match regex '^(00[6-9]|0[1-9]\\d|[1-9]\\d{2})$'"]
+    }
     assert not nv.validate({'zip': "1000"})
-    assert nv.errors == {'zip': ["value does not match regex '^(00[6-9]|0[1-9]\\d|[1-9]\\d{2})$'"]}
+    assert nv.errors == {
+        'zip':
+        ["value does not match regex '^(00[6-9]|0[1-9]\\d|[1-9]\\d{2})$'"]
+    }
+
 
 def test_anyof(create_nacc_validator):
-    """ Test anyof case """
+    """Test anyof case."""
     schema = {
         "dummy_var": {
             "type": "integer",
             "required": True,
-            "anyof": [
-                {
-                    "min": 0,
-                    "max": 10
-                },
-                {
-                    "allowed": [99]
-                }
-            ]
+            "anyof": [{
+                "min": 0,
+                "max": 10
+            }, {
+                "allowed": [99]
+            }]
         }
     }
     nv = create_nacc_validator(schema)
@@ -113,12 +125,27 @@ def test_anyof(create_nacc_validator):
         assert nv.validate({'dummy_var': i})
     assert nv.validate({'dummy_var': 99})
     assert not nv.validate({'dummy_var': 100})
-    assert nv.errors == {'dummy_var': ['no definitions validate', {'anyof definition 0': ['max value is 10'], 'anyof definition 1': ['unallowed value 100']}]}
+    assert nv.errors == {
+        'dummy_var': [
+            'no definitions validate', {
+                'anyof definition 0': ['max value is 10'],
+                'anyof definition 1': ['unallowed value 100']
+            }
+        ]
+    }
     assert not nv.validate({'dummy_var': -1})
-    assert nv.errors == {'dummy_var': ['no definitions validate', {'anyof definition 0': ['min value is 0'], 'anyof definition 1': ['unallowed value -1']}]}
+    assert nv.errors == {
+        'dummy_var': [
+            'no definitions validate', {
+                'anyof definition 0': ['min value is 0'],
+                'anyof definition 1': ['unallowed value -1']
+            }
+        ]
+    }
+
 
 def test_date_format(date_constraint, create_nacc_validator):
-    """ Test dates schema from regex """
+    """Test dates schema from regex."""
     schema = {
         "frmdate": {
             "required": True,
@@ -133,21 +160,18 @@ def test_date_format(date_constraint, create_nacc_validator):
     assert nv.validate({'frmdate': '2001/01/01'})
 
     assert not nv.validate({'frmdate': '01/01/01'})
-    assert nv.errors == {'frmdate': [f"value does not match regex '{date_constraint}'"]}
+    assert nv.errors == {
+        'frmdate': [f"value does not match regex '{date_constraint}'"]
+    }
     assert not nv.validate({'frmdate': 'hello world'})
-    assert nv.errors == {'frmdate': [f"value does not match regex '{date_constraint}'"]}
+    assert nv.errors == {
+        'frmdate': [f"value does not match regex '{date_constraint}'"]
+    }
 
 
 def test_allowed(create_nacc_validator):
-    """ Test allowed with strings. """
-    schema = {
-        "testvar": {
-            "allowed": [
-                1,
-                'hello'
-            ]
-        }
-    }
+    """Test allowed with strings."""
+    schema = {"testvar": {"allowed": [1, 'hello']}}
 
     nv = create_nacc_validator(schema)
 
