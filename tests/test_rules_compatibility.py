@@ -1069,3 +1069,13 @@ def test_integer_vs_float_compatibility(create_nacc_validator):
                      "[99]}, 'perscare': {'allowed': [99]}} then {'cdrsum': {'allowed': "
                      '[99]}} - compatibility rule no: 1']}
 
+    # passing case
+    assert nv.validate({
+        'cdrsum': 99,
+        'memory': 2.0,
+        'orient': 0.5,
+        'judgment': 99,
+        'commun': 3,
+        'homehobb': 0.5,
+        'perscare': 99.0
+    })
