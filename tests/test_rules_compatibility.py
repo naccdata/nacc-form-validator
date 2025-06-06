@@ -797,3 +797,285 @@ def test_compatibility_logic_with_divide(create_nacc_validator):
 
     assert not nv.validate({"ftdsnrat": 0.0 , "ftdhaird": 1, "ftdspit": 1, "ftdnose": 1})
     assert nv.errors == {'ftdsnrat': ["('ftdsnrat', ['unallowed value 0.0']) for if {'ftdhaird': {'allowed': [1]}, 'ftdspit': {'allowed': [1]}, 'ftdnose': {'allowed': [1]}} then {'ftdsnrat': {'allowed': [88.88]}} - compatibility rule no: 3"]}
+
+
+def test_integer_vs_float_compatibility(create_nacc_validator):
+    """Tests the integer/float compatibility."""
+    schema = {
+        "memory": {
+            "required": True,
+            "type": "float",
+            "allowed": [
+                0.0,
+                1.0,
+                2.0,
+                3.0,
+                99.0,
+                0.5
+            ]
+        },
+        "orient": {
+            "required": True,
+            "type": "float",
+            "allowed": [
+                0.0,
+                1.0,
+                2.0,
+                3.0,
+                99.0,
+                0.5
+            ]
+        },
+        "judgment": {
+            "required": True,
+            "type": "float",
+            "allowed": [
+                0.0,
+                1.0,
+                2.0,
+                3.0,
+                99.0,
+                0.5
+            ]
+        },
+        "commun": {
+            "required": True,
+            "type": "float",
+            "allowed": [
+                0.0,
+                1.0,
+                2.0,
+                3.0,
+                99.0,
+                0.5
+            ]
+        },
+        "homehobb": {
+            "required": True,
+            "type": "float",
+            "allowed": [
+                0.0,
+                1.0,
+                2.0,
+                3.0,
+                99.0,
+                0.5
+            ]
+        },
+        "perscare": {
+            "required": True,
+            "type": "float",
+            "allowed": [
+                0.0,
+                1.0,
+                2.0,
+                3.0,
+                99.0
+            ]
+        },
+        "cdrsum": {
+            "required": True,
+            "type": "float",
+            "anyof": [
+                {
+                    "min": 0.0,
+                    "max": 16.0
+                },
+                {
+                    "allowed": [
+                        17.0,
+                        18.0,
+                        99.0
+                    ]
+                }
+            ],
+            "compatibility": [
+                {
+                    "index": 0,
+                    "if_op": "and",
+                    "if": {
+                        "memory": {
+                            "forbidden": [
+                                99
+                            ]
+                        },
+                        "orient": {
+                            "forbidden": [
+                                99
+                            ]
+                        },
+                        "judgment": {
+                            "forbidden": [
+                                99
+                            ]
+                        },
+                        "commun": {
+                            "forbidden": [
+                                99
+                            ]
+                        },
+                        "homehobb": {
+                            "forbidden": [
+                                99
+                            ]
+                        },
+                        "perscare": {
+                            "forbidden": [
+                                99
+                            ]
+                        }
+                    },
+                    "then": {
+                        "cdrsum": {
+                            "logic": {
+                                "formula": {
+                                    "==": [
+                                        {
+                                            "var": "cdrsum"
+                                        },
+                                        {
+                                            "+": [
+                                                {
+                                                    "var": "memory"
+                                                },
+                                                {
+                                                    "var": "orient"
+                                                },
+                                                {
+                                                    "var": "judgment"
+                                                },
+                                                {
+                                                    "var": "commun"
+                                                },
+                                                {
+                                                    "var": "homehobb"
+                                                },
+                                                {
+                                                    "var": "perscare"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            },
+                            "nullable": True
+                        }
+                    }
+                },
+                {
+                "index": 1,
+                    "if_op": "or",
+                    "if": {
+                        "memory": {
+                            "allowed": [
+                                99
+                            ]
+                        },
+                        "orient": {
+                            "allowed": [
+                                99
+                            ]
+                        },
+                        "judgment": {
+                            "allowed": [
+                                99
+                            ]
+                        },
+                        "commun": {
+                            "allowed": [
+                                99
+                            ]
+                        },
+                        "homehobb": {
+                            "allowed": [
+                                99
+                            ]
+                        },
+                        "perscare": {
+                            "allowed": [
+                                99
+                            ]
+                        }
+                    },
+                    "then": {
+                        "cdrsum": {
+                            "allowed": [
+                                99
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    }
+
+    nv = create_nacc_validator(schema)
+
+    # test index 0
+    assert nv.validate({
+        'cdrsum': 8,
+        'memory': 2.0,
+        'orient': 0.5,
+        'judgment': 1,
+        'commun': 3,
+        'homehobb': 0.5,
+        'perscare': 1.0
+    })
+
+    record = {
+        'cdrsum': '8',
+        'memory': 2.0,
+        'orient': '0.5',
+        'judgment': 1,
+        'commun': '3',
+        'homehobb': '0.5',
+        'perscare': '1.0'
+    }
+    assert not nv.validate(record)  # fails before casting
+    record = nv.cast_record(record)
+    assert nv.validate(record)
+
+    # test index 1
+    # 99.0 case
+    assert not nv.validate({
+        'cdrsum': 8,
+        'memory': 2.0,
+        'orient': 0.5,
+        'judgment': 1,
+        'commun': 3,
+        'homehobb': 0.5,
+        'perscare': 99.0
+    })
+    assert nv.errors == {'cdrsum': ["('cdrsum', ['unallowed value 8']) for if {'memory': {'allowed': "
+                     "[99]}, 'orient': {'allowed': [99]}, 'judgment': {'allowed': "
+                     "[99]}, 'commun': {'allowed': [99]}, 'homehobb': {'allowed': "
+                     "[99]}, 'perscare': {'allowed': [99]}} then {'cdrsum': {'allowed': "
+                     '[99]}} - compatibility rule no: 1']}
+
+
+    # 99 case
+    assert not nv.validate({
+        'cdrsum': 8,
+        'memory': 2.0,
+        'orient': 0.5,
+        'judgment': 99,
+        'commun': 3,
+        'homehobb': 0.5,
+        'perscare': 1.0
+    })
+    assert nv.errors == {'cdrsum': ["('cdrsum', ['unallowed value 8']) for if {'memory': {'allowed': "
+                     "[99]}, 'orient': {'allowed': [99]}, 'judgment': {'allowed': "
+                     "[99]}, 'commun': {'allowed': [99]}, 'homehobb': {'allowed': "
+                     "[99]}, 'perscare': {'allowed': [99]}} then {'cdrsum': {'allowed': "
+                     '[99]}} - compatibility rule no: 1']}
+
+    # passing case
+    assert nv.validate({
+        'cdrsum': 99,
+        'memory': 2.0,
+        'orient': 0.5,
+        'judgment': 99,
+        'commun': 3,
+        'homehobb': 0.5,
+        'perscare': 99.0
+    })
