@@ -961,12 +961,57 @@ def test_integer_vs_float_compatibility(create_nacc_validator):
                             "nullable": True
                         }
                     }
+                },
+                {
+                "index": 1,
+                    "if_op": "or",
+                    "if": {
+                        "memory": {
+                            "allowed": [
+                                99
+                            ]
+                        },
+                        "orient": {
+                            "allowed": [
+                                99
+                            ]
+                        },
+                        "judgment": {
+                            "allowed": [
+                                99
+                            ]
+                        },
+                        "commun": {
+                            "allowed": [
+                                99
+                            ]
+                        },
+                        "homehobb": {
+                            "allowed": [
+                                99
+                            ]
+                        },
+                        "perscare": {
+                            "allowed": [
+                                99
+                            ]
+                        }
+                    },
+                    "then": {
+                        "cdrsum": {
+                            "allowed": [
+                                99
+                            ]
+                        }
+                    }
                 }
             ]
         }
     }
 
     nv = create_nacc_validator(schema)
+
+    # test index 0
     assert nv.validate({
         'cdrsum': 8,
         'memory': 2.0,
@@ -989,4 +1034,38 @@ def test_integer_vs_float_compatibility(create_nacc_validator):
     assert not nv.validate(record)  # fails before casting
     record = nv.cast_record(record)
     assert nv.validate(record)
+
+    # test index 1
+    # 99.0 case
+    assert not nv.validate({
+        'cdrsum': 8,
+        'memory': 2.0,
+        'orient': 0.5,
+        'judgment': 1,
+        'commun': 3,
+        'homehobb': 0.5,
+        'perscare': 99.0
+    })
+    assert nv.errors == {'cdrsum': ["('cdrsum', ['unallowed value 8']) for if {'memory': {'allowed': "
+                     "[99]}, 'orient': {'allowed': [99]}, 'judgment': {'allowed': "
+                     "[99]}, 'commun': {'allowed': [99]}, 'homehobb': {'allowed': "
+                     "[99]}, 'perscare': {'allowed': [99]}} then {'cdrsum': {'allowed': "
+                     '[99]}} - compatibility rule no: 1']}
+
+
+    # 99 case
+    assert not nv.validate({
+        'cdrsum': 8,
+        'memory': 2.0,
+        'orient': 0.5,
+        'judgment': 99,
+        'commun': 3,
+        'homehobb': 0.5,
+        'perscare': 1.0
+    })
+    assert nv.errors == {'cdrsum': ["('cdrsum', ['unallowed value 8']) for if {'memory': {'allowed': "
+                     "[99]}, 'orient': {'allowed': [99]}, 'judgment': {'allowed': "
+                     "[99]}, 'commun': {'allowed': [99]}, 'homehobb': {'allowed': "
+                     "[99]}, 'perscare': {'allowed': [99]}} then {'cdrsum': {'allowed': "
+                     '[99]}} - compatibility rule no: 1']}
 
