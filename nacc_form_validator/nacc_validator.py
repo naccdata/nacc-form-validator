@@ -1113,6 +1113,10 @@ class NACCValidator(Validator):
         birth_year = self.__get_value_for_key(
             comparison[SchemaDefs.BIRTH_YEAR])
 
+        if not birth_month or not birth_day or not birth_year:
+            self._error(field, ErrorDefs.MISSING_BIRTH_DATES)
+            return
+
         birth_date = utils.convert_to_date(f"{birth_month:02d} \
                                            /{birth_day:02d} \
                                            /{birth_year:04d}")

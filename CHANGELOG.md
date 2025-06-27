@@ -2,6 +2,10 @@
 
 Documentation of release versions of `nacc-form-validator`
 
+## 0.5.2
+
+* Handle error when birth date cannot be generated
+
 ## 0.5.1
 
 * Adds prorated scoring back to `_check_with_gds` 
