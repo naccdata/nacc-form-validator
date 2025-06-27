@@ -50,6 +50,7 @@ class ErrorDefs:
     ADCID_NOT_MATCH = ErrorDefinition(0x3006, "function")
     ADCID_NOT_VALID = ErrorDefinition(0x3007, "function")
     SCORING_INVALID = ErrorDefinition(0x3008, "function")
+    MISSING_BIRTH_DATES = ErrorDefinition(0x3009, "compare_age")
 
 
 class CustomErrorHandler(BasicErrorHandler):
@@ -138,7 +139,9 @@ class CustomErrorHandler(BasicErrorHandler):
             0x3007:
             "Provided ADCID {0} is not in the valid list of ADCIDs",
             0x3008:
-            "Provided value {0} does not match the expected score"
+            "Provided value {0} does not match the expected score",
+            0x3009:
+            "Cannot compute birth date, one or more components empty"
         }
 
         self.messages.update(custom_errors)

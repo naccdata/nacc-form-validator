@@ -134,8 +134,8 @@ def test_compare_age_invalid_field(date_constraint, create_nacc_validator):
         "Error in comparing behage to age at frmdate (0.08761122518822724): '<=' not supported between instances of 'float' and 'str'"]}
 
 
-def test_compare_age_invalid_base(create_nacc_validator):
-    """ Test case where base_date is invalid """
+def test_compare_age_invalid_fields(create_nacc_validator):
+    """ Test case where base_date or birth_year is invalid """
     schema = {
         "frmdate": {
             "type": "string",
@@ -159,6 +159,12 @@ def test_compare_age_invalid_base(create_nacc_validator):
         {'frmdate': 'hello world', 'birthyr': 2024, 'behage': 50})
     assert nv.errors == {'frmdate': [
         'failed to convert value hello world to a date: Unknown string format: hello world']}
+    assert not nv.validate(
+        {'frmdate': '2024/02/02', 'birthyr': "", 'behage': 50})
+    assert nv.errors == {
+        'birthyr': ['must be of integer type'],
+        'frmdate': ['Cannot compute birth date, one or more components empty'],
+    }
 
 
 def test_compare_age_null_base(create_nacc_validator):
