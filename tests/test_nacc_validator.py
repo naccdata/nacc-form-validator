@@ -69,6 +69,44 @@ def test_validate_formatting_invalid_field(nv):
         'dummy_int': ['formatting definition not supported for non string types']
     }
 
+def test_integer_vs_float(create_nacc_validator):
+    """Tests the allowed/forbidden rules work with both integers and floats."""
+    schema = {
+        "testvar": {
+            "type": "float",
+            "allowed": [
+                99
+            ],
+            "forbidden": [
+                88
+            ]
+        }
+    }
+
+    nv = create_nacc_validator(schema)
+    assert nv.validate({'testvar': 99})
+    assert nv.validate({'testvar': 99.0})
+    assert not nv.validate({'testvar': 88})
+    assert not nv.validate({'testvar': 88.0})
+
+    schema = {
+        "testvar": {
+            "type": "float",
+            "allowed": [
+                99.0
+            ],
+            "forbidden": [
+                88.0
+            ]
+        }
+    }
+
+    nv = create_nacc_validator(schema)
+    assert nv.validate({'testvar': 99})
+    assert nv.validate({'testvar': 99.0})
+    assert not nv.validate({'testvar': 88})
+    assert not nv.validate({'testvar': 88.0})
+
 def test_lots_of_rules(create_nacc_validator):
     """ Test when a specific field has a lot of rules associated with it (in this case oldadcid) """
     schema = {
