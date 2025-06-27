@@ -163,7 +163,7 @@ def test_compare_age_invalid_fields(create_nacc_validator):
         {'frmdate': '2024/02/02', 'birthyr': "", 'behage': 50})
     assert nv.errors == {
         'birthyr': ['must be of integer type'],
-        'frmdate': ['Cannot compute birth date, one or more components empty'],
+        'frmdate': ['Cannot compute birth date, one or more components empty or malformed'],
     }
 
 
