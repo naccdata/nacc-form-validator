@@ -258,3 +258,27 @@ def test_compute_gds_prorated_score(gds_nv):
     for field in ['satis', 'dropact', 'empty']:
         record[field] = 9
         assert gds_nv.validate(record)
+
+def test_compute_gds_rounding(gds_nv):
+    """Test when the prorated score lands on exactly 2.5. Needs to round up to 3,
+    not down to 2."""
+    record = {
+        "satis": 0,
+        "dropact": 0,
+        "empty": 0,
+        "bored": 1,
+        "spirits": 0,
+        "afraid": 0,
+        "happy": 0,
+        "helpless": 0,
+        "stayhome": 9,
+        "memprob": 9,
+        "wondrful": 0,
+        "wrthless": 0,
+        "energy": 1,
+        "hopeless": 0,
+        "better": 9,
+        "gds": 3,
+        "nogds": None
+    }
+    assert gds_nv.validate(record)
