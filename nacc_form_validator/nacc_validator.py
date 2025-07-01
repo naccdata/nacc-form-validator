@@ -3,6 +3,7 @@ library)."""
 
 import copy
 import logging
+import math
 from datetime import datetime as dt
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
@@ -892,7 +893,11 @@ class NACCValidator(Validator):
         # calculate prorated GDS
         num_unanswered = 15 - num_valid
         if num_unanswered <= 3:
-            gds = round(gds + (gds / num_valid) * (num_unanswered))
+            raw_gds = gds + (gds / num_valid) * (num_unanswered)
+
+            # ensures 0.5 rounds up, not down
+            gds = int(math.floor(raw_gds + 0.5))
+
             if gds != value:
                 self._error(field, ErrorDefs.CHECK_GDS_4, 3, value, gds)
 

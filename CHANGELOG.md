@@ -2,6 +2,10 @@
 
 Documentation of release versions of `nacc-form-validator`
 
+## 0.5.3
+
+* Fixes rounding on GDS prorated scores when it's exactly 0.5 (needs to round up, not down)
+
 ## 0.5.2
 
 * Handle error when birth date cannot be generated
