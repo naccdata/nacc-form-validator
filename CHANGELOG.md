@@ -5,6 +5,7 @@ Documentation of release versions of `nacc-form-validator`
 ## 0.5.3
 
 * Fixes rounding on GDS prorated scores when it's exactly 0.5 (needs to round up, not down)
+* Updates wording of error to allow NOGDS to be 0
 
 ## 0.5.2
 

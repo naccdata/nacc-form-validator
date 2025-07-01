@@ -901,7 +901,7 @@ class NACCValidator(Validator):
             if gds != value:
                 self._error(field, ErrorDefs.CHECK_GDS_4, 3, value, gds)
 
-        if not nogds and num_valid < 12:
+        if (not nogds or nogds == 0) and num_valid < 12:
             self._error(field, ErrorDefs.CHECK_GDS_5, 4)
             return
 

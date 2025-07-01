@@ -1,6 +1,7 @@
 """
 Tests the custom compute_gds rule (_validate_compute_gds).
 """
+import copy
 import pytest
 
 
@@ -118,7 +119,7 @@ def gds_nv(create_nacc_validator):
         "nogds": {
             "nullable": True,
             "type": "integer",
-            "allowed": [1]
+            "allowed": [0, 1]
         }
     }
 
@@ -187,22 +188,27 @@ def test_compute_gds_nogds_is_1(gds_nv, gds_record):
                 gds_nv.validate(gds_record)
 
 def test_compute_gds_nogds_is_blank(gds_nv, gds_record):
-    """ Test compute_gds when `nogds` is blank """
-    # if NOGDS is blank then there must be at least 12 questions with valid scores
+    """ Test compute_gds when `nogds` is 0 or blank """
+    # if NOGDS is 0/blank then there must be at least 12 questions with valid scores
     # if up to 3 of the 15 items are unanswered, then GDS is equal to a prorated score;
     # since in this case all answers are 1, we can easily calculate on the fly
-    count = 0
-    for k in gds_record:
-        if k not in ['nogds', 'gds']:
-            gds_record[k] = 9
-            count += 1
-            if count <= 3:
-                gds_record['gds'] = (15 - count) + count
-                assert gds_nv.validate(gds_record)
-            else:
-                gds_record['gds'] -= 1
-                assert not gds_nv.validate(gds_record)
-                assert gds_nv.errors == {'gds': ['If GDS attempted (nogds=blank), at least 12 questions need to have valid scores - GDS rule no: 4']}
+
+    for value in [None, 0]:
+        local_record = copy.deepcopy(gds_record)
+        local_record['nogds'] = value
+
+        count = 0
+        for k in local_record:
+            if k not in ['nogds', 'gds']:
+                local_record[k] = 9
+                count += 1
+                if count <= 3:
+                    local_record['gds'] = (15 - count) + count
+                    assert gds_nv.validate(local_record)
+                else:
+                    local_record['gds'] -= 1
+                    assert not gds_nv.validate(local_record)
+                    assert gds_nv.errors == {'gds': ['If GDS attempted (nogds = 0 or blank), at least 12 questions need to have valid scores - GDS rule no: 4']}
 
 def test_compute_gds_prorated_score(gds_nv):
     """ Test the GDS prorated scoring algorithm """

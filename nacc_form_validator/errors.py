@@ -116,7 +116,7 @@ class CustomErrorHandler(BasicErrorHandler):
             0x2007:
             "incorrect prorated GDS score {1}, expected value {2} - GDS rule no: {0}",
             0x2008:
-            "If GDS attempted (nogds=blank), at least 12 questions need to have "
+            "If GDS attempted (nogds = 0 or blank), at least 12 questions need to have "
             + "valid scores - GDS rule no: {0}",
             0x2009:
             "input value doesn't satisfy the condition {0}",
