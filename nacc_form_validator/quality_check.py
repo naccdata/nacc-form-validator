@@ -1,6 +1,6 @@
 """Module for performing data quality checks."""
 
-from typing import Dict, List, Mapping, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from cerberus.errors import DocumentErrorTree
 from cerberus.schema import SchemaError
@@ -21,9 +21,9 @@ class QualityCheck:
     def __init__(
         self,
         pk_field: str,
-        schema: Mapping,
+        schema: Dict[str, Dict[str, Any]],
         strict: bool = True,
-        datastore: Datastore = None,
+        datastore: Optional[Datastore] = None,
     ):
         """
 
@@ -37,10 +37,10 @@ class QualityCheck:
 
         self.__pk_field: str = pk_field
         self.__strict: bool = strict
-        self.__schema: Dict[str, Mapping[str, object]] = schema
+        self.__schema: Dict[str, Dict[str, Any]] = schema
 
         # Validator object for rule evaluation
-        self.__validator: NACCValidator = None
+        self.__validator: NACCValidator = None  # type: ignore
         self.__init_validator(datastore)
 
     @property
@@ -53,11 +53,11 @@ class QualityCheck:
         return self.__pk_field
 
     @property
-    def schema(self) -> Dict[str, Mapping[str, object]]:
+    def schema(self) -> Dict[str, Dict[str, Any]]:
         """The schema property.
 
         Returns:
-            Dict[str, Mapping[str, object]]:
+            Dict[str, Dict[str, Any]]:
             Schema of validation rules defined in the project
         """
         return self.__schema

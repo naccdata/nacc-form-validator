@@ -191,33 +191,64 @@ def count_exact(args):
 
 
 operations = {
-    "==": soft_equals,
-    "===": hard_equals,
-    "!=": lambda a, b: not soft_equals(a, b),
-    "!==": lambda a, b: not hard_equals(a, b),
-    ">": lambda a, b: less(b, a),
-    ">=": lambda a, b: less(b, a) or soft_equals(a, b),
-    "<": less,
-    "<=": less_or_equal,
-    "!": lambda a: not a,
-    "!!": bool,
-    "%": lambda a, b: a % b,
-    "and": lambda *args: reduce(lambda total, arg: total and arg, args, True),
-    "or": lambda *args: reduce(lambda total, arg: total or arg, args, False),
-    "?:": lambda a, b, c: b if a else c,
-    "if": if_,
-    "log": lambda a: logger.info(a) or a,
-    "in": lambda a, b: a in b if "__contains__" in dir(b) else False,
-    "cat": lambda *args: "".join(str(arg) for arg in args),
-    "+": plus,
-    "*": lambda *args: reduce(lambda total, arg: total * float(arg), args, 1),
-    "-": minus,
-    "/": lambda a, b=None: a if b is None else float(a) / float(b),
-    "min": lambda *args: min(args),
-    "max": lambda *args: max(args),
-    "merge": merge,
-    "count": lambda *args: sum(1 if a else 0 for a in args),
-    "count_exact": lambda *args: count_exact(args),
+    "==":
+    soft_equals,
+    "===":
+    hard_equals,
+    "!=":
+    lambda a, b: not soft_equals(a, b),
+    "!==":
+    lambda a, b: not hard_equals(a, b),
+    ">":
+    lambda a, b: less(b, a),
+    ">=":
+    lambda a, b: less(b, a) or soft_equals(a, b),
+    "<":
+    less,
+    "<=":
+    less_or_equal,
+    "!":
+    lambda a: not a,
+    "!!":
+    bool,
+    "%":
+    lambda a, b: a % b,
+    "and":
+    lambda *args: reduce(lambda total, arg: total and arg, args, True),
+    "or":
+    lambda *args: reduce(lambda total, arg: total or arg, args, False),
+    "?:":
+    lambda a, b, c: b if a else c,
+    "if":
+    if_,
+    "log":
+    lambda a: logger.info(a) or a,  # type: ignore
+    "in":
+    lambda a, b: a in b if "__contains__" in dir(b) else False,
+    "cat":
+    lambda *args: "".join(str(arg) for arg in args),
+    "+":
+    plus,
+    "*":
+    lambda *args: reduce(
+        lambda total,  # type: ignore
+        arg: total * float(arg),  # type: ignore
+        args,
+        1),
+    "-":
+    minus,
+    "/":
+    lambda a, b=None: a if b is None else float(a) / float(b),
+    "min":
+    lambda *args: min(args),
+    "max":
+    lambda *args: max(args),
+    "merge":
+    merge,
+    "count":
+    lambda *args: sum(1 if a else 0 for a in args),
+    "count_exact":
+    lambda *args: count_exact(args),
 }
 
 

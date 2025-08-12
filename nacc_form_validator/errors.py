@@ -1,6 +1,6 @@
 """Error-code and schema related constants."""
 
-from typing import Mapping
+from typing import Mapping, Optional
 
 from cerberus.errors import (
     BasicErrorHandler,
@@ -56,9 +56,10 @@ class ErrorDefs:
 class CustomErrorHandler(BasicErrorHandler):
     """Class to provide custom error messages."""
 
-    def __init__(self, schema: Mapping = None, tree: ErrorTree = None):
+    def __init__(self,
+                 schema: Optional[Mapping] = None,
+                 tree: Optional[ErrorTree] = None):
         """
-
         Args:
             schema (optional): Validation schema as dict[field, rule objects].
             tree (optional): Validation errors tree.

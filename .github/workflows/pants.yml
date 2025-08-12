@@ -47,6 +47,9 @@ jobs:
     - name: Lint
       run: |
         pants lint ::
+    - name: Check
+      run: |
+        pants check ::
     - name: Test
       run: |
         pants test ::

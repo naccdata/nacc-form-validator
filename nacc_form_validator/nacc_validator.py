@@ -4,7 +4,7 @@ library)."""
 import copy
 import logging
 import math
-from datetime import datetime as dt
+from datetime import date, datetime
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 from cerberus.validator import Validator
@@ -26,7 +26,7 @@ class ValidationException(Exception):
 class NACCValidator(Validator):
     """NACCValidator class to extend cerberus.Validator."""
 
-    def __init__(self, schema: Mapping, *args, **kwargs):
+    def __init__(self, schema: Dict[str, Any], *args, **kwargs):
         """
         Args:
             schema: Validation schema as Dict[variable, rule objects]
@@ -38,13 +38,13 @@ class NACCValidator(Validator):
         self.__dtypes: Dict[str, str] = self.__populate_data_types()
 
         # Datastore instance
-        self.__datastore: Datastore = None
+        self.__datastore: Optional[Datastore] = None
 
         # Primary key field of the project
-        self.__pk_field: str = None
+        self.__pk_field: Optional[str] = None
 
         # Cache of previous records that has been retrieved
-        self.__prev_records: Dict[str, Mapping] = {}
+        self.__prev_records: Dict[str, Dict[str, Any]] = {}
 
         # List of system errors occured by field
         self.__sys_errors: Dict[str, List[str]] = {}
@@ -55,7 +55,7 @@ class NACCValidator(Validator):
         validation schema."""
         return self.__dtypes
 
-    def __populate_data_types(self) -> Optional[Dict[str, str]]:
+    def __populate_data_types(self) -> Dict[str, str]:
         """Convert cerberus data types to python data types. Populates a
         field->data type mapping for each field in the schema.
 
@@ -64,7 +64,7 @@ class NACCValidator(Validator):
         """
 
         if not self.schema:
-            return None
+            return {}
 
         data_types = {}
         for key, configs in self.schema.items():
@@ -162,7 +162,7 @@ class NACCValidator(Validator):
         """
         return self.error_handler.messages
 
-    def cast_record(self, record: Dict[str, str]) -> Dict[str, object]:
+    def cast_record(self, record: Dict[str, Any]) -> Dict[str, Any]:
         """Cast the fields in the record to appropriate data types.
 
         Args:
@@ -218,7 +218,7 @@ class NACCValidator(Validator):
         self,
         field: str,
         ignore_empty_fields: Optional[List[str]] = None
-    ) -> Optional[Dict[str, Mapping]]:
+    ) -> Optional[Dict[str, Dict[str, Any]]]:
         """Get the previous record from the Datastore; if not skipping empty
         records, stores it in the prev_records cache.
 
@@ -230,7 +230,7 @@ class NACCValidator(Validator):
         Returns:
             Dict[str, object]: Casted record Dict[field, value]
         """
-        if not self.datastore:
+        if not self.__datastore:
             err_msg = "Datastore not set, cannot validate temporal rules"
             self.__add_system_error(field, err_msg)
             raise ValidationException(err_msg)
@@ -247,20 +247,20 @@ class NACCValidator(Validator):
 
         record_id = self.document[self.primary_key]
 
-        ignore_empty = bool(ignore_empty_fields)
-        # If the previous record was already retrieved and not ignore_empty, use it
-        # Similarly only save into cache if ignore_empty is false
-        if not ignore_empty and record_id in self.__prev_records:
+        # If the previous record was already retrieved and not ignore_empty_fields,
+        # use it. Similarly only save into cache if ignore_empty_fields is None/empty
+        if not ignore_empty_fields and record_id in self.__prev_records:
             prev_ins = self.__prev_records[record_id]
         else:
-            prev_ins = (self.__datastore.get_previous_nonempty_record(
-                self.document, ignore_empty_fields) if ignore_empty else
-                        self.__datastore.get_previous_record(self.document))
+            prev_ins = (
+                self.__datastore.get_previous_nonempty_record(  # type: ignore
+                    self.document, ignore_empty_fields) if ignore_empty_fields
+                else self.__datastore.get_previous_record(self.document))
 
             if prev_ins:
                 prev_ins = self.cast_record(prev_ins)
 
-            if not ignore_empty:
+            if not ignore_empty_fields:
                 self.__prev_records[record_id] = prev_ins
 
         return prev_ins
@@ -280,16 +280,16 @@ class NACCValidator(Validator):
             Any: Value of the specified key or None
         """
         if key == SchemaDefs.CRR_DATE:
-            return dt.now().date()
+            return datetime.now().date()
 
         if key == SchemaDefs.CRR_YEAR:
-            return dt.now().date().year
+            return datetime.now().date().year
 
         if key == SchemaDefs.CRR_MONTH:
-            return dt.now().date().month
+            return datetime.now().date().month
 
         if key == SchemaDefs.CRR_DAY:
-            return dt.now().date().day
+            return datetime.now().date().day
 
         if self.document and key in self.document:
             return self.document[key]
@@ -297,7 +297,8 @@ class NACCValidator(Validator):
         return key if return_self else None
 
     # pylint: disable=(unused-argument)
-    def _validate_formatting(self, formatting: str, field: str, value: object):
+    def _validate_formatting(self, formatting: str, field: str,
+                             value: object) -> None:
         """Adding formatting attribute to support specifying string dates. This
         is not an actual validation, just a placeholder method.
 
@@ -332,6 +333,69 @@ class NACCValidator(Validator):
         if value is None:
             super()._drop_remaining_rules("compare_age")
 
+    def _convert_value_to_date(self, target_value: object, field: str,
+                               value: object,
+                               error_def: ErrorDefs) -> Optional[date]:
+        """Converts the given value to a date object.
+
+        Args:
+            target_value: Target value specified in the schema def
+            field: Variable name
+            value: Variable value
+            error_def: The ErrorDef to raise on error
+        """
+        dtype = self.dtypes[field] if field in self.dtypes else "undefined"
+        try:
+            if dtype == "str":
+                return utils.convert_to_date(value)
+            elif dtype == "date":
+                return value  # type: ignore
+            elif dtype == "datetime":
+                return value.date()  # type: ignore
+            elif dtype == "int" and target_value == SchemaDefs.CRR_YEAR:
+                return datetime(value, 1, 1).date()  # type: ignore
+            else:
+                message = f"{target_value} not supported for {dtype} datatype"
+                self._error(field, error_def, message)
+                return None
+        except (ValueError, TypeError, parser.ParserError) as error:
+            self._error(field, error_def, str(error))
+            return None
+
+        return None
+
+    def _format_min_max(self, target_value: object, field: str, value: object,
+                        error_def: ErrorDefs) -> Tuple[object, object]:
+        """Format the target value.
+
+        Args:
+            target_value: Target value specified in the schema def
+            field: Variable name
+            value: Variable value
+            error_def: The ErrorDef to raise on error
+        """
+        if SchemaDefs.FORMATTING in self.schema[field]:
+            methodname = f"convert_to_{self.schema[field][SchemaDefs.FORMATTING]}"
+            func = getattr(utils, methodname, None)
+            if func and callable(func):
+                try:
+                    target_value = func(target_value)
+                    value = func(value)
+                except (
+                        AttributeError,
+                        parser.ParserError,
+                        TypeError,
+                        ValueError,
+                ) as error:
+                    self._error(field, error_def, str(error))
+                    return None, None
+            else:
+                err_msg = f"{methodname} not defined in the validator module"
+                self.__add_system_error(field, err_msg)
+                raise ValidationException(err_msg)
+
+        return target_value, value
+
     def _validate_max(self, max_value: object, field: str, value: object):
         """Override max rule to support validations wrt current date/year.
 
@@ -346,54 +410,21 @@ class NACCValidator(Validator):
         The rule's arguments are validated against this schema:
             {'nullable': False}
         """
-
         if max_value in (SchemaDefs.CRR_DATE, SchemaDefs.CRR_YEAR):
-            dtype = self.dtypes[field] if field in self.dtypes else "undefined"
-            try:
-                if dtype == "str":
-                    input_date = utils.convert_to_date(value)
-                elif dtype == "date":
-                    input_date = value
-                elif dtype == "datetime":
-                    input_date = value.date()
-                elif dtype == "int" and max_value == SchemaDefs.CRR_YEAR:
-                    input_date = dt(value, 1, 1).date()
-                else:
-                    message = f"{max_value} not supported for {dtype} datatype"
-                    self._error(field, ErrorDefs.INVALID_DATE_MAX, message)
-                    return
-            except (ValueError, TypeError, parser.ParserError) as error:
-                self._error(field, ErrorDefs.INVALID_DATE_MAX, str(error))
+            input_date = self._convert_value_to_date(
+                max_value, field, value, ErrorDefs.INVALID_DATE_MAX)
+            if not input_date:
                 return
 
-            curr_date = dt.now().date()
+            curr_date = datetime.now().date()
 
             if max_value == SchemaDefs.CRR_DATE and input_date > curr_date:
                 self._error(field, ErrorDefs.CURR_DATE_MAX, str(curr_date))
             elif max_value == SchemaDefs.CRR_YEAR and input_date.year > curr_date.year:
                 self._error(field, ErrorDefs.CURR_YEAR_MAX, curr_date.year)
         else:
-            if SchemaDefs.FORMATTING in self.schema[field]:
-                methodname = f"convert_to_{self.schema[field][SchemaDefs.FORMATTING]}"
-                func = getattr(utils, methodname, None)
-                if func and callable(func):
-                    try:
-                        max_value = func(max_value)
-                        value = func(value)
-                    except (
-                            AttributeError,
-                            parser.ParserError,
-                            TypeError,
-                            ValueError,
-                    ) as error:
-                        self._error(field, ErrorDefs.INVALID_DATE_MAX,
-                                    str(error))
-                        return
-                else:
-                    err_msg = f"{methodname} not defined in the validator module"
-                    self.__add_system_error(field, err_msg)
-                    raise ValidationException(err_msg)
-
+            max_value, value = self._format_min_max(max_value, field, value,
+                                                    ErrorDefs.INVALID_DATE_MAX)
             super()._validate_max(max_value, field, value)
 
     def _validate_min(self, min_value: object, field: str, value: object):
@@ -412,52 +443,20 @@ class NACCValidator(Validator):
         """
 
         if min_value in (SchemaDefs.CRR_DATE, SchemaDefs.CRR_YEAR):
-            dtype = self.dtypes[field] if field in self.dtypes else "undefined"
-            try:
-                if dtype == "str":
-                    input_date = utils.convert_to_date(value)
-                elif dtype == "date":
-                    input_date = value
-                elif dtype == "datetime":
-                    input_date = value.date()
-                elif dtype == "int" and min_value == SchemaDefs.CRR_YEAR:
-                    input_date = dt(value, 1, 1).date()
-                else:
-                    message = f"{min_value} not supported for {dtype} datatype"
-                    self._error(field, ErrorDefs.INVALID_DATE_MIN, message)
-                    return
-            except (ValueError, TypeError, parser.ParserError) as error:
-                self._error(field, ErrorDefs.INVALID_DATE_MIN, str(error))
+            input_date = self._convert_value_to_date(
+                min_value, field, value, ErrorDefs.INVALID_DATE_MIN)
+            if not input_date:
                 return
 
-            curr_date = dt.now().date()
+            curr_date = datetime.now().date()
 
             if min_value == SchemaDefs.CRR_DATE and input_date < curr_date:
                 self._error(field, ErrorDefs.CURR_DATE_MIN, str(curr_date))
             elif min_value == SchemaDefs.CRR_YEAR and input_date.year < curr_date.year:
                 self._error(field, ErrorDefs.CURR_YEAR_MIN, curr_date.year)
         else:
-            if SchemaDefs.FORMATTING in self.schema[field]:
-                methodname = f"convert_to_{self.schema[field][SchemaDefs.FORMATTING]}"
-                func = getattr(utils, methodname, None)
-                if func and callable(func):
-                    try:
-                        min_value = func(min_value)
-                        value = func(value)
-                    except (
-                            AttributeError,
-                            parser.ParserError,
-                            TypeError,
-                            ValueError,
-                    ) as error:
-                        self._error(field, ErrorDefs.INVALID_DATE_MIN,
-                                    str(error))
-                        return
-                else:
-                    err_msg = f"{methodname} not defined in the validator module"
-                    self.__add_system_error(field, err_msg)
-                    raise ValidationException(err_msg)
-
+            min_value, value = self._format_min_max(min_value, field, value,
+                                                    ErrorDefs.INVALID_DATE_MIN)
             super()._validate_min(min_value, field, value)
 
     def _validate_filled(self, filled: bool, field: str, value: object):
@@ -485,8 +484,8 @@ class NACCValidator(Validator):
         self,
         all_conditions: Dict[str, object],
         operator: str,
-        record: Dict[str, Any] = None,
-    ) -> Tuple[bool, object]:
+        record: Optional[Dict[str, Any]] = None,
+    ) -> Tuple[bool, Dict[str, Any]]:
         """Creates a temporary validator to check a set of conditions.
 
         Args:
@@ -502,7 +501,7 @@ class NACCValidator(Validator):
             record = self.document
 
         valid = operator != "OR"
-        errors = {}
+        errors: Dict[str, Any] = {}
 
         for field, conds in all_conditions.items():
             subschema = {field: conds}
@@ -524,7 +523,7 @@ class NACCValidator(Validator):
                 # if something passed, don't need to evaluate rest,
                 # and ignore any errors found
                 if valid:
-                    errors = None
+                    errors = {}
                     break
                 # otherwise keep track of all errors
                 errors.update(temp_validator.errors)
@@ -1006,7 +1005,7 @@ class NACCValidator(Validator):
                 elif operator == "/":
                     adjusted_value = base_val / adjustment
                 elif operator == "abs":
-                    value = abs(value - base_val)
+                    value = abs(value - base_val)  # type: ignore
                     adjusted_value = adjustment
 
             valid = utils.compare_values(comparator, value, adjusted_value)
@@ -1238,9 +1237,10 @@ class NACCValidator(Validator):
         record = copy.deepcopy(self.document)
         record[calc_var_name] = total_sum
 
-        valid, errors = self._check_subschema_valid(all_conditions=condition,
-                                                    operator="AND",
-                                                    record=record)
+        valid, errors = self._check_subschema_valid(
+            all_conditions=condition,  # type: ignore
+            operator="AND",
+            record=record)
 
         # Logic formula failed, report errors
         if errors:
