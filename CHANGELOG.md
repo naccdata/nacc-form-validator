@@ -2,6 +2,20 @@
 
 Documentation of release versions of `nacc-form-validator`
 
+## Unreleased
+
+* Reformats repo to pass `pants lint ::`
+* Updates lockfile
+
+## 0.5.3
+
+* Fixes rounding on GDS prorated scores when it's exactly 0.5 (needs to round up, not down)
+* Updates wording of error to allow NOGDS to be 0
+
+## 0.5.2
+
+* Handle error when birth date cannot be generated
+
 ## 0.5.1
 
 * Adds prorated scoring back to `_check_with_gds` 
