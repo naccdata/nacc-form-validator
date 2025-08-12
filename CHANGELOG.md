@@ -4,7 +4,8 @@ Documentation of release versions of `nacc-form-validator`
 
 ## Unreleased
 
-* Reformats repo to pass `pants lint ::`
+* Refactors `utils.compare_values` and validation of min/max
+* Reformats repo to pass `pants lint ::` and `pants check ::`
 * Updates lockfile
 
 ## 0.5.3

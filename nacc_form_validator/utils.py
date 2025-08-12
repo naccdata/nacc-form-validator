@@ -65,6 +65,8 @@ def get_float(value: Any) -> Optional[float]:
     except (TypeError, ValueError):
         return None
 
+    return None
+
 
 def compare_values(comparator: str, value: Any, base_value: Any) -> bool:
     """Compare two values.
@@ -113,3 +115,5 @@ def compare_values(comparator: str, value: Any, base_value: Any) -> bool:
         return value <= base_value
     if comparator == "<":
         return value < base_value
+
+    return False

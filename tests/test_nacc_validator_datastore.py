@@ -58,10 +58,11 @@ class CustomDatastore(Datastore):
 
         sorted_record = copy.deepcopy(self.__db[key])
         sorted_record.append(current_record)
-        sorted_record.sort(key=lambda record: record[self.orderby])
+        sorted_record.sort(
+            key=lambda record: record[self.orderby])  # type: ignore
 
         index = sorted_record.index(current_record)
-        return sorted_record[index - 1] if index != 0 else None
+        return sorted_record[index - 1] if index != 0 else None  # type: ignore
 
     def get_previous_nonempty_record(
             self, current_record: dict[str, str],
@@ -75,16 +76,17 @@ class CustomDatastore(Datastore):
         for x in self.__db[key]:
             nonempty = True
             for f in fields:
-                if x.get(f, None) is None:
+                if x.get(f, None) is None:  # type: ignore
                     nonempty = False
             if nonempty:
                 sorted_record.append(x)
 
         sorted_record.append(current_record)
-        sorted_record.sort(key=lambda record: record[self.orderby])
+        sorted_record.sort(
+            key=lambda record: record[self.orderby])  # type: ignore
 
         index = sorted_record.index(current_record)
-        return sorted_record[index - 1] if index != 0 else None
+        return sorted_record[index - 1] if index != 0 else None  # type: ignore
 
     def is_valid_rxcui(self, drugid: int) -> bool:
         """For RXCUI testing."""

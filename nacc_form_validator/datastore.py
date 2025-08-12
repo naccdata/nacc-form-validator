@@ -1,7 +1,7 @@
 """Datastore module."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 # pylint: disable=(too-few-public-methods, no-self-use, unused-argument)
 
@@ -40,7 +40,7 @@ class Datastore(ABC):
 
     @abstractmethod
     def get_previous_record(
-            self, current_record: Dict[str, str]) -> Optional[Dict[str, str]]:
+            self, current_record: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Abstract method to return the previous visit record for the
         specified participant. Override this method to retrieve the records
         from the desired datastore/warehouse.
@@ -55,8 +55,8 @@ class Datastore(ABC):
 
     @abstractmethod
     def get_previous_nonempty_record(
-            self, current_record: Dict[str, str],
-            fields: List[str]) -> Optional[Dict[str, str]]:
+            self, current_record: Dict[str, Any],
+            fields: List[str]) -> Optional[Dict[str, Any]]:
         """Abstract method to return the previous record where all fields are
         NOT empty for the specified participant. Override this method to
         retrieve the records from the desired datastore/warehouse.
@@ -66,7 +66,7 @@ class Datastore(ABC):
             fields: Field(s) to check for non-empty values
 
         Returns:
-            Dict[str, str]: Previous nonempty record or None if none found
+            Dict[str, Any]: Previous nonempty record or None if none found
         """
         return None
 
