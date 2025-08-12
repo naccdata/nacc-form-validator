@@ -32,10 +32,10 @@ class SchemaDefs:
     BASE = "base"
     ADJUST = "adjustment"
     IGNORE_EMPTY = "ignore_empty"
-    BIRTH_MONTH = 'birth_month'
-    BIRTH_DAY = 'birth_day'
-    BIRTH_YEAR = 'birth_year'
+    BIRTH_MONTH = "birth_month"
+    BIRTH_DAY = "birth_day"
+    BIRTH_YEAR = "birth_year"
     COMPARE_TO = "compare_to"
     SWAP_ORDER = "swap_order"
-    FUNCTION_NAME = 'name'
-    FUNCTION_ARGS = 'args'
+    FUNCTION_NAME = "name"
+    FUNCTION_ARGS = "args"
