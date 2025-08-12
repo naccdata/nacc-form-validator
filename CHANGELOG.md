@@ -2,6 +2,10 @@
 
 Documentation of release versions of `nacc-form-validator`
 
+## Unreleased
+
+* Reformats repo to pass `pants lint ::`
+
 ## 0.5.3
 
 * Fixes rounding on GDS prorated scores when it's exactly 0.5 (needs to round up, not down)

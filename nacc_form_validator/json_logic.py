@@ -217,7 +217,7 @@ operations = {
     "max": lambda *args: max(args),
     "merge": merge,
     "count": lambda *args: sum(1 if a else 0 for a in args),
-    "count_exact": lambda *args: count_exact(args)
+    "count_exact": lambda *args: count_exact(args),
 }
 
 

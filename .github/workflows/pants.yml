@@ -46,7 +46,7 @@ jobs:
         # Alternatively you change gha-cache-key to ignore old caches.
     - name: Lint
       run: |
-        pants lint nacc_form_validator::
+        pants lint ::
     - name: Test
       run: |
         pants test ::

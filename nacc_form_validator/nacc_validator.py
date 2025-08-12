@@ -330,7 +330,7 @@ class NACCValidator(Validator):
         """
         super()._validate_nullable(nullable, field, value)
         if value is None:
-            super()._drop_remaining_rules('compare_age')
+            super()._drop_remaining_rules("compare_age")
 
     def _validate_max(self, max_value: object, field: str, value: object):
         """Override max rule to support validations wrt current date/year.
@@ -482,10 +482,11 @@ class NACCValidator(Validator):
             self._error(field, ErrorDefs.FILLED_TRUE)
 
     def _check_subschema_valid(
-            self,
-            all_conditions: Dict[str, object],
-            operator: str,
-            record: Dict[str, Any] = None) -> Tuple[bool, object]:
+        self,
+        all_conditions: Dict[str, object],
+        operator: str,
+        record: Dict[str, Any] = None,
+    ) -> Tuple[bool, object]:
         """Creates a temporary validator to check a set of conditions.
 
         Args:
@@ -835,8 +836,8 @@ class NACCValidator(Validator):
             }
         """
 
-        function_name = '_' + \
-            function.get(SchemaDefs.FUNCTION_NAME, 'undefined')
+        function_name = "_" + function.get(SchemaDefs.FUNCTION_NAME,
+                                           "undefined")
         func = getattr(self, function_name, None)
         if func and callable(func):
             kwargs = function.get(SchemaDefs.FUNCTION_ARGS, {})
@@ -966,13 +967,13 @@ class NACCValidator(Validator):
         prev_record = comparison.get(SchemaDefs.PREV_RECORD, False)
         ignore_empty = comparison.get(SchemaDefs.IGNORE_EMPTY, False)
 
-        base_str = f'{base} (previous record)' if prev_record else base
-        comparison_str = f'{field} {comparator} {base_str}'
+        base_str = f"{base} (previous record)" if prev_record else base
+        comparison_str = f"{field} {comparator} {base_str}"
         if adjustment and operator:
-            if operator == 'abs':
-                comparison_str = f'abs({field} - {base_str}) {comparator} {adjustment}'
+            if operator == "abs":
+                comparison_str = f"abs({field} - {base_str}) {comparator} {adjustment}"
             else:
-                comparison_str += f' {operator} {adjustment}'
+                comparison_str += f" {operator} {adjustment}"
 
         if prev_record:
             ignore_empty_fields = [base] if ignore_empty else None
@@ -1106,8 +1107,9 @@ class NACCValidator(Validator):
             self._error(field, ErrorDefs.DATE_CONVERSION, value, error)
             return
 
-        comparison_str = \
-            f'age at {field} {comparator} {", ".join(map(str, ages_to_compare))}'
+        comparison_str = (
+            f"age at {field} {comparator} {', '.join(map(str, ages_to_compare))}"
+        )
 
         # calculates age at the value of this field given the
         # birth fields and assumes the ages_to_compare values to are also numerical
@@ -1137,8 +1139,14 @@ class NACCValidator(Validator):
                     self._error(field, ErrorDefs.COMPARE_AGE, compare_field,
                                 comparison_str)
             except TypeError as error:
-                self._error(field, ErrorDefs.COMPARE_AGE_INVALID_COMPARISON,
-                            compare_field, field, age, str(error))
+                self._error(
+                    field,
+                    ErrorDefs.COMPARE_AGE_INVALID_COMPARISON,
+                    compare_field,
+                    field,
+                    age,
+                    str(error),
+                )
 
     def _check_adcid(self, field: str, value: int, own: bool = True):
         """Check whether a given ADCID is valid.
@@ -1159,16 +1167,21 @@ class NACCValidator(Validator):
 
         if not self.datastore.is_valid_adcid(value, own):
             self._error(
-                field, ErrorDefs.ADCID_NOT_MATCH
-                if own else ErrorDefs.ADCID_NOT_VALID, value)
+                field,
+                ErrorDefs.ADCID_NOT_MATCH
+                if own else ErrorDefs.ADCID_NOT_VALID,
+                value,
+            )
 
-    def _score_variables(self,
-                         field: str,
-                         value: int,
-                         mode: str,
-                         scoring_key: Dict[str, Any],
-                         logic: Dict[str, Any],
-                         calc_var_name: str = '__total_sum') -> None:
+    def _score_variables(
+        self,
+        field: str,
+        value: int,
+        mode: str,
+        scoring_key: Dict[str, Any],
+        logic: Dict[str, Any],
+        calc_var_name: str = "__total_sum",
+    ) -> None:
         """Sums all the variables that are correct or incorrect depending on
         the mode based on scoring_key. Stores the result a special variable
         defined by calc_var_name (defaults to __total_sum, note double
@@ -1211,11 +1224,11 @@ class NACCValidator(Validator):
                 return
 
             correct = self.document[key] == correct_value
-            if (correct and mode == 'correct') or \
-               (not correct and mode == 'incorrect'):
+            if (correct and mode == "correct") or (not correct
+                                                   and mode == "incorrect"):
                 total_sum += 1
 
-        condition = {field: {'nullable': True, 'logic': logic}}
+        condition = {field: {"nullable": True, "logic": logic}}
 
         if calc_var_name in self.document:
             raise ValueError(
@@ -1226,7 +1239,7 @@ class NACCValidator(Validator):
         record[calc_var_name] = total_sum
 
         valid, errors = self._check_subschema_valid(all_conditions=condition,
-                                                    operator='AND',
+                                                    operator="AND",
                                                     record=record)
 
         # Logic formula failed, report errors
