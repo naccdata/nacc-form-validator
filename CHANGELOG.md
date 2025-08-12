@@ -5,6 +5,7 @@ Documentation of release versions of `nacc-form-validator`
 ## Unreleased
 
 * Reformats repo to pass `pants lint ::`
+* Updates lockfile
 
 ## 0.5.3
 
