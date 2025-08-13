@@ -66,7 +66,7 @@ class CustomDatastore(Datastore):
 
     def get_previous_nonempty_record(
             self, current_record: dict[str, str],
-            fields: list[str]) -> dict[str, str] | None:
+            ignore_empty_fields: list[str]) -> dict[str, str] | None:
         """Grabs the previous record where field is not empty."""
         key = current_record[self.pk_field]
         if key not in self.__db:
@@ -75,7 +75,7 @@ class CustomDatastore(Datastore):
         sorted_record = []
         for x in self.__db[key]:
             nonempty = True
-            for f in fields:
+            for f in ignore_empty_fields:
                 if x.get(f, None) is None:  # type: ignore
                     nonempty = False
             if nonempty:
@@ -87,6 +87,15 @@ class CustomDatastore(Datastore):
 
         index = sorted_record.index(current_record)
         return sorted_record[index - 1] if index != 0 else None  # type: ignore
+
+    def get_initial_record(
+            self, current_record: dict[str, str],
+            ignore_empty_fields: list[str]) -> dict[str, str] | None:
+        """Grabs the initial record."""
+        if self.__db.get(key, None):
+            return self.__db[key][0]
+
+        return None
 
     def is_valid_rxcui(self, drugid: int) -> bool:
         """For RXCUI testing."""
