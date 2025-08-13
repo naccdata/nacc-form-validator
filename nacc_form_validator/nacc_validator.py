@@ -761,6 +761,7 @@ class NACCValidator(Validator):
             ignore_empty_fields = temporalrule.get(SchemaDefs.IGNORE_EMPTY,
                                                    None)
             initial_record = temporalrule.get(SchemaDefs.INITIAL_RECORD, False)
+            visit_type = "previous" if not initial_record else "initial"
 
             rule_no = temporalrule.get(SchemaDefs.INDEX, rule_no + 1)
 
@@ -781,7 +782,7 @@ class NACCValidator(Validator):
             if not prev_ins:
                 if ignore_empty_fields:
                     continue
-                self._error(field, ErrorDefs.NO_PREV_VISIT, rule_no)
+                self._error(field, ErrorDefs.NO_PREV_VISIT, visit_type)
                 return
 
             # Extract operators if specified, default is AND
@@ -829,7 +830,7 @@ class NACCValidator(Validator):
             if not valid and errors:
                 for error in errors.items():
                     self._error(field, error_def, rule_no, str(error),
-                                prev_conds, curr_conds)
+                                prev_conds, curr_conds, visit_type)
 
     def _validate_logic(self, logic: Dict[str, Any], field: str,
                         value: object):
@@ -1027,7 +1028,8 @@ class NACCValidator(Validator):
             self.__add_system_error(field, err_msg)
             raise ValidationException(err_msg)
 
-        base_str = f"{base} (previous record)" if prev_record else base
+        visit_type = "previous" if not initial_record else "initial"
+        base_str = f"{base} ({visit_type} record)" if (prev_record or initial_record) else base
         comparison_str = f"{field} {comparator} {base_str}"
         if adjustment and operator:
             if operator == "abs":
@@ -1051,7 +1053,7 @@ class NACCValidator(Validator):
         if base_val is None:
             error = (ErrorDefs.COMPARE_WITH_PREV
                      if prev_record else ErrorDefs.COMPARE_WITH)
-            self._error(field, error, comparison_str)
+            self._error(field, error, comparison_str, visit_type)
             return
 
         try:

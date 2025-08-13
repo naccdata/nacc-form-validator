@@ -22,7 +22,7 @@ class CustomDatastore(Datastore):
                     "taxes": 8,
                     "birthyr": 1950,
                     "birthmo": None,
-                    "birthdy": None,
+                    "birthdy": 27,
                 },
                 {
                     "visit_num": 3,
@@ -92,6 +92,10 @@ class CustomDatastore(Datastore):
             self, current_record: dict[str, str],
             ignore_empty_fields: list[str]) -> dict[str, str] | None:
         """Grabs the initial record."""
+        key = current_record[self.pk_field]
+        if key not in self.__db:
+            return None
+
         if self.__db.get(key, None):
             return self.__db[key][0]
 
@@ -131,8 +135,7 @@ def schema():
             "type": "integer"
         },
         "taxes": {
-            "type":
-            "integer",
+            "type": "integer",
             "temporalrules": [{
                 "index": 0,
                 "previous": {
@@ -237,8 +240,7 @@ def test_temporal_check_previous_nonempty():
             "type": "integer"
         },
         "birthmo": {
-            "type":
-            "integer",
+            "type": "integer",
             "temporalrules": [{
                 "index": 0,
                 "ignore_empty": ["birthmo", "birthdy"],
@@ -458,8 +460,7 @@ def test_temporal_check_with_nested_compare_with_previous_record():
             "type": "integer"
         },
         "birthyr": {
-            "type":
-            "integer",
+            "type": "integer",
             "temporalrules": [{
                 "index": 0,
                 "previous": {
@@ -502,6 +503,91 @@ def test_temporal_check_with_nested_compare_with_previous_record():
         ]
     }
 
+def test_compare_with_initial_visit():
+    """Compare with test check when requesting initial visit (visit_num == 1)"""
+    schema = {
+        "patient_id": {
+            "type": "string"
+        },
+        "visit_num": {
+            "type": "integer",
+        },
+        "birthdy": {
+            "type": "integer",
+            "compare_with": {
+                "comparator": "==",
+                "base": "birthdy",
+                "initial_record": True,
+            },
+        },
+    }
+
+    nv = create_nacc_validator_with_ds(schema, "patient_id", "visit_num")
+
+    assert nv.validate({
+        "patient_id": "PatientID1",
+        "visit_num": 1,
+        "birthdy": 27
+    })
+
+    assert not nv.validate({
+        "patient_id": "PatientID1",
+        "visit_num": 3,
+        "birthdy": 30
+    })
+
+    assert nv.errors == {
+        'birthdy': [
+            "input value doesn't satisfy the condition birthdy == birthdy (initial record)"
+        ]
+    }
+
+def test_temporal_rule_initial_visit():
+    """Temporal rule test check when requesting initial visit (visit_num == 1)"""
+    schema = {
+        "patient_id": {
+            "type": "string"
+        },
+        "visit_num": {
+            "type": "integer",
+        },
+        "birthdy": {
+            "type": "integer",
+            "temporalrules": [{
+                "index": 0,
+                "initial_record": True,
+                "previous": {
+                    "birthdy": {
+                        "allowed": [27],
+                    }
+                },
+                "current": {
+                    "birthdy": {
+                        "allowed": [30]
+                    }
+                },
+            }],
+        },
+    }
+
+    nv = create_nacc_validator_with_ds(schema, "patient_id", "visit_num")
+
+    assert nv.validate({
+        "patient_id": "PatientID1",
+        "visit_num": 3,
+        "birthdy": 30
+    })
+
+    assert not nv.validate({
+        "patient_id": "PatientID1",
+        "visit_num": 3,
+        "birthdy": 27
+    })
+
+    assert nv.errors == {'birthdy': [
+        "('birthdy', ['unallowed value 27']) for if {'birthdy': {'allowed': [27]}} "
+        + "in initial visit then {'birthdy': {'allowed': [30]}} "
+        + "in current visit - temporal rule no: 0"]}
 
 def test_check_with_rxnorm():
     """Test checking drugID is a valid RXCUI."""
