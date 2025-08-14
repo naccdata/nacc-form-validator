@@ -259,6 +259,8 @@ Used to validate the field based on comparison with another field, with optional
     * For `abs`, it instead follows the formula `abs(field - base) {comparator} adjustment`, e.g. `abs(field - base) <= adjustment`
     * See examples below for more details
 * `previous_record`: Optional boolean - if True, will search for `base` in the previous record and make the comparison against that
+* `initial_record`: Optional boolean - if True, will search for `base` in the initial record and make the comparison against that
+    * Error will be thrown if both `initial_record` and `previous_record` are set to True
 * `ignore_empty`: Optional boolean - if comparing to previous record(s), set this to True to ignore records where the specified `base` is empty
     * If this is set to True, the validation will _ignore_ cases when a previous record was not found (e.g. pass through validation without errors)
 
@@ -280,7 +282,8 @@ The rule definition for `compare_with` should follow the following format:
             "adjustment": "(optional) the adjustment field or value",
             "op": "(optional) operation, one of +, -, *, /, abs",
             "previous_record": "(optional) boolean, whether or not to compare to base in the previous record",
-            "ignore_empty": "(optional) boolean, whether or not to ignore previous records where this field is empty"
+            "initial_record": "(optional) boolean, whether or not to compare to base in the initial record",
+            "ignore_empty": "(optional) boolean, whether or not to ignore previous/initial records where this field is empty"
         }
 }
 ```
@@ -815,7 +818,10 @@ Each constraint specifies `previous` and `current` attributes. If conditions spe
 Each constraint also has optional fields that can be set:
 
 * Each `previous/current` attribute can have several fields which need to be satisifed, so an optional `*_op` attribute can be used to specify the boolean operation in which to compare the different fields. For example, if `prev_op = or`, then as long as _any_ of the fields satsify their schema, the `current` attribute will be evaluated. The default `*_op` is `and`.
-* `ignore_empty`: Takes a string or list of strings denoting fields that cannot be empty. When grabbing the previous record, the validator will grab the first previous record where _all_ specified fields are non-empty.
+* `initial_record`: If set to True, will grab the initial record (not necessarily the previous one)
+* `ignore_empty`: Takes a string or list of strings denoting fields that cannot be empty
+    * When grabbing the previous record, the validator will grab the first previous record where _all_ specified fields are non-empty.
+    * When grabbing the initial record, will just return None if _all_ specified fields are empty.
     * If no record is found that satisfies all fields being non-empty, the validator will _ignore_ the check (e.g. pass through validation without errors)
 * `swap_order`: If set to True, it will swap the order of operations, evluating the `current` subschema first, then the `previous` subschema
 
@@ -852,6 +858,15 @@ The rule definition for `temporalrules` should follow the following format:
                 },
                 "current": {
                     "<field_name>": "subschema to be satisfied for the current record"
+                }
+            },
+            {
+                "initial_record": true,
+                "previous": {
+                    "<field_name>": "subschema to be satisfied for the initial record"
+                },
+                "current": {
+                    "<field_name>": "subschema to be satisfied for the current record, will be evaluated in the previous (representing initial) subschema is satisfied"
                 }
             }
 

@@ -56,17 +56,36 @@ class Datastore(ABC):
     @abstractmethod
     def get_previous_nonempty_record(
             self, current_record: Dict[str, Any],
-            fields: List[str]) -> Optional[Dict[str, Any]]:
+            ignore_empty_fields: List[str]) -> Optional[Dict[str, Any]]:
         """Abstract method to return the previous record where all fields are
         NOT empty for the specified participant. Override this method to
         retrieve the records from the desired datastore/warehouse.
 
         Args:
             current_record: Record currently being validated
-            fields: Field(s) to check for non-empty values
+            ignore_empty_fields: Field(s) to check for non-empty values
 
         Returns:
             Dict[str, Any]: Previous nonempty record or None if none found
+        """
+        return None
+
+    @abstractmethod
+    def get_initial_record(
+        self,
+        current_record: Dict[str, Any],
+        ignore_empty_fields: Optional[List[str]] = None
+    ) -> Optional[Dict[str, Any]]:
+        """Abstract method to return the initial record. Override this method
+        to retrieve the records from the desired datastore/warehouse.
+
+        Args:
+            current_record: Record currently being validated
+            ignore_empty_fields: Field(s) to check for non-empty values
+
+        Returns:
+            Dict[str, str]: Initial record or None if no initial record found
+            or current record is the initial record
         """
         return None
 

@@ -98,12 +98,12 @@ class CustomErrorHandler(BasicErrorHandler):
             0x1009:
             "{1} for if {2} else {3} - compatibility rule no: {0}",
             0x2000:
-            "{1} for if {2} in previous visit then {3} " +
+            "{1} for if {2} in {4} visit then {3} " +
             "in current visit - temporal rule no: {0}",
             0x2001:
             "primary key variable {0} not set in current visit data",
             0x2002:
-            "failed to retrieve the previous visit, cannot proceed with " +
+            "failed to retrieve the {0} visit, cannot proceed with " +
             "validation",
             0x2003:
             "error in formula evaluation - {0}",
@@ -124,7 +124,7 @@ class CustomErrorHandler(BasicErrorHandler):
             0x2009:
             "input value doesn't satisfy the condition {0}",
             0x3000:
-            "failed to retrieve record for previous visit, cannot proceed " +
+            "failed to retrieve record for {1} visit, cannot proceed " +
             "with validation {0}",
             0x3001:
             "Drug ID {0} is not a valid RXCUI",
@@ -136,7 +136,7 @@ class CustomErrorHandler(BasicErrorHandler):
             "Error in comparing {0} to age at {1} ({2}): {3}",
             0x3005:
             "{1} for if {3} in current visit then {2} " +
-            "in previous visit - temporal rule no: {0}",
+            "in {4} visit - temporal rule no: {0}",
             0x3006:
             "Provided ADCID {0} does not match your center's ADCID",
             0x3007:
