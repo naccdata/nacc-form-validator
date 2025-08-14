@@ -546,8 +546,8 @@ def test_compare_with_initial_visit():
 
     assert nv.errors == {
         'birthdy': [
-            "input value doesn't satisfy the condition "
-            + "birthdy == birthdy (initial record)"
+            "input value doesn't satisfy the condition " +
+            "birthdy == birthdy (initial record)"
         ]
     }
 

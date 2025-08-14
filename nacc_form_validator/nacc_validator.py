@@ -269,8 +269,8 @@ class NACCValidator(Validator):
         prev_ins = (
             self.__datastore.get_previous_nonempty_record(  # type: ignore
                 self.document, ignore_empty_fields) if ignore_empty_fields else
-            self.__datastore.get_previous_record(self.document)
-        )  # type: ignore
+            self.__datastore.get_previous_record(self.document)  # type: ignore
+        )
 
         if prev_ins:
             prev_ins = self.cast_record(prev_ins)
