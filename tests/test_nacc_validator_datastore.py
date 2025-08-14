@@ -2,6 +2,7 @@
 required, e.g. temporal rules Creates a dummy datastore for simple testing."""
 
 import copy
+from typing import Any, Dict, List, Optional
 
 import pytest
 
@@ -44,7 +45,7 @@ class CustomDatastore(Datastore):
         super().__init__(pk_field, orderby)
 
     def get_previous_record(
-            self, current_record: dict[str, str]) -> dict[str, str] | None:
+            self, current_record: Dict[str, str]) -> Optional[Dict[str, str]]:
         """See where current record would fit in the sorted record and return
         the previous record.
 
@@ -65,8 +66,8 @@ class CustomDatastore(Datastore):
         return sorted_record[index - 1] if index != 0 else None  # type: ignore
 
     def get_previous_nonempty_record(
-            self, current_record: dict[str, str],
-            ignore_empty_fields: list[str]) -> dict[str, str] | None:
+            self, current_record: Dict[str, str],
+            ignore_empty_fields: List[str]) -> Optional[Dict[str, str]]:
         """Grabs the previous record where field is not empty."""
         key = current_record[self.pk_field]
         if key not in self.__db:
@@ -89,15 +90,17 @@ class CustomDatastore(Datastore):
         return sorted_record[index - 1] if index != 0 else None  # type: ignore
 
     def get_initial_record(
-            self, current_record: dict[str, str],
-            ignore_empty_fields: list[str]) -> dict[str, str] | None:
+        self,
+        current_record: Dict[str, Any],
+        ignore_empty_fields: Optional[List[str]] = None
+    ) -> Optional[Dict[str, Any]]:
         """Grabs the initial record."""
         key = current_record[self.pk_field]
         if key not in self.__db:
             return None
 
         if self.__db.get(key, None):
-            return self.__db[key][0]
+            return self.__db[key][0]  # type: ignore
 
         return None
 
@@ -113,7 +116,7 @@ class CustomDatastore(Datastore):
         return adcid in self.__valid_adcids
 
 
-def create_nacc_validator_with_ds(schema: dict[str, object], pk_field: str,
+def create_nacc_validator_with_ds(schema: Dict[str, object], pk_field: str,
                                   orderby: str) -> NACCValidator:
     """Creates a generic NACCValidtor with the above CustomDataStore."""
     nv = NACCValidator(schema,
@@ -135,7 +138,8 @@ def schema():
             "type": "integer"
         },
         "taxes": {
-            "type": "integer",
+            "type":
+            "integer",
             "temporalrules": [{
                 "index": 0,
                 "previous": {
@@ -240,7 +244,8 @@ def test_temporal_check_previous_nonempty():
             "type": "integer"
         },
         "birthmo": {
-            "type": "integer",
+            "type":
+            "integer",
             "temporalrules": [{
                 "index": 0,
                 "ignore_empty": ["birthmo", "birthdy"],
@@ -460,7 +465,8 @@ def test_temporal_check_with_nested_compare_with_previous_record():
             "type": "integer"
         },
         "birthyr": {
-            "type": "integer",
+            "type":
+            "integer",
             "temporalrules": [{
                 "index": 0,
                 "previous": {
@@ -503,8 +509,10 @@ def test_temporal_check_with_nested_compare_with_previous_record():
         ]
     }
 
+
 def test_compare_with_initial_visit():
-    """Compare with test check when requesting initial visit (visit_num == 1)"""
+    """Compare with test check when requesting initial visit (visit_num ==
+    1)"""
     schema = {
         "patient_id": {
             "type": "string"
@@ -538,12 +546,15 @@ def test_compare_with_initial_visit():
 
     assert nv.errors == {
         'birthdy': [
-            "input value doesn't satisfy the condition birthdy == birthdy (initial record)"
+            "input value doesn't satisfy the condition "
+            + "birthdy == birthdy (initial record)"
         ]
     }
 
+
 def test_temporal_rule_initial_visit():
-    """Temporal rule test check when requesting initial visit (visit_num == 1)"""
+    """Temporal rule test check when requesting initial visit (visit_num ==
+    1)"""
     schema = {
         "patient_id": {
             "type": "string"
@@ -552,7 +563,8 @@ def test_temporal_rule_initial_visit():
             "type": "integer",
         },
         "birthdy": {
-            "type": "integer",
+            "type":
+            "integer",
             "temporalrules": [{
                 "index": 0,
                 "initial_record": True,
@@ -584,10 +596,14 @@ def test_temporal_rule_initial_visit():
         "birthdy": 27
     })
 
-    assert nv.errors == {'birthdy': [
-        "('birthdy', ['unallowed value 27']) for if {'birthdy': {'allowed': [27]}} "
-        + "in initial visit then {'birthdy': {'allowed': [30]}} "
-        + "in current visit - temporal rule no: 0"]}
+    assert nv.errors == {
+        'birthdy': [
+            "('birthdy', ['unallowed value 27']) for if {'birthdy': {'allowed': [27]}} "
+            + "in initial visit then {'birthdy': {'allowed': [30]}} " +
+            "in current visit - temporal rule no: 0"
+        ]
+    }
+
 
 def test_check_with_rxnorm():
     """Test checking drugID is a valid RXCUI."""

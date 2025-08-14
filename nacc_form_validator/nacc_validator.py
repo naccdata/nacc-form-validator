@@ -268,14 +268,15 @@ class NACCValidator(Validator):
         # Grab previous record
         prev_ins = (
             self.__datastore.get_previous_nonempty_record(  # type: ignore
-                self.document, ignore_empty_fields) if ignore_empty_fields
-            else self.__datastore.get_previous_record(self.document))
+                self.document, ignore_empty_fields) if ignore_empty_fields else
+            self.__datastore.get_previous_record(self.document)
+        )  # type: ignore
 
         if prev_ins:
             prev_ins = self.cast_record(prev_ins)
 
         if not ignore_empty_fields:
-            self.__prev_records[record_id] = prev_ins
+            self.__prev_records[record_id] = prev_ins  # type: ignore
 
         return prev_ins
 
@@ -297,10 +298,10 @@ class NACCValidator(Validator):
         # only evaluate if we have not already cached the initial record
         if self.__initial_record is None:
             if not self.__ensure_datastore_set(field):
-                return None
-
-            self.__initial_record = self.__datastore.get_initial_record(
-                self.document, ignore_empty_fields)
+                self.__initial_record = {}
+            else:
+                self.__initial_record = self.__datastore.get_initial_record(  # type: ignore
+                    self.document, ignore_empty_fields)
 
         return self.__initial_record
 
@@ -1023,13 +1024,15 @@ class NACCValidator(Validator):
         initial_record = comparison.get(SchemaDefs.INITIAL_RECORD, False)
 
         if prev_record and initial_record:
-            err_msg = ("Cannot specify both prev_record and initial_record for "
-                + "comparison rule")
+            err_msg = (
+                "Cannot specify both prev_record and initial_record for " +
+                "comparison rule")
             self.__add_system_error(field, err_msg)
             raise ValidationException(err_msg)
 
         visit_type = "previous" if not initial_record else "initial"
-        base_str = f"{base} ({visit_type} record)" if (prev_record or initial_record) else base
+        base_str = f"{base} ({visit_type} record)" if (
+            prev_record or initial_record) else base
         comparison_str = f"{field} {comparator} {base_str}"
         if adjustment and operator:
             if operator == "abs":
@@ -1039,7 +1042,8 @@ class NACCValidator(Validator):
 
         if prev_record or initial_record:
             ignore_empty_fields = [base] if ignore_empty else None
-            func = self.__get_previous_record if prev_record else self.__get_initial_record
+            func = self.__get_previous_record if prev_record \
+                else self.__get_initial_record
             record = func(field=base, ignore_empty_fields=ignore_empty_fields)
 
             # pass through validation if no records found and ignore_empty is True
