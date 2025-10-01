@@ -5,6 +5,7 @@ Documentation of release versions of `nacc-form-validator`
 ## Unreleased
 
 * Refactors `utils.compare_values` and validation of min/max
+* Fixes issue where `"max": "current_year"` does not work when evaluated inside temporalrules (dtype not set on prev record so need to specify)
 * Reformats repo to pass `pants lint ::` and `pants check ::`
 * Updates lockfile
 

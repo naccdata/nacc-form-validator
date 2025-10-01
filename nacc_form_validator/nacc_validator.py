@@ -333,9 +333,12 @@ class NACCValidator(Validator):
         if value is None:
             super()._drop_remaining_rules("compare_age")
 
-    def _convert_value_to_date(self, target_value: object, field: str,
+    def _convert_value_to_date(self,
+                               target_value: object,
+                               field: str,
                                value: object,
-                               error_def: ErrorDefs) -> Optional[date]:
+                               error_def: ErrorDefs,
+                               default_dtype: str = 'undefined') -> Optional[date]:
         """Converts the given value to a date object.
 
         Args:
@@ -343,8 +346,9 @@ class NACCValidator(Validator):
             field: Variable name
             value: Variable value
             error_def: The ErrorDef to raise on error
+            dtype: dtype to use if undefined
         """
-        dtype = self.dtypes[field] if field in self.dtypes else "undefined"
+        dtype = self.dtypes[field] if field in self.dtypes else default_dtype
         try:
             if dtype == "str":
                 return utils.convert_to_date(value)
@@ -411,8 +415,9 @@ class NACCValidator(Validator):
             {'nullable': False}
         """
         if max_value in (SchemaDefs.CRR_DATE, SchemaDefs.CRR_YEAR):
+            dtype = 'int' if max_value == SchemaDefs.CRR_YEAR else 'date'
             input_date = self._convert_value_to_date(
-                max_value, field, value, ErrorDefs.INVALID_DATE_MAX)
+                max_value, field, value, ErrorDefs.INVALID_DATE_MAX, default_dtype=dtype)
             if not input_date:
                 return
 
@@ -443,8 +448,9 @@ class NACCValidator(Validator):
         """
 
         if min_value in (SchemaDefs.CRR_DATE, SchemaDefs.CRR_YEAR):
+            dtype = 'int' if min_value == SchemaDefs.CRR_YEAR else 'date'
             input_date = self._convert_value_to_date(
-                min_value, field, value, ErrorDefs.INVALID_DATE_MIN)
+                min_value, field, value, ErrorDefs.INVALID_DATE_MIN, default_dtype=dtype)
             if not input_date:
                 return
 
