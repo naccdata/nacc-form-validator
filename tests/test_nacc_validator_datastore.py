@@ -543,9 +543,9 @@ def test_check_adcid():
         "oldadcid": ["Provided ADCID 20 is not in the valid list of ADCIDs"]
     }
 
+
 def test_temporal_check_current_year():
-    """Test temporal check with current year
-    """
+    """Test temporal check with current year."""
     schema = {
         "patient_id": {
             "type": "string"
@@ -554,7 +554,8 @@ def test_temporal_check_current_year():
             "type": "integer"
         },
         "birthyr": {
-            "type": "integer",
+            "type":
+            "integer",
             "temporalrules": [{
                 "index": 0,
                 "previous": {
@@ -590,10 +591,12 @@ def test_temporal_check_current_year():
         "birthyr": 1949
     })
     assert nv.errors == {
-    'birthyr': ['(\'birthyr\', ["input value doesn\'t satisfy the condition '
-        'birthyr == birthyr (previous record)"]) for if {\'birthyr\': '
-        "{'min': 0, 'max': 'current_year'}} in previous visit then "
-        "{'birthyr': {'compare_with': {'comparator': '==', 'base': "
-        "'birthyr', 'previous_record': True}}} in current visit - "
-        'temporal rule no: 0']
+        'birthyr': [
+            '(\'birthyr\', ["input value doesn\'t satisfy the condition '
+            'birthyr == birthyr (previous record)"]) for if {\'birthyr\': '
+            "{'min': 0, 'max': 'current_year'}} in previous visit then "
+            "{'birthyr': {'compare_with': {'comparator': '==', 'base': "
+            "'birthyr', 'previous_record': True}}} in current visit - "
+            'temporal rule no: 0'
+        ]
     }
