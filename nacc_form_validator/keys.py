@@ -39,3 +39,4 @@ class SchemaDefs:
     SWAP_ORDER = "swap_order"
     FUNCTION_NAME = "name"
     FUNCTION_ARGS = "args"
+    INITIAL_RECORD = 'initial_record'
