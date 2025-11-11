@@ -77,7 +77,10 @@ class Datastore(ABC):
         ignore_empty_fields: Optional[List[str]] = None
     ) -> Optional[Dict[str, Any]]:
         """Abstract method to return the initial record. Override this method
-        to retrieve the records from the desired datastore/warehouse.
+        to retrieve the record from the desired datastore/warehouse.
+
+        Note: Return the IVP packet for the modules that has only one initial packet,
+        else return the first record sorted by visit date or form date.
 
         Args:
             current_record: Record currently being validated
@@ -85,7 +88,21 @@ class Datastore(ABC):
 
         Returns:
             Dict[str, str]: Initial record or None if no initial record found
-            or current record is the initial record
+        """
+        return None
+
+    @abstractmethod
+    def get_uds_ivp_record(
+            self, current_record: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Abstract method to return the UDS IVP record for the particiapnt.
+        Override this method to retrieve the record from the desired
+        datastore/warehouse.
+
+        Args:
+            current_record: Record currently being validated
+
+        Returns:
+            Dict[str, str]: UDS IVP record or None if no UDS IVP found
         """
         return None
 

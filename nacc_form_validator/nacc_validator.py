@@ -290,7 +290,9 @@ class NACCValidator(Validator):
         field: str,
         ignore_empty_fields: Optional[List[str]] = None,
     ) -> Optional[Dict[str, Dict[str, Any]]]:
-        """Get the initial record from the Datastore.
+        """Get the initial record from the Datastore. Returns IVP packet for
+        the modules that has initial and follwup packets, else the first record
+        sorted by visit date or form date.
 
         Args:
             field: Variable name
