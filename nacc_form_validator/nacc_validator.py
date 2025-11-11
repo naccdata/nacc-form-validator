@@ -392,7 +392,7 @@ class NACCValidator(Validator):
             field: Variable name
             value: Variable value
             error_def: The ErrorDef to raise on error
-            dtype: dtype to use if undefined
+            default_dtype: dtype to use if undefined
         """
         dtype = self.dtypes[field] if field in self.dtypes else default_dtype
         try:
@@ -411,8 +411,6 @@ class NACCValidator(Validator):
         except (ValueError, TypeError, parser.ParserError) as error:
             self._error(field, error_def, str(error))
             return None
-
-        return None
 
     def _format_min_max(self, target_value: object, field: str, value: object,
                         error_def: ErrorDefs) -> Tuple[object, object]:
@@ -461,7 +459,7 @@ class NACCValidator(Validator):
             {'nullable': False}
         """
         if max_value in (SchemaDefs.CRR_DATE, SchemaDefs.CRR_YEAR):
-            dtype = 'int' if max_value == SchemaDefs.CRR_YEAR else 'date'
+            dtype = 'int' if max_value == SchemaDefs.CRR_YEAR else 'str'
             input_date = self._convert_value_to_date(
                 max_value,
                 field,
@@ -498,7 +496,7 @@ class NACCValidator(Validator):
         """
 
         if min_value in (SchemaDefs.CRR_DATE, SchemaDefs.CRR_YEAR):
-            dtype = 'int' if min_value == SchemaDefs.CRR_YEAR else 'date'
+            dtype = 'int' if min_value == SchemaDefs.CRR_YEAR else 'str'
             input_date = self._convert_value_to_date(
                 min_value,
                 field,
