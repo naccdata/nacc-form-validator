@@ -72,10 +72,7 @@ class Datastore(ABC):
 
     @abstractmethod
     def get_initial_record(
-        self,
-        current_record: Dict[str, Any],
-        ignore_empty_fields: Optional[List[str]] = None
-    ) -> Optional[Dict[str, Any]]:
+            self, current_record: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Abstract method to return the initial record. Override this method
         to retrieve the record from the desired datastore/warehouse.
 
@@ -84,7 +81,6 @@ class Datastore(ABC):
 
         Args:
             current_record: Record currently being validated
-            ignore_empty_fields: Field(s) to check for non-empty values
 
         Returns:
             Dict[str, str]: Initial record or None if no initial record found
