@@ -215,13 +215,17 @@ class NACCValidator(Validator):
 
         return record
 
-    def __ensure_datastore_set(self, field: str) -> Optional[str]:
+    def __ensure_datastore_set(self, field: str) -> bool:
         """Ensure the datastore is properly set.
 
         Args:
             field: Variable name
+
         Returns:
-            The record ID, if datastore properly set
+            True, if datastore properly set, else False
+
+        Raises:
+            ValidationException: If Datastore or primary key not set
         """
         if not self.__datastore:
             err_msg = "Datastore not set, cannot validate temporal rules"
@@ -236,9 +240,9 @@ class NACCValidator(Validator):
         if self.primary_key not in self.document or not self.document[
                 self.primary_key]:
             self._error(field, ErrorDefs.NO_PRIMARY_KEY, self.primary_key)
-            return None
+            return False
 
-        return self.document[self.primary_key]
+        return True
 
     def __get_previous_record(
         self,
@@ -256,9 +260,10 @@ class NACCValidator(Validator):
         Returns:
             Dict[str, object]: Casted record Dict[field, value]
         """
-        record_id = self.__ensure_datastore_set(field)
-        if not record_id:
+        if not self.__ensure_datastore_set(field):
             return None
+
+        record_id = self.document[self.primary_key]
 
         # If the previous record was already retrieved and not ignore_empty_fields,
         # use it. Similarly only save into cache if ignore_empty_fields is None/empty
