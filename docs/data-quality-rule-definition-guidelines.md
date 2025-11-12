@@ -11,7 +11,9 @@
     - [compare\_age](#compare_age)
     - [compatibility](#compatibility)
     - [logic](#logic)
+      - [Custom Operations](#custom-operations)
     - [temporalrules](#temporalrules)
+- [{"visit\_date": 1, "taxes": 0}](#visit_date-1-taxes-0)
     - [check\_adcid](#check_adcid)
     - [compute\_gds](#compute_gds)
     - [rxnorm](#rxnorm)
@@ -262,6 +264,7 @@ Used to validate the field based on comparison with another field, with optional
 * `initial_record`: Optional boolean - if True, will search for `base` in the initial record and make the comparison against that
     * Error will be thrown if both `initial_record` and `previous_record` are set to True
 * `ignore_empty`: Optional boolean - if comparing to previous record(s), set this to True to ignore records where the specified `base` is empty
+    * Not applicable for `initial_record`, error will be thrown if `initial_record` True and `ignore_empty` fiels are provided
     * If this is set to True, the validation will _ignore_ cases when a previous record was not found (e.g. pass through validation without errors)
 
 The value to compare to (`base`) can be another field in the schema OR a special keywords either related to the current date (i.e. the exact time/date at time of validation) or a previous record
@@ -283,7 +286,7 @@ The rule definition for `compare_with` should follow the following format:
             "op": "(optional) operation, one of +, -, *, /, abs",
             "previous_record": "(optional) boolean, whether or not to compare to base in the previous record",
             "initial_record": "(optional) boolean, whether or not to compare to base in the initial record",
-            "ignore_empty": "(optional) boolean, whether or not to ignore previous/initial records where this field is empty"
+            "ignore_empty": "(optional) boolean, whether or not to ignore previous records where this field is empty"
         }
 }
 ```
@@ -803,9 +806,9 @@ var3:
 
 The validator also has custom operators in addition to the ones provided by json-logic-py:
 
-| Operator | Arguments | Description |
-| -------- | --------- | ----------- |
-| `count` | `[var1, var2, var3...]` | Counts how many valid variables are in the list, ignoring null and 0 values |
+| Operator      | Arguments                       | Description                                                                                                                                                                               |
+| ------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `count`       | `[var1, var2, var3...]`         | Counts how many valid variables are in the list, ignoring null and 0 values                                                                                                               |
 | `count_exact` | `[base, var1, var2, var3, ...]` | Counts how many values in the list equal the base. The first value is always considered the base, and the rest of the list is compared to it, so this operator requires at least 2 items. |
 
 
@@ -820,9 +823,9 @@ Each constraint also has optional fields that can be set:
 * Each `previous/current` attribute can have several fields which need to be satisifed, so an optional `*_op` attribute can be used to specify the boolean operation in which to compare the different fields. For example, if `prev_op = or`, then as long as _any_ of the fields satsify their schema, the `current` attribute will be evaluated. The default `*_op` is `and`.
 * `initial_record`: If set to True, will grab the initial record (not necessarily the previous one)
 * `ignore_empty`: Takes a string or list of strings denoting fields that cannot be empty
+    * Not applicable for `initial_record`, error will be thrown if `initial_record` True and `ignore_empty` fields are provided
     * When grabbing the previous record, the validator will grab the first previous record where _all_ specified fields are non-empty.
-    * When grabbing the initial record, will just return None if _all_ specified fields are empty.
-    * If no record is found that satisfies all fields being non-empty, the validator will _ignore_ the check (e.g. pass through validation without errors)
+      * If no record is found that satisfies all fields being non-empty, the validator will _ignore_ the check (e.g. pass through validation without errors)
 * `swap_order`: If set to True, it will swap the order of operations, evluating the `current` subschema first, then the `previous` subschema
 
 > **NOTE**: To validate `temporalrules`, the validator should have a `Datastore` instance which will be used to retrieve the previous visit record(s) for the participant. 
