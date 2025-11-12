@@ -311,8 +311,8 @@ class NACCValidator(Validator):
         if record_id in self.__initial_records:
             return self.__initial_records[record_id]
 
-        initital_record = self.__datastore.get_initial_record(
-            self.document)  # type: ignore
+        initital_record = self.__datastore.get_initial_record(  # type: ignore
+            self.document)
         if initital_record:
             initital_record = self.cast_record(initital_record)
             self.__initial_records[record_id] = initital_record
