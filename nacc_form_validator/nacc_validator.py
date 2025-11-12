@@ -43,9 +43,11 @@ class NACCValidator(Validator):
         # Primary key field of the project
         self.__pk_field: Optional[str] = None
 
-        # Cache of previous records that has been retrieved
+        # Cache of previous records that has been retrieved by subject
         self.__prev_records: Dict[str, Dict[str, Any]] = {}
-        self.__initial_record: Optional[Dict[str, Any]] = None
+
+        # Cache of initial records that has been retrieved by subject
+        self.__initial_records: Dict[str, Dict[str, Any]] = {}
 
         # List of system errors occured by field
         self.__sys_errors: Dict[str, List[str]] = {}
@@ -215,13 +217,17 @@ class NACCValidator(Validator):
 
         return record
 
-    def __ensure_datastore_set(self, field: str) -> Optional[str]:
+    def __ensure_datastore_set(self, field: str) -> bool:
         """Ensure the datastore is properly set.
 
         Args:
             field: Variable name
+
         Returns:
-            The record ID, if datastore properly set
+            True, if datastore properly set, else False
+
+        Raises:
+            ValidationException: If Datastore or primary key not set
         """
         if not self.__datastore:
             err_msg = "Datastore not set, cannot validate temporal rules"
@@ -236,15 +242,15 @@ class NACCValidator(Validator):
         if self.primary_key not in self.document or not self.document[
                 self.primary_key]:
             self._error(field, ErrorDefs.NO_PRIMARY_KEY, self.primary_key)
-            return None
+            return False
 
-        return self.document[self.primary_key]
+        return True
 
     def __get_previous_record(
         self,
         field: str,
         ignore_empty_fields: Optional[List[str]] = None,
-    ) -> Optional[Dict[str, Dict[str, Any]]]:
+    ) -> Optional[Dict[str, Any]]:
         """Get the previous record from the Datastore; if not skipping empty
         records, stores it in the prev_records cache.
 
@@ -254,11 +260,12 @@ class NACCValidator(Validator):
                    previous record where ignore_empty_fields are not empty.
 
         Returns:
-            Dict[str, object]: Casted record Dict[field, value]
+            Dict[str, Any]: Casted record Dict[field, value]
         """
-        record_id = self.__ensure_datastore_set(field)
-        if not record_id:
+        if not self.__ensure_datastore_set(field):
             return None
+
+        record_id = self.document[self.primary_key]
 
         # If the previous record was already retrieved and not ignore_empty_fields,
         # use it. Similarly only save into cache if ignore_empty_fields is None/empty
@@ -283,27 +290,34 @@ class NACCValidator(Validator):
     def __get_initial_record(
         self,
         field: str,
-        ignore_empty_fields: Optional[List[str]] = None,
-    ) -> Optional[Dict[str, Dict[str, Any]]]:
-        """Get the initial record from the Datastore.
+    ) -> Optional[Dict[str, Any]]:
+        """Get the initial record from the Datastore. Returns IVP packet for
+        the modules that has initial and follwup packets, else the first record
+        sorted by visit date or form date.
 
         Args:
             field: Variable name
-            ignore_empty_fields (optional): If provided, will only grab the first
-                   previous record where ignore_empty_fields are not empty.
 
         Returns:
-            Dict[str, object]: Casted record Dict[field, value]
+            Dict[str, Any]: Casted record Dict[field, value]
         """
-        # only evaluate if we have not already cached the initial record
-        if self.__initial_record is None:
-            if not self.__ensure_datastore_set(field):
-                self.__initial_record = {}
-            else:
-                self.__initial_record = self.__datastore.get_initial_record(  # type: ignore
-                    self.document, ignore_empty_fields)
 
-        return self.__initial_record
+        if not self.__ensure_datastore_set(field):
+            return None
+
+        record_id = self.document[self.primary_key]
+
+        # If the initial record was already retrieved return it
+        if record_id in self.__initial_records:
+            return self.__initial_records[record_id]
+
+        initital_record = self.__datastore.get_initial_record(  # type: ignore
+            self.document)
+        if initital_record:
+            initital_record = self.cast_record(initital_record)
+            self.__initial_records[record_id] = initital_record
+
+        return initital_record
 
     def __get_value_for_key(self,
                             key: str,
@@ -387,7 +401,7 @@ class NACCValidator(Validator):
             field: Variable name
             value: Variable value
             error_def: The ErrorDef to raise on error
-            dtype: dtype to use if undefined
+            default_dtype: dtype to use if undefined
         """
         dtype = self.dtypes[field] if field in self.dtypes else default_dtype
         try:
@@ -406,8 +420,6 @@ class NACCValidator(Validator):
         except (ValueError, TypeError, parser.ParserError) as error:
             self._error(field, error_def, str(error))
             return None
-
-        return None
 
     def _format_min_max(self, target_value: object, field: str, value: object,
                         error_def: ErrorDefs) -> Tuple[object, object]:
@@ -456,7 +468,7 @@ class NACCValidator(Validator):
             {'nullable': False}
         """
         if max_value in (SchemaDefs.CRR_DATE, SchemaDefs.CRR_YEAR):
-            dtype = 'int' if max_value == SchemaDefs.CRR_YEAR else 'date'
+            dtype = 'int' if max_value == SchemaDefs.CRR_YEAR else 'str'
             input_date = self._convert_value_to_date(
                 max_value,
                 field,
@@ -493,7 +505,7 @@ class NACCValidator(Validator):
         """
 
         if min_value in (SchemaDefs.CRR_DATE, SchemaDefs.CRR_YEAR):
-            dtype = 'int' if min_value == SchemaDefs.CRR_YEAR else 'date'
+            dtype = 'int' if min_value == SchemaDefs.CRR_YEAR else 'str'
             input_date = self._convert_value_to_date(
                 min_value,
                 field,
@@ -777,6 +789,14 @@ class NACCValidator(Validator):
             ignore_empty_fields = temporalrule.get(SchemaDefs.IGNORE_EMPTY,
                                                    None)
             initial_record = temporalrule.get(SchemaDefs.INITIAL_RECORD, False)
+
+            if initial_record and ignore_empty_fields:
+                err_msg = (
+                    "Cannot specify both initial_record and ignore_empty in "
+                    "temporalrule")
+                self.__add_system_error(field, err_msg)
+                raise ValidationException(err_msg)
+
             visit_type = "previous" if not initial_record else "initial"
 
             rule_no = temporalrule.get(SchemaDefs.INDEX, rule_no + 1)
@@ -786,8 +806,7 @@ class NACCValidator(Validator):
 
             prev_ins = None
             if initial_record:
-                prev_ins = self.__get_initial_record(
-                    field=field, ignore_empty_fields=ignore_empty_fields)
+                prev_ins = self.__get_initial_record(field=field)
             else:
                 prev_ins = self.__get_previous_record(
                     field=field, ignore_empty_fields=ignore_empty_fields)
@@ -1045,6 +1064,13 @@ class NACCValidator(Validator):
             self.__add_system_error(field, err_msg)
             raise ValidationException(err_msg)
 
+        if initial_record and ignore_empty:
+            err_msg = (
+                "Cannot specify both initial_record and ignore_empty for " +
+                "comparison rule")
+            self.__add_system_error(field, err_msg)
+            raise ValidationException(err_msg)
+
         visit_type = "previous" if not initial_record else "initial"
         base_str = f"{base} ({visit_type} record)" if (
             prev_record or initial_record) else base
@@ -1057,13 +1083,14 @@ class NACCValidator(Validator):
 
         if prev_record or initial_record:
             ignore_empty_fields = [base] if ignore_empty else None
-            func = self.__get_previous_record if prev_record \
-                else self.__get_initial_record
-            record = func(field=base, ignore_empty_fields=ignore_empty_fields)
-
-            # pass through validation if no records found and ignore_empty is True
-            if not record and ignore_empty:
-                return
+            if prev_record:
+                record = self.__get_previous_record(
+                    field=base, ignore_empty_fields=ignore_empty_fields)
+                # pass through validation if no records found and ignore_empty is True
+                if not record and ignore_empty:
+                    return
+            else:
+                record = self.__get_initial_record(field=base)
 
             base_val = record[base] if record else None
         else:

@@ -86,6 +86,9 @@ def compare_values(comparator: str, value: Any, base_value: Any) -> bool:
     # for >= and <=, allow equality case (both None)
     if value is None and base_value is None:
         return True if comparator in ["<=", "==", ">="] else False
+    # if only one is None, return True for !=
+    if ((value is None) != (base_value is None)) and comparator == "!=":
+        return True
     if value is None:
         return True if comparator in ["<", "<="] else False
     if base_value is None:

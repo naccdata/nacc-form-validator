@@ -90,10 +90,7 @@ class CustomDatastore(Datastore):
         return sorted_record[index - 1] if index != 0 else None  # type: ignore
 
     def get_initial_record(
-        self,
-        current_record: Dict[str, Any],
-        ignore_empty_fields: Optional[List[str]] = None
-    ) -> Optional[Dict[str, Any]]:
+            self, current_record: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Grabs the initial record."""
         key = current_record[self.pk_field]
         if key not in self.__db:
@@ -101,6 +98,12 @@ class CustomDatastore(Datastore):
 
         if self.__db.get(key, None):
             return self.__db[key][0]  # type: ignore
+
+        return None
+
+    def get_uds_ivp_record(
+            self, current_record: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Grabs the UDS IVP record."""
 
         return None
 
