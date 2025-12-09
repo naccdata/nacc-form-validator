@@ -1,7 +1,6 @@
 """Tests general NACCValidator (from nacc_validator.py) methods."""
-
-from dateutil import parser
 import pytest
+from dateutil import parser
 
 from nacc_form_validator.nacc_validator import ValidationException
 
