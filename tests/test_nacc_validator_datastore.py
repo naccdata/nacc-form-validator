@@ -44,7 +44,7 @@ class CustomDatastore(Datastore):
         super().__init__(pk_field, orderby)
 
     def get_previous_record(
-            self, current_record: Dict[str, str]) -> Optional[Dict[str, str]]:
+            self, current_record: Dict[str, Any]) -> Optional[Dict[str, str]]:
         """See where current record would fit in the sorted record and return
         the previous record.
 
@@ -65,7 +65,7 @@ class CustomDatastore(Datastore):
         return sorted_record[index - 1] if index != 0 else None  # type: ignore
 
     def get_previous_nonempty_record(
-            self, current_record: Dict[str, str],
+            self, current_record: Dict[str, Any],
             ignore_empty_fields: List[str]) -> Optional[Dict[str, str]]:
         """Grabs the previous record where field is not empty."""
         key = current_record[self.pk_field]

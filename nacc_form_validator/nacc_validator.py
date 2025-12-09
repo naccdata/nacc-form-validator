@@ -54,7 +54,7 @@ class NACCValidator(Validator):
 
         # Field datatypes extracted from parent schema
         # only applicable for a subschema validator
-        self.__parent_dtypes: Dict[str, str] = None
+        self.__parent_dtypes: Optional[Dict[str, str]] = None
 
     @property
     def dtypes(self) -> Dict[str, str]:
