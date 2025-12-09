@@ -1,7 +1,7 @@
 """Tests the util methods in `utils.py`."""
 
-import pytest
 from dateutil import parser
+import pytest
 
 from nacc_form_validator.utils import (
     compare_values,

@@ -1,8 +1,8 @@
 """Tests the NACCValidator (from nacc_validator.py) when a datastore is
 required, e.g. temporal rules Creates a dummy datastore for simple testing."""
-
 import copy
 from typing import Any, Dict, List, Optional
+
 import pytest
 
 from nacc_form_validator.datastore import Datastore
