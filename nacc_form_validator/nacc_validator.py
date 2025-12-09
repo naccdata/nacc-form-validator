@@ -52,6 +52,10 @@ class NACCValidator(Validator):
         # List of system errors occured by field
         self.__sys_errors: Dict[str, List[str]] = {}
 
+        # Field datatypes extracted from parent schema
+        # only applicable for a subschema validator
+        self.__parent_dtypes: Optional[Dict[str, str]] = None
+
     @property
     def dtypes(self) -> Dict[str, str]:
         """Returns the field->datatype mapping for the fields defined in the
@@ -149,6 +153,41 @@ class NACCValidator(Validator):
         """Clear the system errors."""
 
         self.__sys_errors.clear()
+
+    @property
+    def parent_dtypes(self) -> Optional[Dict[str, str]]:
+        """Returns the parent datatypes dict if present."""
+        return self.__parent_dtypes
+
+    @parent_dtypes.setter
+    def parent_dtypes(self, parent_dtypes: Dict[str, str]):
+        """Set the parent datatypes for a subschema validator.
+
+        Args:
+            parent_dtypes: Field datatypes from parent validator
+        """
+        self.__parent_dtypes = parent_dtypes
+
+    def _copy_datatypes(self):
+        """Copy any missing datatypes to a subschema from a parent schema.
+
+        If subschema already has a datatype set for the field, that type
+        is used.
+        """
+
+        if self.parent_dtypes is None:
+            return
+
+        for field in self.schema:
+            # Continue if datatype already set
+            if field in self.dtypes:
+                continue
+
+            datatype = self.parent_dtypes.get(field)
+            if datatype:
+                self.__dtypes[field] = datatype
+            else:
+                log.warning(f"Cannot find datatype for {field}")
 
     def reset_record_cache(self):
         """Clear the previous records cache."""
@@ -579,10 +618,16 @@ class NACCValidator(Validator):
                 error_handler=CustomErrorHandler(subschema),
             )
 
-            # pass the same datastore
-            if self.primary_key and self.datastore:
+            # pass the same primary key and datastore
+            if self.primary_key:
                 temp_validator.primary_key = self.primary_key
+            if self.datastore:
                 temp_validator.datastore = self.datastore
+
+            # copy datatypes from parent validator
+            temp_validator.parent_dtypes = (
+                self.parent_dtypes if self.parent_dtypes else self.dtypes)
+            temp_validator._copy_datatypes()
 
             if operator == "OR":
                 valid = valid or temp_validator.validate(record,

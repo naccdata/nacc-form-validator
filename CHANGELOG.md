@@ -2,6 +2,10 @@
 
 Documentation of release versions of `nacc-form-validator`
 
+## 0.6.1
+
+* Copies missing datatypes to a subschema validator from the parent validator
+  
 ## 0.6.0
 
 * Adds abstract method for pulling UDS IVP packets to Datastore

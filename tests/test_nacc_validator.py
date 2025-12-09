@@ -1,5 +1,4 @@
 """Tests general NACCValidator (from nacc_validator.py) methods."""
-
 import pytest
 from dateutil import parser
 
