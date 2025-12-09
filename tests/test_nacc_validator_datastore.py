@@ -3,7 +3,6 @@ required, e.g. temporal rules Creates a dummy datastore for simple testing."""
 
 import copy
 from typing import Any, Dict, List, Optional
-
 import pytest
 
 from nacc_form_validator.datastore import Datastore
@@ -21,14 +20,14 @@ class CustomDatastore(Datastore):
                 {
                     "visit_num": 1,
                     "taxes": 8,
-                    "birthyr": 1950,
+                    "birthyr": "1950",
                     "birthmo": None,
                     "birthdy": 27,
                 },
                 {
                     "visit_num": 3,
                     "taxes": 0,
-                    "birthyr": 1950,
+                    "birthyr": "1950",
                     "birthmo": 6,
                     "birthdy": 9,
                 },
@@ -714,3 +713,76 @@ def test_temporal_check_current_year():
             'temporal rule no: 0'
         ]
     }
+
+
+def test_nested_compatibility_temporal_compare_with():
+    """Test compare_with previous record nested in compatiblity."""
+    schema = {
+        "patient_id": {
+            "type": "string"
+        },
+        "visit_num": {
+            "type": "integer"
+        },
+        "birthyr": {
+            "type":
+            "integer",
+            "nullable":
+            True,
+            "compatibility": [{
+                "index": 0,
+                "if": {
+                    "birthyr": {
+                        "min": 1000,
+                        "max": 2025
+                    }
+                },
+                "then": {
+                    "birthyr": {
+                        "temporalrules": [{
+                            "index": 0,
+                            "previous": {
+                                "birthyr": {
+                                    "min": 1000,
+                                    "max": 2025
+                                }
+                            },
+                            "current": {
+                                "birthyr": {
+                                    "compare_with": {
+                                        "comparator": ">=",
+                                        "base": "birthyr",
+                                        "previous_record": True
+                                    }
+                                }
+                            }
+                        }]
+                    }
+                }
+            }]
+        }
+    }
+
+    nv = create_nacc_validator_with_ds(schema, "patient_id", "visit_num")
+    record = nv.cast_record({
+        "patient_id": "PatientID1",
+        "visit_num": 4,
+        "birthyr": 1950
+    })
+    print(f"\nErrors: {nv.errors}")
+    assert nv.validate(record)
+
+    record2 = nv.cast_record({
+        "patient_id": "PatientID1",
+        "visit_num": 4,
+        "birthyr": 1980
+    })
+    assert nv.validate(record2)
+
+    record3 = nv.cast_record({
+        "patient_id": "PatientID1",
+        "visit_num": 4,
+        "birthyr": 1940
+    })
+    # print(f"\nErrors: {nv.errors}")
+    assert not nv.validate(record3)
