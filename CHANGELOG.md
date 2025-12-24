@@ -2,6 +2,10 @@
 
 Documentation of release versions of `nacc-form-validator`
 
+## 0.6.2
+
+* Adds `base_decimal` argument to `compare_with` to handle cases where a value is actually split between the int and a decimal variable that need to be combined
+
 ## 0.6.1
 
 * Copies missing datatypes to a subschema validator from the parent validator
