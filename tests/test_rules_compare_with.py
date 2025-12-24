@@ -205,6 +205,9 @@ def test_compare_with_base_decimal(create_nacc_validator):
         ]
     }
 
+    # sanity check prev_heigdec = 0 doesn't crash the code
+    assert nv.validate({"new_height": 65.5, "prev_height": 65, "prev_heigdec": 0})
+
     # test the "old" behavior without the decimal works as expected, e.g. get opposite result
     schema['new_height']['compare_with'].pop('base_decimal')
     nv = create_nacc_validator(schema)

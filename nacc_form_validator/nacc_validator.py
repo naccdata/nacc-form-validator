@@ -1144,10 +1144,12 @@ class NACCValidator(Validator):
                 record = self.__get_initial_record(field=base)
 
             base_val = record[base] if record else None
-            base_decimal_value = record.get(base_decimal) if record else None
+            base_decimal_value = record.get(base_decimal) \
+                if record and base_decimal else None
         else:
             base_val = self.__get_value_for_key(base)
-            base_decimal_value = self.__get_value_for_key(base_decimal)
+            base_decimal_value = self.__get_value_for_key(base_decimal) \
+                if base_decimal else None
 
         if base_val is None:
             error = (ErrorDefs.COMPARE_WITH_PREV
