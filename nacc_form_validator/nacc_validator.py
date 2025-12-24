@@ -1414,5 +1414,3 @@ class NACCValidator(Validator):
         if errors:
             for error in errors.items():
                 self._error(field, ErrorDefs.SCORING_INVALID, value)
-
-
