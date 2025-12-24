@@ -201,14 +201,16 @@ def test_compare_with_base_decimal(create_nacc_validator):
     assert not nv.validate({"new_height": 60, "prev_height": 65, "prev_heigdec": 9})
     assert nv.errors == {
         "new_height": [
-            "input value doesn't satisfy the condition abs(new_height - prev_height) <= 5"
+            "input value doesn't satisfy the condition "
+            + "abs(new_height - prev_height) <= 5"
         ]
     }
 
     # sanity check prev_heigdec = 0 doesn't crash the code
     assert nv.validate({"new_height": 65.5, "prev_height": 65, "prev_heigdec": 0})
 
-    # test the "old" behavior without the decimal works as expected, e.g. get opposite result
+    # test the "old" behavior without the decimal works as expected,
+    # e.g. get opposite result
     schema['new_height']['compare_with'].pop('base_decimal')
     nv = create_nacc_validator(schema)
 
@@ -216,7 +218,8 @@ def test_compare_with_base_decimal(create_nacc_validator):
     assert not nv.validate({"new_height": 65.5, "prev_height": 60})
     assert nv.errors == {
         "new_height": [
-            "input value doesn't satisfy the condition abs(new_height - prev_height) <= 5"
+            "input value doesn't satisfy the condition "
+            + "abs(new_height - prev_height) <= 5"
         ]
     }
 
