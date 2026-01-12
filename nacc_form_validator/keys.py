@@ -30,6 +30,7 @@ class SchemaDefs:
     FORMATTING = "formatting"
     COMPARATOR = "comparator"
     BASE = "base"
+    BASE_DECIMAL = "base_decimal"
     ADJUST = "adjustment"
     IGNORE_EMPTY = "ignore_empty"
     BIRTH_MONTH = "birth_month"

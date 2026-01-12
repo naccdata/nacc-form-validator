@@ -1063,6 +1063,11 @@ class NACCValidator(Validator):
                         'required': True,
                         'empty': False
                     },
+                    'base_decimal': {
+                        'type': ['string', 'number'],
+                        'required': False,
+                        'empty': False
+                    },
                     'adjustment': {
                         'type': ['string', 'number'],
                         'required': False,
@@ -1095,6 +1100,7 @@ class NACCValidator(Validator):
 
         comparator = comparison[SchemaDefs.COMPARATOR]
         base = comparison[SchemaDefs.BASE]
+        base_decimal = comparison.get(SchemaDefs.BASE_DECIMAL)
         adjustment = comparison.get(SchemaDefs.ADJUST, None)
         operator = comparison.get(SchemaDefs.OP, None)
 
@@ -1138,14 +1144,21 @@ class NACCValidator(Validator):
                 record = self.__get_initial_record(field=base)
 
             base_val = record[base] if record else None
+            base_decimal_value = record.get(base_decimal) \
+                if record and base_decimal else None
         else:
             base_val = self.__get_value_for_key(base)
+            base_decimal_value = self.__get_value_for_key(base_decimal) \
+                if base_decimal else None
 
         if base_val is None:
             error = (ErrorDefs.COMPARE_WITH_PREV
                      if prev_record else ErrorDefs.COMPARE_WITH)
             self._error(field, error, comparison_str, visit_type)
             return
+
+        if base_decimal_value:
+            base_val += (base_decimal_value / 10.0)
 
         try:
             adjusted_value = base_val

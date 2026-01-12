@@ -255,6 +255,8 @@ Used to validate the field based on comparison with another field, with optional
 
 * `comparator`: The comparison expression; can be one of `[">", "<", ">=", "<=", "==", "!="]`
 * `base`: The field or value to compare to
+* `base_decimal`: The decimal field or value to add to the base
+    * This is divided by ten before being added, e.g. if `base` is 5 and `base_decimal` is 8, full value becomes 5.8; similarly, if `base_decimal` is 0.8 then the full value becomes 5.08
 * `adjustment`: The adjustment to make to the base expression, if any. If specified, `op` must also be provided 
 * `op`: The operation to make the adjustment for; can be one of `["+", "-", "*", "/", "abs"]`. If specified, `adjustment` must also be provided
     * Follows the formula `field {comparator} base {op} adjustment`, e.g. `field <= base + adjustment`
@@ -282,6 +284,7 @@ The rule definition for `compare_with` should follow the following format:
         "compare_with": {
             "comparator": "comparator, one of >, <, >=, <=, ==, !=",
             "base": "field or value to compare field_name to",
+            "base_decimal": "decimal field or value to add to base",
             "adjustment": "(optional) the adjustment field or value",
             "op": "(optional) operation, one of +, -, *, /, abs",
             "previous_record": "(optional) boolean, whether or not to compare to base in the previous record",

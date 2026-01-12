@@ -168,3 +168,72 @@ def test_compare_with_absolute_value(create_nacc_validator):
             "input value doesn't satisfy the condition abs(waist1 - waist2) <= 0.5"
         ]
     }
+
+
+def test_compare_with_base_decimal(create_nacc_validator):
+    """Test compare_with when base_decimal is specified."""
+    schema = {
+        "new_height": {
+            "type": "float",
+            "required": True,
+            "compare_with": {
+                "comparator": "<=",
+                "base": "prev_height",
+                "base_decimal": "prev_heigdec",
+                "op": "abs",
+                "adjustment": 5
+            },
+        },
+        "prev_height": {
+            "type": "float"
+        },
+        "prev_heigdec": {
+            "type": "float",
+            "nullable": True
+        }
+    }
+    nv = create_nacc_validator(schema)
+
+    # 65.6 - 60.9 = 4.6 so should pass
+    assert nv.validate({
+        "new_height": 65.5,
+        "prev_height": 60,
+        "prev_heigdec": 9
+    })
+
+    # 60.0 - 65.9 = -5.9 so should fail
+    assert not nv.validate({
+        "new_height": 60,
+        "prev_height": 65,
+        "prev_heigdec": 9
+    })
+    assert nv.errors == {
+        "new_height": [
+            "input value doesn't satisfy the condition " +
+            "abs(new_height - prev_height) <= 5"
+        ]
+    }
+
+    # sanity check prev_heigdec = 0 doesn't crash the code
+    assert nv.validate({
+        "new_height": 65.5,
+        "prev_height": 65,
+        "prev_heigdec": 0
+    })
+
+    # test the "old" behavior without the decimal works as expected,
+    # e.g. get opposite result
+    schema['new_height']['compare_with'].pop('base_decimal')
+    nv = create_nacc_validator(schema)
+
+    # 65.5 - 60 = 5.5 which fails
+    assert not nv.validate({"new_height": 65.5, "prev_height": 60})
+    assert nv.errors == {
+        "new_height": [
+            "input value doesn't satisfy the condition " +
+            "abs(new_height - prev_height) <= 5"
+        ]
+    }
+
+    # 60.0 - 65 = -5 which passes
+    assert nv.validate({"new_height": 60, "prev_height": 65})
