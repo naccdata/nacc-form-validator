@@ -2,6 +2,10 @@
 
 Documentation of release versions of `nacc-form-validator`
 
+## 0.6.3
+
+* Upgrade to Python 3.12 and Pants 2.29.0
+
 ## 0.6.2
 
 * Adds `base_decimal` argument to `compare_with` to handle cases where a value is actually split between the int and a decimal variable that need to be combined
