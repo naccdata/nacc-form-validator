@@ -24,8 +24,8 @@ See the [Usage doc](./docs/index.md) for a quick-start usage guide with examples
 Before getting started, it is recommended to do your installations and work in a [virtual environment](https://www.geeksforgeeks.org/python-virtual-environment/). You can set one up with the following command:
 
 ```
-# create; you want to use a Python version that matches the interpreter specified in pants.toml, which in this case is Python 3.11
-python3.11 -m venv path/to/your/venv
+# create; you want to use a Python version that matches the interpreter specified in pants.toml, which in this case is Python 3.12
+python3.12 -m venv path/to/your/venv
 
 # activate
 source path/to/your/venv/bin/activate
@@ -111,10 +111,10 @@ Examined the following interpreters:
 
 No interpreter compatible with the requested constraints was found:
 
-  Version matches CPython==3.11.*
+  Version matches CPython==3.12.*
 ```
 
-As mentioned earlier, you can use a VSCode devcontainer configuration. Otherwise, you need to set up an environment (preferably a virtual one) with the correct Python version (in this case, Python 3.11).
+As mentioned earlier, you can use a VSCode devcontainer configuration. Otherwise, you need to set up an environment (preferably a virtual one) with the correct Python version (in this case, Python 3.12).
 
 #### macOS Incompatible Architecture
 

@@ -92,7 +92,7 @@ class QualityCheck:
             )
 
         self.validator.primary_key = self.pk_field
-        self.validator.datastore = datastore
+        self.validator.datastore = datastore  # type: ignore
 
     def validate_record(
         self, record: Dict[str, str]
