@@ -1,6 +1,7 @@
 """Datastore module."""
 
 from abc import ABC, abstractmethod
+from datetime import date
 from typing import Any, Dict, List, Optional
 
 # pylint: disable=(too-few-public-methods, no-self-use, unused-argument)
@@ -103,7 +104,9 @@ class Datastore(ABC):
         return None
 
     @abstractmethod
-    def is_valid_rxcui(self, drugid: int) -> bool:
+    def is_valid_rxcui(self,
+                       drugid: int,
+                       target_date: Optional[date] = None) -> bool:
         """Abstract method to check whether a given drug ID is valid RXCUI.
         Override this method to implement drug ID validation. Check
         https://www.nlm.nih.gov/research/umls/rxnorm/overview.html,
@@ -111,6 +114,7 @@ class Datastore(ABC):
 
         Args:
             drugid: provided drug ID
+            target_date: target_date to check against
 
         Returns:
             bool: True if provided drug ID is valid, else False

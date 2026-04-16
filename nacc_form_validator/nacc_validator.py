@@ -1182,14 +1182,18 @@ class NACCValidator(Validator):
         except (TypeError, ValueError):
             self._error(field, ErrorDefs.COMPARE_WITH, comparison_str)
 
-    def _check_with_rxnorm(self, field: str, value: Optional[int]):
-        """Check whether the specified value is a valid RXCUI
+    def _check_rxcui(self,
+                     field: str,
+                     value: Optional[int],
+                     target_date: Optional[str] = None):
+        """Validate whether the specified value is a valid RXCUI
         https://www.nlm.nih.gov/research/umls/rxnorm/overview.html
         https://mor.nlm.nih.gov/RxNav/
 
         Args:
             field: Variable name
             value: Variable value
+            target_date (optional): Target date to validate RxCUI against
 
         Raises:
             ValidationException: If Datastore not set
@@ -1204,8 +1208,23 @@ class NACCValidator(Validator):
             self.__add_system_error(field, err_msg)
             raise ValidationException(err_msg)
 
-        if not self.datastore.is_valid_rxcui(value):
-            self._error(field, ErrorDefs.RXNORM, value)
+        if target_date is not None:
+            try:
+                target_date_str = self.__get_value_for_key(target_date)
+                target_date_value = utils.convert_to_date(target_date_str)
+            except (ValueError, TypeError, parser.ParserError) as error:
+                self._error(field, ErrorDefs.RXCUI_DATE_CONVERSION,
+                            target_date_str, error)
+                return
+        else:
+            target_date_value = None
+
+        if not self.datastore.is_valid_rxcui(value, target_date_value):
+            if target_date_value is not None:
+                self._error(field, ErrorDefs.RXCUI_DATED, value,
+                            str(target_date_value))
+            else:
+                self._error(field, ErrorDefs.RXCUI, value)
 
     def _validate_compare_age(self, comparison: Dict[str, Any], field: str,
                               value: object):
@@ -1271,7 +1290,7 @@ class NACCValidator(Validator):
         try:
             value = utils.convert_to_date(value)
         except (ValueError, TypeError, parser.ParserError) as error:
-            self._error(field, ErrorDefs.DATE_CONVERSION, value, error)
+            self._error(field, ErrorDefs.AGE_DATE_CONVERSION, value, error)
             return
 
         comparison_str = (
