@@ -151,7 +151,7 @@ class CustomErrorHandler(BasicErrorHandler):
             0x4000:
             "failed to convert value {0} to a date: {1}",
             0x4001:
-            "Drug ID {0} is not a valid RXCUI for the given date {1}",
+            "Drug ID {0} is not a valid RXCUI for the target date {1}",
         }
 
         self.messages.update(custom_errors)

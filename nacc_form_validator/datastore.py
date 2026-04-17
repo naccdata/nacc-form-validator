@@ -114,7 +114,7 @@ class Datastore(ABC):
 
         Args:
             drugid: provided drug ID
-            target_date: target_date to check against
+            target_date: target date to check against
 
         Returns:
             bool: True if provided drug ID is valid, else False

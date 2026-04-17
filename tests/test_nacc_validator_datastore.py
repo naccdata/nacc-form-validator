@@ -614,8 +614,8 @@ def test_temporal_rule_initial_visit():
     }
 
 
-def test_check_with_rxnorm():
-    """Test checking drugID is a valid RXCUI."""
+def test_check_rxcui():
+    """Test checking drugID is a valid RxCUI."""
     schema = {"drug": {"type": "integer", "function": {"name": "check_rxcui"}}}
 
     nv = create_nacc_validator_with_ds(schema, "patient_id", "visit_num")
@@ -629,8 +629,8 @@ def test_check_with_rxnorm():
     assert nv.errors == {"drug": ["Drug ID 100 is not a valid RXCUI"]}
 
 
-def test_check_with_rxnorm_with_target_date():
-    """Test checking drugID is a valid RXCUI for a given target date.
+def test_check_rxcui_with_target_date():
+    """Test checking drugID is a valid RxCUI for a given target date.
 
     For testing only 2026-01-01 is valid.
     """
