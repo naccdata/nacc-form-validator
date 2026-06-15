@@ -42,8 +42,8 @@ class ErrorDefs:
     CHECK_GDS_5 = ErrorDefinition(0x2008, "compute_gds")
     COMPARE_WITH = ErrorDefinition(0x2009, "compare_with")
     COMPARE_WITH_PREV = ErrorDefinition(0x3000, "compare_with")
-    RXNORM = ErrorDefinition(0x3001, "check_with")
-    DATE_CONVERSION = ErrorDefinition(0x3002, "compare_age")
+    RXCUI = ErrorDefinition(0x3001, "function")
+    AGE_DATE_CONVERSION = ErrorDefinition(0x3002, "compare_age")
     COMPARE_AGE = ErrorDefinition(0x3003, "compare_age")
     COMPARE_AGE_INVALID_COMPARISON = ErrorDefinition(0x3004, "compare_age")
     TEMPORAL_SWAPPED = ErrorDefinition(0x3005, "temporalrules")
@@ -51,6 +51,8 @@ class ErrorDefs:
     ADCID_NOT_VALID = ErrorDefinition(0x3007, "function")
     SCORING_INVALID = ErrorDefinition(0x3008, "function")
     INVALID_BIRTH_DATES = ErrorDefinition(0x3009, "compare_age")
+    RXCUI_DATE_CONVERSION = ErrorDefinition(0x4000, "function")
+    RXCUI_DATED = ErrorDefinition(0x4001, "function")
 
 
 class CustomErrorHandler(BasicErrorHandler):
@@ -146,6 +148,10 @@ class CustomErrorHandler(BasicErrorHandler):
             0x3009:
             "Cannot compute birth date, one or more components empty or " +
             "malformed",
+            0x4000:
+            "failed to convert value {0} to a date: {1}",
+            0x4001:
+            "Drug ID {0} is not a valid RXCUI for the target date {1}",
         }
 
         self.messages.update(custom_errors)

@@ -1,6 +1,7 @@
 """Tests the NACCValidator (from nacc_validator.py) when a datastore is
 required, e.g. temporal rules Creates a dummy datastore for simple testing."""
 import copy
+from datetime import date
 from typing import Any, Dict, List, Optional
 
 import pytest
@@ -106,8 +107,14 @@ class CustomDatastore(Datastore):
 
         return None
 
-    def is_valid_rxcui(self, drugid: int) -> bool:
+    def is_valid_rxcui(self,
+                       drugid: int,
+                       target_date: Optional[date] = None) -> bool:
         """For RXCUI testing."""
+        if target_date is not None:
+            if target_date != date(2026, 1, 1):
+                return False
+
         return drugid in self.__valid_rxcui
 
     def is_valid_adcid(self, adcid: int, own: bool) -> bool:
@@ -607,9 +614,9 @@ def test_temporal_rule_initial_visit():
     }
 
 
-def test_check_with_rxnorm():
-    """Test checking drugID is a valid RXCUI."""
-    schema = {"drug": {"type": "integer", "check_with": "rxnorm"}}
+def test_check_rxcui():
+    """Test checking drugID is a valid RxCUI."""
+    schema = {"drug": {"type": "integer", "function": {"name": "check_rxcui"}}}
 
     nv = create_nacc_validator_with_ds(schema, "patient_id", "visit_num")
 
@@ -620,6 +627,47 @@ def test_check_with_rxnorm():
     assert nv.errors == {"drug": ["Drug ID -1 is not a valid RXCUI"]}
     assert not nv.validate({"drug": 100})
     assert nv.errors == {"drug": ["Drug ID 100 is not a valid RXCUI"]}
+
+
+def test_check_rxcui_with_target_date_field():
+    """Test checking drugID is a valid RxCUI for a given target date.
+
+    For testing only 2026-01-01 is valid.
+    """
+    schema = {
+        "drug": {
+            "type": "integer",
+            "function": {
+                "name": "check_rxcui",
+                "args": {
+                    "target_date_field": "visitdate"
+                }
+            }
+        },
+        "visitdate": {
+            "type": "string"
+        }
+    }
+    nv = create_nacc_validator_with_ds(schema, "patient_id", "visit_num")
+
+    # active at given date
+    assert nv.validate({"drug": 24, "visitdate": "2026-01-01"})
+
+    # not active at given date
+    assert not nv.validate({"drug": 3, "visitdate": "2025-01-01"})
+    assert nv.errors == {
+        "drug":
+        ["Drug ID 3 is not a valid RXCUI for the target date 2025-01-01"]
+    }
+
+    # bad date
+    assert not nv.validate({"drug": 3, "visitdate": "hello world"})
+    assert nv.errors == {
+        "drug": [
+            "failed to convert value hello world to a date: " +
+            "Unknown string format: hello world"
+        ]
+    }
 
 
 def test_check_adcid():

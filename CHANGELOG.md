@@ -2,6 +2,10 @@
 
 Documentation of release versions of `nacc-form-validator`
 
+## 0.6.4
+
+* Updates `_check_rxcui` (changed from `_check_with_rxnorm` to a `function` to support arguments) to take a `target_date_field` argument and `is_valid_rxcui` to take a `target_date` argument
+
 ## 0.6.3
 
 * Upgrade to Python 3.12 and Pants 2.29.0
