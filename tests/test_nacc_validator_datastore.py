@@ -109,10 +109,10 @@ class CustomDatastore(Datastore):
 
     def is_valid_rxcui(self,
                        drugid: int,
-                       target_date_field: Optional[date] = None) -> bool:
+                       target_date: Optional[date] = None) -> bool:
         """For RXCUI testing."""
-        if target_date_field is not None:
-            if target_date_field != date(2026, 1, 1):
+        if target_date is not None:
+            if target_date != date(2026, 1, 1):
                 return False
 
         return drugid in self.__valid_rxcui

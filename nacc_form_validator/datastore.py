@@ -106,7 +106,7 @@ class Datastore(ABC):
     @abstractmethod
     def is_valid_rxcui(self,
                        drugid: int,
-                       target_date_field: Optional[date] = None) -> bool:
+                       target_date: Optional[date] = None) -> bool:
         """Abstract method to check whether a given drug ID is valid RXCUI.
         Override this method to implement drug ID validation. Check
         https://www.nlm.nih.gov/research/umls/rxnorm/overview.html,
@@ -114,7 +114,7 @@ class Datastore(ABC):
 
         Args:
             drugid: provided drug ID
-            target_date_field: target date field to check against
+            target_date: target date field to check against
 
         Returns:
             bool: True if provided drug ID is valid, else False
