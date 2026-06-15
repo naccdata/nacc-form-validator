@@ -1193,7 +1193,7 @@ class NACCValidator(Validator):
         Args:
             field: Variable name
             value: Variable value
-            target_date_field (optional): Target date to validate RxCUI against
+            target_date_field (optional): Date field to use as the target date
 
         Raises:
             ValidationException: If Datastore not set
@@ -1210,21 +1210,21 @@ class NACCValidator(Validator):
 
         if target_date_field is not None:
             try:
-                target_date_field_str = self.__get_value_for_key(
+                target_date_str = self.__get_value_for_key(
                     target_date_field)
-                target_date_field_value = utils.convert_to_date(
-                    target_date_field_str)
+                target_date_value = utils.convert_to_date(
+                    target_date_str)
             except (ValueError, TypeError, parser.ParserError) as error:
                 self._error(field, ErrorDefs.RXCUI_DATE_CONVERSION,
-                            target_date_field_str, error)
+                            target_date_str, error)
                 return
         else:
-            target_date_field_value = None
+            target_date_value = None
 
-        if not self.datastore.is_valid_rxcui(value, target_date_field_value):
-            if target_date_field_value is not None:
+        if not self.datastore.is_valid_rxcui(value, target_date_value):
+            if target_date_value is not None:
                 self._error(field, ErrorDefs.RXCUI_DATED, value,
-                            str(target_date_field_value))
+                            str(target_date_value))
             else:
                 self._error(field, ErrorDefs.RXCUI, value)
 

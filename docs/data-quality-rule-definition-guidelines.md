@@ -11,12 +11,11 @@
     - [compare\_age](#compare_age)
     - [compatibility](#compatibility)
     - [logic](#logic)
-      - [Custom Operations](#custom-operations)
+      - [Custom `logic` Operations](#custom-logic-operations)
     - [temporalrules](#temporalrules)
-- [{"visit\_date": 1, "taxes": 0}](#visit_date-1-taxes-0)
     - [check\_adcid](#check_adcid)
     - [compute\_gds](#compute_gds)
-    - [rxnorm](#rxnorm)
+    - [check\_rxcui](#check_rxcui)
     - [score\_variables](#score_variables)
 
 ## Introduction
@@ -805,7 +804,7 @@ var3:
 </tr>
 </table>
 
-#### Custom Operations
+#### Custom `logic` Operations
 
 The validator also has custom operators in addition to the ones provided by json-logic-py:
 
@@ -929,8 +928,7 @@ If field `taxes` (difficulty with taxes, business, and other papers) is 0 (norma
 </code></pre>
 </td>
 <td style="vertical-align:top;">
-<pre><code># assume this record already exists
-# {"visit_date": 1, "taxes": 0}
+<pre><code># assume this record already exists {"visit_date": 1, "taxes": 0}
 
 {"visit_date": 2, "taxes": 1}   # passes
 {"visit_date": 2, "taxes": 8}   # fails
@@ -956,7 +954,7 @@ This validation is implemented using the `function` rule with custom `check_adci
 }
 ```
 
-> **NOTE**: To validate `check_adcid`, the validator should have a `Datastore` instance which implements the `is_valid_adcid` function (which should have access to center's ADCID and the list of current ADCIDs).
+> **NOTE**: To use `check_adcid`, the validator should have a `Datastore` instance which implements the `is_valid_adcid` function (which should have access to center's ADCID and the list of current ADCIDs).
 
 **Example:**
 
@@ -1024,20 +1022,24 @@ The rule definition for `compute_gds` should follow the following format:
 }
 ```
 
-### rxnorm
+### check_rxcui
 
-Custom rule defined to check whether a given Drug ID is valid RXCUI code.
+Custom rule defined to check whether a given Drug ID is valid RXCUI code as per the target date.
 
-This function uses the `check_with` rule from Cerberus. The rule definition should be in the following format:
+This validation is implemented using the `function` rule with custom `check_rxcui` function in the NACCValidator. The rule definition should be in the following format:
 
 ```json
 {
     "<rxnormid variable>": {
-        "check_with": "rxnorm"
+        "function": {
+            "name": "check_rxcui",
+            "args": {"target_date_field": "<str (optional), Date field to use for target date>"}
+        }
     }
 }
 ```
-> **NOTE**: To validate `rxnorm`, the validator should have a `Datastore` instance which implements the `is_valid_rxcui` function which will check if the given rxnormid value is a valid RXCUI code
+
+> **NOTE**: To use `check_rxcui`, the validator should have a `Datastore` instance which implements the `is_valid_rxcui` function which will check if the given rxnormid value is a valid RXCUI code
 
 ### score_variables
 
