@@ -109,10 +109,10 @@ class CustomDatastore(Datastore):
 
     def is_valid_rxcui(self,
                        drugid: int,
-                       target_date: Optional[date] = None) -> bool:
+                       target_date_field: Optional[date] = None) -> bool:
         """For RXCUI testing."""
-        if target_date is not None:
-            if target_date != date(2026, 1, 1):
+        if target_date_field is not None:
+            if target_date_field != date(2026, 1, 1):
                 return False
 
         return drugid in self.__valid_rxcui
@@ -629,7 +629,7 @@ def test_check_rxcui():
     assert nv.errors == {"drug": ["Drug ID 100 is not a valid RXCUI"]}
 
 
-def test_check_rxcui_with_target_date():
+def test_check_rxcui_with_target_date_field():
     """Test checking drugID is a valid RxCUI for a given target date.
 
     For testing only 2026-01-01 is valid.
@@ -640,7 +640,7 @@ def test_check_rxcui_with_target_date():
             "function": {
                 "name": "check_rxcui",
                 "args": {
-                    "target_date": "visitdate"
+                    "target_date_field": "visitdate"
                 }
             }
         },

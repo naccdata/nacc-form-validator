@@ -1185,7 +1185,7 @@ class NACCValidator(Validator):
     def _check_rxcui(self,
                      field: str,
                      value: Optional[int],
-                     target_date: Optional[str] = None):
+                     target_date_field: Optional[str] = None):
         """Validate whether the specified value is a valid RXCUI
         https://www.nlm.nih.gov/research/umls/rxnorm/overview.html
         https://mor.nlm.nih.gov/RxNav/
@@ -1193,7 +1193,7 @@ class NACCValidator(Validator):
         Args:
             field: Variable name
             value: Variable value
-            target_date (optional): Target date to validate RxCUI against
+            target_date_field (optional): Target date to validate RxCUI against
 
         Raises:
             ValidationException: If Datastore not set
@@ -1208,21 +1208,23 @@ class NACCValidator(Validator):
             self.__add_system_error(field, err_msg)
             raise ValidationException(err_msg)
 
-        if target_date is not None:
+        if target_date_field is not None:
             try:
-                target_date_str = self.__get_value_for_key(target_date)
-                target_date_value = utils.convert_to_date(target_date_str)
+                target_date_field_str = self.__get_value_for_key(
+                    target_date_field)
+                target_date_field_value = utils.convert_to_date(
+                    target_date_field_str)
             except (ValueError, TypeError, parser.ParserError) as error:
                 self._error(field, ErrorDefs.RXCUI_DATE_CONVERSION,
-                            target_date_str, error)
+                            target_date_field_str, error)
                 return
         else:
-            target_date_value = None
+            target_date_field_value = None
 
-        if not self.datastore.is_valid_rxcui(value, target_date_value):
-            if target_date_value is not None:
+        if not self.datastore.is_valid_rxcui(value, target_date_field_value):
+            if target_date_field_value is not None:
                 self._error(field, ErrorDefs.RXCUI_DATED, value,
-                            str(target_date_value))
+                            str(target_date_field_value))
             else:
                 self._error(field, ErrorDefs.RXCUI, value)
 

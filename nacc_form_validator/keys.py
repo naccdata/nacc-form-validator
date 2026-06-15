@@ -41,4 +41,3 @@ class SchemaDefs:
     FUNCTION_NAME = "name"
     FUNCTION_ARGS = "args"
     INITIAL_RECORD = 'initial_record'
-    TARGET_DATE = 'target_date'
