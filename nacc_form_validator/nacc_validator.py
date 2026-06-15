@@ -1210,10 +1210,8 @@ class NACCValidator(Validator):
 
         if target_date_field is not None:
             try:
-                target_date_str = self.__get_value_for_key(
-                    target_date_field)
-                target_date_value = utils.convert_to_date(
-                    target_date_str)
+                target_date_str = self.__get_value_for_key(target_date_field)
+                target_date_value = utils.convert_to_date(target_date_str)
             except (ValueError, TypeError, parser.ParserError) as error:
                 self._error(field, ErrorDefs.RXCUI_DATE_CONVERSION,
                             target_date_str, error)
