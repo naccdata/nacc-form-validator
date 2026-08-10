@@ -6,7 +6,7 @@
   - [Table of Contents](#table-of-contents)
   - [Introduction](#introduction)
   - [Validation Rules](#validation-rules)
-  - [Custom Rules Defined for UDS](#custom-rules-defined-for-uds)
+  - [Custom Rules Defined for NACC Form Data](#custom-rules-defined-for-nacc-form-data)
     - [compare\_with](#compare_with)
     - [compare\_age](#compare_age)
     - [compatibility](#compatibility)
@@ -244,7 +244,7 @@ data = {"email": "john_at_example_dot_com"}     # fails
 </tr>
 </table>
 
-## Custom Rules Defined for UDS
+## Custom Rules Defined for NACC Form Data
 
 These are defined in the `NACCValidator` class.
 
