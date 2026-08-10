@@ -12,6 +12,8 @@ See [Data Quality Rule Definition Guidelines](./data-quality-rule-definition-gui
   - [Example Usage - Hello World](#example-usage---hello-world)
   - [Example Usage - Records and Datastores](#example-usage---records-and-datastores)
   - [Example Usage - Bulk Validation](#example-usage---bulk-validation)
+  - [NACC Published JSON Rule Definitions for Form Data Validation](#nacc-published-json-rule-definitions-for-form-data-validation)
+  - [Mapping Validation Errors to Human-Readable Messages](#mapping-validation-errors-to-human-readable-messages)
 
 ## Overview
 
@@ -224,3 +226,54 @@ python3 validate_csv_records.py \
     -i input-records.csv \
     -o output-errors.csv
 ```
+
+## NACC Published JSON Rule Definitions for Form Data Validation
+
+NACC published data quality checks for each form data module can be downloaded in [CSV](https://docs.naccdata.org/edc/data-quality-processing/nacc-published-checks#data-quality-checks) and [JSON](https://docs.naccdata.org/edc/data-quality-processing/nacc-published-checks#json-rule-definitions) formats from NACC's [Electronic Data Capture Documentation](https://docs.naccdata.org/edc/data-quality-processing/nacc-published-checks) page.
+
+JSON rule definitions for a module are distributed as a zip file, organized by version, packet, and form name. Merge all the form definition files under a given packet code to get the full validation schema for that module/version/packet. Optional forms have an additional definition file named `<formname>_rules_optional.json`; if an optional form is not submitted, use this file in place of the regular definition file when building the validation schema.
+
+Each version/packet also has a `codes` directory containing an error code mapping schema for each form. These JSON files can be used to [map the validator generated errors to human-readable messages](#mapping-validation-errors-to-human-readable-messages). Similar to rule definitions, merge all the form definition files under a given packet code to get the full error code mapping schema for that module/version/packet.
+
+## Mapping Validation Errors to Human-Readable Messages
+
+The `errors` dict returned by `validate_record` already contains a generic message for each failed field, but you'll often want to show your own wording instead - sourced from wherever you maintain published error text (a database, a flat file, an internal API, and so on), and possibly keyed by a stable code rather than the validator's internal rule name. The `error_tree` return value gives you access to the raw `ValidationError` objects needed to do this: each one exposes `rule` (the schema rule that failed, e.g. `"max"` or `"compatibility"`), `value`, `constraint`, and `info` (extra context used to build the default message).
+
+A simple approach is to keep two things separate from the schema itself:
+
+- An **error code map**, assigning a stable, publishable code to each field/rule pair you care to override. This is kept apart from the schema because rule names like `"max"` are implementation details of the validator, not identifiers meant to be shown to end users.
+- An **error message store**, which looks up message text for a given code. You implement this against whatever system publishes your error text, the same way you'd implement the `Datastore` abstract class (see [Example Usage - Records and Datastores](#example-usage---records-and-datastores)) against whatever system stores previous records - the validator doesn't care where either one lives.
+
+A small wrapper class then ties `validate_record`'s output together with these two pieces: for each validation error it resolves a code via the error code map, looks up that code's message via the error message store, and falls back to the validator's own default message when no custom code or message is available, so an error is never silently dropped. Note that some custom NACC rules (e.g. `temporalrules`, `compatibility`) can report more than one failed condition for a single field - `error.info` carries the extra context needed to tell those conditions apart if you need a different message per condition.
+
+`docs/mapping_errors_example.py` is a self-contained, runnable example of this pattern. It defines an `ErrorMessageStore` abstract class, a trivial in-memory implementation of it, and an `ErrorCodeMapper` wrapper class whose `map_errors` method turns validator output into a list of `MappedError` objects:
+
+```python
+@dataclass
+class MappedError:
+    error_code: str
+    field: str
+    value: str
+    message: str
+    ptid: Optional[str]
+    visitnum: Optional[str]
+    visitdate: Optional[str]
+
+
+class ErrorCodeMapper:
+    def map_errors(
+        self, error_tree, default_errors: Dict[str, List[str]]
+    ) -> List[MappedError]:
+        ...
+```
+
+Example usage:
+
+```bash
+python3 mapping_errors_example.py
+# MappedError(error_code='UDS-AGE-001', field='age', value='130',
+#     message='Age must not be greater than 120.', ptid='PatientID1',
+#     visitnum=3, visitdate='2025-01-01')
+```
+
+You can download the NACC published JSON rule definitions and the respective code mapping schemas for each module from the [NACC Published Error Checks](https://docs.naccdata.org/edc/data-quality-processing/nacc-published-checks#json-rule-definitions) page. See [NACC Published JSON Rule Definitions for Form Data Validation](#nacc-published-json-rule-definitions-for-form-data-validation) above for more details.
