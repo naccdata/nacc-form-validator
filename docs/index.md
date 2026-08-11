@@ -229,11 +229,11 @@ python3 validate_csv_records.py \
 
 ## NACC Published JSON Rule Definitions for Form Data Validation
 
-NACC published data quality checks for each form data module can be downloaded in [CSV](https://docs.naccdata.org/edc/data-quality-processing/nacc-published-checks#data-quality-checks) and [JSON](https://docs.naccdata.org/edc/data-quality-processing/nacc-published-checks#json-rule-definitions) formats from NACC's [Electronic Data Capture Documentation](https://docs.naccdata.org/edc/data-quality-processing/nacc-published-checks) page.
+NACC-published data quality checks for each form data module can be downloaded in [CSV](https://docs.naccdata.org/edc/data-quality-processing/nacc-published-checks#data-quality-checks) and [JSON](https://docs.naccdata.org/edc/data-quality-processing/nacc-published-checks#json-rule-definitions) formats from NACC's [Electronic Data Capture Documentation](https://docs.naccdata.org/edc/data-quality-processing/nacc-published-checks) page.
 
-JSON rule definitions for a module are distributed as a zip file, organized by version, packet, and form name. Merge all the form definition files under a given packet code to get the full validation schema for that module/version/packet. Optional forms have an additional definition file named `<formname>_rules_optional.json`; if an optional form is not submitted, use this file in place of the regular definition file when building the validation schema.
+JSON rule definitions for a module are distributed as a zip file, organized by version, packet, and form. Merge all the rule definition files under a given packet code to get the full validation schema for that module/version/packet. Optional forms have an additional rule definition file named `<formname>_rules_optional.json`; if an optional form is not submitted, use this file in place of the regular rule definition file when building the validation schema.
 
-Each version/packet also has a `codes` directory containing an error code mapping schema for each form. These JSON files can be used to [map the validator generated errors to human-readable messages](#mapping-validation-errors-to-human-readable-messages). Similar to rule definitions, merge all the form definition files under a given packet code to get the full error code mapping schema for that module/version/packet.
+Each module/version/packet also has a `codes` directory containing an error code mapping schema for each form. These JSON files can be used to [map the validator generated errors to human-readable messages](#mapping-validation-errors-to-human-readable-messages). Similar to rule definitions, merge all the code mapping files under a given packet code to get the full error code mapping schema for that module/version/packet. If an optional form is not submitted, use the `<formname>_codes_optional.json` file.
 
 ## Mapping Validation Errors to Human-Readable Messages
 
@@ -276,4 +276,4 @@ python3 mapping_errors_example.py
 #     visitnum=3, visitdate='2025-01-01')
 ```
 
-You can download the NACC published JSON rule definitions and the respective code mapping schemas for each module from the [NACC Published Error Checks](https://docs.naccdata.org/edc/data-quality-processing/nacc-published-checks#json-rule-definitions) page. See [NACC Published JSON Rule Definitions for Form Data Validation](#nacc-published-json-rule-definitions-for-form-data-validation) above for more details.
+You can download the NACC-published JSON rule definitions and the respective code mapping schemas for each module from the [NACC Published Error Checks](https://docs.naccdata.org/edc/data-quality-processing/nacc-published-checks#json-rule-definitions) page. See [NACC Published JSON Rule Definitions for Form Data Validation](#nacc-published-json-rule-definitions-for-form-data-validation) above for more details.
